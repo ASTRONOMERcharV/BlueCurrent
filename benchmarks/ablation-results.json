@@ -1,0 +1,2084 @@
+{
+  "environment": {
+    "generatedAt": "2026-11-08T09:57:08.559Z",
+    "node": "v22.23.4",
+    "platform": "linux",
+    "release": "6.8.0-138-generic",
+    "cpu": "13th Gen Intel(R) Core(TM) i7-13700H",
+    "logicalCores": 2
+  },
+  "methodology": {
+    "fishCount": 500,
+    "warmupSteps": 300,
+    "measurementSteps": 600,
+    "sampleInterval": 30,
+    "seeds": [
+      1270981331,
+      1270981332,
+      1270981333
+    ],
+    "searchMode": "grid",
+    "predatorEnabled": false,
+    "fixedDeltaSeconds": 0.016666666666666666,
+    "simulationSecondsMeasured": 10,
+    "connectionRadius": 3.2,
+    "notes": [
+      "All configurations use the same seed, radii, speeds, environment and integration settings.",
+      "Only the three behavior weights differ; no data are theoretical or inferred.",
+      "Metrics are sampled every 30 fixed steps during the final 600 steps."
+    ]
+  },
+  "aggregated": [
+    {
+      "configuration": {
+        "id": "separation-only",
+        "label": "Separation only",
+        "separationWeight": 2.4,
+        "alignmentWeight": 0,
+        "cohesionWeight": 0
+      },
+      "seeds": 3,
+      "meanRadiusOfGyration": 14.693501839923428,
+      "meanPolarization": 0.3363426886626744,
+      "meanAverageNeighbors": 23.327266666666663,
+      "meanSchoolCount": 8.216666666666667,
+      "meanMaxSchoolCount": 19.333333333333332,
+      "meanLargestFraction": 0.6364666666666665,
+      "meanSpeed": 3.8458925478320594
+    },
+    {
+      "configuration": {
+        "id": "separation-alignment",
+        "label": "Separation + alignment",
+        "separationWeight": 2.4,
+        "alignmentWeight": 0.9,
+        "cohesionWeight": 0
+      },
+      "seeds": 3,
+      "meanRadiusOfGyration": 12.453766989655113,
+      "meanPolarization": 0.3965081017466389,
+      "meanAverageNeighbors": 73.81639999999999,
+      "meanSchoolCount": 1.2333333333333334,
+      "meanMaxSchoolCount": 2,
+      "meanLargestFraction": 0.9147666666666666,
+      "meanSpeed": 2.2473400900175817
+    },
+    {
+      "configuration": {
+        "id": "full-boids",
+        "label": "All three rules",
+        "separationWeight": 2.4,
+        "alignmentWeight": 0.9,
+        "cohesionWeight": 0.32
+      },
+      "seeds": 3,
+      "meanRadiusOfGyration": 8.133786671174695,
+      "meanPolarization": 0.7117082573591725,
+      "meanAverageNeighbors": 138.91086666666666,
+      "meanSchoolCount": 1,
+      "meanMaxSchoolCount": 1,
+      "meanLargestFraction": 0.9999333333333333,
+      "meanSpeed": 2.408061039422526
+    }
+  ],
+  "runs": [
+    {
+      "seed": 1270981331,
+      "configuration": {
+        "id": "separation-only",
+        "label": "Separation only",
+        "separationWeight": 2.4,
+        "alignmentWeight": 0,
+        "cohesionWeight": 0
+      },
+      "samples": [
+        {
+          "step": 330,
+          "radiusOfGyration": 11.255075819377732,
+          "polarization": 0.42138166446901293,
+          "averageNeighbors": 35.232,
+          "schoolCount": 2,
+          "largestSchool": 455,
+          "largestFraction": 0.91,
+          "meanSpeed": 3.6121443725646643
+        },
+        {
+          "step": 360,
+          "radiusOfGyration": 11.477215985201571,
+          "polarization": 0.29870300599040217,
+          "averageNeighbors": 35.664,
+          "schoolCount": 2,
+          "largestSchool": 457,
+          "largestFraction": 0.914,
+          "meanSpeed": 3.615332691315212
+        },
+        {
+          "step": 390,
+          "radiusOfGyration": 11.72537954341431,
+          "polarization": 0.1616826345754672,
+          "averageNeighbors": 35.632,
+          "schoolCount": 2,
+          "largestSchool": 466,
+          "largestFraction": 0.932,
+          "meanSpeed": 3.652871504146519
+        },
+        {
+          "step": 420,
+          "radiusOfGyration": 12.048785866156818,
+          "polarization": 0.0687548140743421,
+          "averageNeighbors": 35.04,
+          "schoolCount": 2,
+          "largestSchool": 466,
+          "largestFraction": 0.932,
+          "meanSpeed": 3.7093935780628393
+        },
+        {
+          "step": 450,
+          "radiusOfGyration": 12.471325355280095,
+          "polarization": 0.03889599035240034,
+          "averageNeighbors": 33.244,
+          "schoolCount": 1,
+          "largestSchool": 471,
+          "largestFraction": 0.942,
+          "meanSpeed": 3.7164028931584756
+        },
+        {
+          "step": 480,
+          "radiusOfGyration": 12.962788564177691,
+          "polarization": 0.13251627681758857,
+          "averageNeighbors": 30.712,
+          "schoolCount": 3,
+          "largestSchool": 445,
+          "largestFraction": 0.89,
+          "meanSpeed": 3.7683994893067525
+        },
+        {
+          "step": 510,
+          "radiusOfGyration": 13.497584415522065,
+          "polarization": 0.22557703883522123,
+          "averageNeighbors": 27.908,
+          "schoolCount": 1,
+          "largestSchool": 448,
+          "largestFraction": 0.896,
+          "meanSpeed": 3.8097520895255146
+        },
+        {
+          "step": 540,
+          "radiusOfGyration": 14.05736347584667,
+          "polarization": 0.29466247221867026,
+          "averageNeighbors": 25.804,
+          "schoolCount": 5,
+          "largestSchool": 408,
+          "largestFraction": 0.816,
+          "meanSpeed": 3.857435566231211
+        },
+        {
+          "step": 570,
+          "radiusOfGyration": 14.640747207178675,
+          "polarization": 0.3578155990873494,
+          "averageNeighbors": 23.66,
+          "schoolCount": 2,
+          "largestSchool": 418,
+          "largestFraction": 0.836,
+          "meanSpeed": 3.853087188134214
+        },
+        {
+          "step": 600,
+          "radiusOfGyration": 15.213162789284954,
+          "polarization": 0.4134836837191822,
+          "averageNeighbors": 21.556,
+          "schoolCount": 3,
+          "largestSchool": 388,
+          "largestFraction": 0.776,
+          "meanSpeed": 3.8836905701831514
+        },
+        {
+          "step": 630,
+          "radiusOfGyration": 15.750437128733186,
+          "polarization": 0.44485399052137725,
+          "averageNeighbors": 19.632,
+          "schoolCount": 9,
+          "largestSchool": 329,
+          "largestFraction": 0.658,
+          "meanSpeed": 3.8956630651508135
+        },
+        {
+          "step": 660,
+          "radiusOfGyration": 16.22925895946982,
+          "polarization": 0.48968969177047433,
+          "averageNeighbors": 17.872,
+          "schoolCount": 11,
+          "largestSchool": 322,
+          "largestFraction": 0.644,
+          "meanSpeed": 3.880908930555935
+        },
+        {
+          "step": 690,
+          "radiusOfGyration": 16.598725067089326,
+          "polarization": 0.4952231973618699,
+          "averageNeighbors": 17.144,
+          "schoolCount": 13,
+          "largestSchool": 146,
+          "largestFraction": 0.292,
+          "meanSpeed": 3.8947017943823345
+        },
+        {
+          "step": 720,
+          "radiusOfGyration": 16.85493827344064,
+          "polarization": 0.4900314564537863,
+          "averageNeighbors": 16.772,
+          "schoolCount": 18,
+          "largestSchool": 137,
+          "largestFraction": 0.274,
+          "meanSpeed": 3.9269699143969903
+        },
+        {
+          "step": 750,
+          "radiusOfGyration": 16.998319924015355,
+          "polarization": 0.4770717151034922,
+          "averageNeighbors": 16.212,
+          "schoolCount": 14,
+          "largestSchool": 318,
+          "largestFraction": 0.636,
+          "meanSpeed": 3.9020647843057663
+        },
+        {
+          "step": 780,
+          "radiusOfGyration": 17.005065385800982,
+          "polarization": 0.4430534628395209,
+          "averageNeighbors": 15.776,
+          "schoolCount": 12,
+          "largestSchool": 146,
+          "largestFraction": 0.292,
+          "meanSpeed": 3.930882551327764
+        },
+        {
+          "step": 810,
+          "radiusOfGyration": 16.89746134380103,
+          "polarization": 0.41560502694981044,
+          "averageNeighbors": 15.404,
+          "schoolCount": 14,
+          "largestSchool": 119,
+          "largestFraction": 0.238,
+          "meanSpeed": 3.948122929012564
+        },
+        {
+          "step": 840,
+          "radiusOfGyration": 16.70165881963411,
+          "polarization": 0.36930858085186985,
+          "averageNeighbors": 15.356,
+          "schoolCount": 13,
+          "largestSchool": 141,
+          "largestFraction": 0.282,
+          "meanSpeed": 3.977216859973527
+        },
+        {
+          "step": 870,
+          "radiusOfGyration": 16.43775028472901,
+          "polarization": 0.3146051622733633,
+          "averageNeighbors": 15.744,
+          "schoolCount": 16,
+          "largestSchool": 181,
+          "largestFraction": 0.362,
+          "meanSpeed": 3.972653884862478
+        },
+        {
+          "step": 900,
+          "radiusOfGyration": 16.131602773317255,
+          "polarization": 0.24992786571350786,
+          "averageNeighbors": 16.316,
+          "schoolCount": 14,
+          "largestSchool": 212,
+          "largestFraction": 0.424,
+          "meanSpeed": 3.9851713303693326
+        }
+      ],
+      "summary": {
+        "radiusOfGyration": 14.747732349073567,
+        "polarization": 0.3301421664989354,
+        "averageNeighbors": 23.533999999999995,
+        "schoolCount": 7.85,
+        "maxSchoolCount": 18,
+        "largestFraction": 0.6472999999999999,
+        "meanLargestSchool": 323.65,
+        "meanSpeed": 3.8396432993483023
+      }
+    },
+    {
+      "seed": 1270981331,
+      "configuration": {
+        "id": "separation-alignment",
+        "label": "Separation + alignment",
+        "separationWeight": 2.4,
+        "alignmentWeight": 0.9,
+        "cohesionWeight": 0
+      },
+      "samples": [
+        {
+          "step": 330,
+          "radiusOfGyration": 8.819407533518792,
+          "polarization": 0.6985382368364964,
+          "averageNeighbors": 55.664,
+          "schoolCount": 1,
+          "largestSchool": 499,
+          "largestFraction": 0.998,
+          "meanSpeed": 2.7872542401652516
+        },
+        {
+          "step": 360,
+          "radiusOfGyration": 8.826089031286008,
+          "polarization": 0.5639621554666505,
+          "averageNeighbors": 59,
+          "schoolCount": 1,
+          "largestSchool": 497,
+          "largestFraction": 0.994,
+          "meanSpeed": 2.5968544814520347
+        },
+        {
+          "step": 390,
+          "radiusOfGyration": 8.888295484071431,
+          "polarization": 0.47944432236222856,
+          "averageNeighbors": 62.988,
+          "schoolCount": 1,
+          "largestSchool": 495,
+          "largestFraction": 0.99,
+          "meanSpeed": 2.394106398158162
+        },
+        {
+          "step": 420,
+          "radiusOfGyration": 9.053878429358146,
+          "polarization": 0.40805981743526665,
+          "averageNeighbors": 65.816,
+          "schoolCount": 1,
+          "largestSchool": 495,
+          "largestFraction": 0.99,
+          "meanSpeed": 2.256609632764114
+        },
+        {
+          "step": 450,
+          "radiusOfGyration": 9.342850247168503,
+          "polarization": 0.3350698580936129,
+          "averageNeighbors": 67.724,
+          "schoolCount": 1,
+          "largestSchool": 496,
+          "largestFraction": 0.992,
+          "meanSpeed": 2.2026678657916916
+        },
+        {
+          "step": 480,
+          "radiusOfGyration": 9.753636162018342,
+          "polarization": 0.26970512857970613,
+          "averageNeighbors": 68.736,
+          "schoolCount": 1,
+          "largestSchool": 497,
+          "largestFraction": 0.994,
+          "meanSpeed": 2.170371802259409
+        },
+        {
+          "step": 510,
+          "radiusOfGyration": 10.285341113281314,
+          "polarization": 0.20723699683241684,
+          "averageNeighbors": 68.704,
+          "schoolCount": 1,
+          "largestSchool": 500,
+          "largestFraction": 1,
+          "meanSpeed": 2.1562754538318027
+        },
+        {
+          "step": 540,
+          "radiusOfGyration": 10.907010817892248,
+          "polarization": 0.1513857291442564,
+          "averageNeighbors": 68.3,
+          "schoolCount": 1,
+          "largestSchool": 500,
+          "largestFraction": 1,
+          "meanSpeed": 2.1549826055404764
+        },
+        {
+          "step": 570,
+          "radiusOfGyration": 11.582909905984472,
+          "polarization": 0.11682976371664026,
+          "averageNeighbors": 67.912,
+          "schoolCount": 1,
+          "largestSchool": 499,
+          "largestFraction": 0.998,
+          "meanSpeed": 2.1643613642050332
+        },
+        {
+          "step": 600,
+          "radiusOfGyration": 12.261432690830768,
+          "polarization": 0.11197351589308807,
+          "averageNeighbors": 68.408,
+          "schoolCount": 1,
+          "largestSchool": 498,
+          "largestFraction": 0.996,
+          "meanSpeed": 2.171474711758033
+        },
+        {
+          "step": 630,
+          "radiusOfGyration": 12.898372624910836,
+          "polarization": 0.13423137312581954,
+          "averageNeighbors": 70.272,
+          "schoolCount": 1,
+          "largestSchool": 497,
+          "largestFraction": 0.994,
+          "meanSpeed": 2.1608981589267007
+        },
+        {
+          "step": 660,
+          "radiusOfGyration": 13.49303546726393,
+          "polarization": 0.1850851613156761,
+          "averageNeighbors": 73.28,
+          "schoolCount": 1,
+          "largestSchool": 497,
+          "largestFraction": 0.994,
+          "meanSpeed": 2.1384358291767076
+        },
+        {
+          "step": 690,
+          "radiusOfGyration": 14.033015591539813,
+          "polarization": 0.2465831616627344,
+          "averageNeighbors": 77.548,
+          "schoolCount": 1,
+          "largestSchool": 497,
+          "largestFraction": 0.994,
+          "meanSpeed": 2.119507135257374
+        },
+        {
+          "step": 720,
+          "radiusOfGyration": 14.50278433022722,
+          "polarization": 0.3304646472964236,
+          "averageNeighbors": 82.184,
+          "schoolCount": 1,
+          "largestSchool": 497,
+          "largestFraction": 0.994,
+          "meanSpeed": 2.1243762053498076
+        },
+        {
+          "step": 750,
+          "radiusOfGyration": 14.916597862689182,
+          "polarization": 0.4211920947259979,
+          "averageNeighbors": 86.08,
+          "schoolCount": 2,
+          "largestSchool": 492,
+          "largestFraction": 0.984,
+          "meanSpeed": 2.1291562719919797
+        },
+        {
+          "step": 780,
+          "radiusOfGyration": 15.281729938441513,
+          "polarization": 0.511918817163945,
+          "averageNeighbors": 89.32,
+          "schoolCount": 1,
+          "largestSchool": 492,
+          "largestFraction": 0.984,
+          "meanSpeed": 2.1444728898872527
+        },
+        {
+          "step": 810,
+          "radiusOfGyration": 15.60113061193614,
+          "polarization": 0.5869696997479532,
+          "averageNeighbors": 90.62,
+          "schoolCount": 1,
+          "largestSchool": 492,
+          "largestFraction": 0.984,
+          "meanSpeed": 2.166000309042908
+        },
+        {
+          "step": 840,
+          "radiusOfGyration": 15.858416712494735,
+          "polarization": 0.6517240672695354,
+          "averageNeighbors": 90.812,
+          "schoolCount": 1,
+          "largestSchool": 492,
+          "largestFraction": 0.984,
+          "meanSpeed": 2.1876870248478943
+        },
+        {
+          "step": 870,
+          "radiusOfGyration": 16.05064255305158,
+          "polarization": 0.6955175914186479,
+          "averageNeighbors": 89.86,
+          "schoolCount": 2,
+          "largestSchool": 247,
+          "largestFraction": 0.494,
+          "meanSpeed": 2.2332849522236073
+        },
+        {
+          "step": 900,
+          "radiusOfGyration": 16.198417775714955,
+          "polarization": 0.7425980583831511,
+          "averageNeighbors": 88.072,
+          "schoolCount": 2,
+          "largestSchool": 247,
+          "largestFraction": 0.494,
+          "meanSpeed": 2.261176159367463
+        }
+      ],
+      "summary": {
+        "radiusOfGyration": 12.427749744183995,
+        "polarization": 0.39242450982351235,
+        "averageNeighbors": 74.56499999999998,
+        "schoolCount": 1.15,
+        "maxSchoolCount": 2,
+        "largestFraction": 0.9425999999999999,
+        "meanLargestSchool": 471.3,
+        "meanSpeed": 2.2359976745998855
+      }
+    },
+    {
+      "seed": 1270981331,
+      "configuration": {
+        "id": "full-boids",
+        "label": "All three rules",
+        "separationWeight": 2.4,
+        "alignmentWeight": 0.9,
+        "cohesionWeight": 0.32
+      },
+      "samples": [
+        {
+          "step": 330,
+          "radiusOfGyration": 4.739621843808043,
+          "polarization": 0.9948492853160067,
+          "averageNeighbors": 230.088,
+          "schoolCount": 1,
+          "largestSchool": 500,
+          "largestFraction": 1,
+          "meanSpeed": 3.0970276733607434
+        },
+        {
+          "step": 360,
+          "radiusOfGyration": 4.677088516689764,
+          "polarization": 0.9521922933380366,
+          "averageNeighbors": 235.188,
+          "schoolCount": 1,
+          "largestSchool": 500,
+          "largestFraction": 1,
+          "meanSpeed": 2.941152655600767
+        },
+        {
+          "step": 390,
+          "radiusOfGyration": 4.599105326289252,
+          "polarization": 0.7716255243561989,
+          "averageNeighbors": 244.32,
+          "schoolCount": 1,
+          "largestSchool": 500,
+          "largestFraction": 1,
+          "meanSpeed": 2.727748203680844
+        },
+        {
+          "step": 420,
+          "radiusOfGyration": 4.64077443503069,
+          "polarization": 0.49371978154278456,
+          "averageNeighbors": 250.896,
+          "schoolCount": 1,
+          "largestSchool": 500,
+          "largestFraction": 1,
+          "meanSpeed": 2.4692098500041597
+        },
+        {
+          "step": 450,
+          "radiusOfGyration": 5.015331458532125,
+          "polarization": 0.17287199865139521,
+          "averageNeighbors": 231.992,
+          "schoolCount": 1,
+          "largestSchool": 500,
+          "largestFraction": 1,
+          "meanSpeed": 2.3262377972495623
+        },
+        {
+          "step": 480,
+          "radiusOfGyration": 5.679503163020438,
+          "polarization": 0.12655063532433983,
+          "averageNeighbors": 192.856,
+          "schoolCount": 1,
+          "largestSchool": 500,
+          "largestFraction": 1,
+          "meanSpeed": 2.334574775088286
+        },
+        {
+          "step": 510,
+          "radiusOfGyration": 6.446124021657865,
+          "polarization": 0.3587024698924735,
+          "averageNeighbors": 153.352,
+          "schoolCount": 1,
+          "largestSchool": 500,
+          "largestFraction": 1,
+          "meanSpeed": 2.3607279744093868
+        },
+        {
+          "step": 540,
+          "radiusOfGyration": 7.190320698722197,
+          "polarization": 0.5283217567059462,
+          "averageNeighbors": 123.212,
+          "schoolCount": 1,
+          "largestSchool": 500,
+          "largestFraction": 1,
+          "meanSpeed": 2.3447352768995677
+        },
+        {
+          "step": 570,
+          "radiusOfGyration": 7.849623956340712,
+          "polarization": 0.6563583494219077,
+          "averageNeighbors": 104.552,
+          "schoolCount": 1,
+          "largestSchool": 500,
+          "largestFraction": 1,
+          "meanSpeed": 2.321262462106676
+        },
+        {
+          "step": 600,
+          "radiusOfGyration": 8.416189638934375,
+          "polarization": 0.7279388425122818,
+          "averageNeighbors": 94.412,
+          "schoolCount": 1,
+          "largestSchool": 500,
+          "largestFraction": 1,
+          "meanSpeed": 2.297528762542388
+        },
+        {
+          "step": 630,
+          "radiusOfGyration": 8.917329583243202,
+          "polarization": 0.7722537342080028,
+          "averageNeighbors": 88.432,
+          "schoolCount": 1,
+          "largestSchool": 500,
+          "largestFraction": 1,
+          "meanSpeed": 2.2737713655846283
+        },
+        {
+          "step": 660,
+          "radiusOfGyration": 9.37120553320042,
+          "polarization": 0.7996506420873052,
+          "averageNeighbors": 84.736,
+          "schoolCount": 1,
+          "largestSchool": 500,
+          "largestFraction": 1,
+          "meanSpeed": 2.271153086360477
+        },
+        {
+          "step": 690,
+          "radiusOfGyration": 9.79555027170124,
+          "polarization": 0.8209266384956546,
+          "averageNeighbors": 83.012,
+          "schoolCount": 1,
+          "largestSchool": 500,
+          "largestFraction": 1,
+          "meanSpeed": 2.2722823703461765
+        },
+        {
+          "step": 720,
+          "radiusOfGyration": 10.200016295776726,
+          "polarization": 0.8335805945783629,
+          "averageNeighbors": 82.664,
+          "schoolCount": 1,
+          "largestSchool": 500,
+          "largestFraction": 1,
+          "meanSpeed": 2.276497906961526
+        },
+        {
+          "step": 750,
+          "radiusOfGyration": 10.590292779756012,
+          "polarization": 0.8412615672380808,
+          "averageNeighbors": 83.564,
+          "schoolCount": 1,
+          "largestSchool": 500,
+          "largestFraction": 1,
+          "meanSpeed": 2.2918419087615884
+        },
+        {
+          "step": 780,
+          "radiusOfGyration": 10.975157071916495,
+          "polarization": 0.8458203458549671,
+          "averageNeighbors": 85.14,
+          "schoolCount": 1,
+          "largestSchool": 500,
+          "largestFraction": 1,
+          "meanSpeed": 2.309590716708427
+        },
+        {
+          "step": 810,
+          "radiusOfGyration": 11.359233172815383,
+          "polarization": 0.8478973010370087,
+          "averageNeighbors": 87.84,
+          "schoolCount": 1,
+          "largestSchool": 500,
+          "largestFraction": 1,
+          "meanSpeed": 2.3243128395172032
+        },
+        {
+          "step": 840,
+          "radiusOfGyration": 11.747245280479978,
+          "polarization": 0.8485822152553146,
+          "averageNeighbors": 91.876,
+          "schoolCount": 1,
+          "largestSchool": 500,
+          "largestFraction": 1,
+          "meanSpeed": 2.3389722100510144
+        },
+        {
+          "step": 870,
+          "radiusOfGyration": 12.143506713015054,
+          "polarization": 0.848619437784602,
+          "averageNeighbors": 96.944,
+          "schoolCount": 1,
+          "largestSchool": 500,
+          "largestFraction": 1,
+          "meanSpeed": 2.3478478676428955
+        },
+        {
+          "step": 900,
+          "radiusOfGyration": 12.549467833046439,
+          "polarization": 0.8485215558276358,
+          "averageNeighbors": 102.832,
+          "schoolCount": 1,
+          "largestSchool": 500,
+          "largestFraction": 1,
+          "meanSpeed": 2.358324654536663
+        }
+      ],
+      "summary": {
+        "radiusOfGyration": 8.345134379698822,
+        "polarization": 0.7045122484714152,
+        "averageNeighbors": 137.39540000000002,
+        "schoolCount": 1,
+        "maxSchoolCount": 1,
+        "largestFraction": 1,
+        "meanLargestSchool": 500,
+        "meanSpeed": 2.4142400178706493
+      }
+    },
+    {
+      "seed": 1270981332,
+      "configuration": {
+        "id": "separation-only",
+        "label": "Separation only",
+        "separationWeight": 2.4,
+        "alignmentWeight": 0,
+        "cohesionWeight": 0
+      },
+      "samples": [
+        {
+          "step": 330,
+          "radiusOfGyration": 11.5100099906363,
+          "polarization": 0.4493249002110181,
+          "averageNeighbors": 34.608,
+          "schoolCount": 3,
+          "largestSchool": 443,
+          "largestFraction": 0.886,
+          "meanSpeed": 3.5593407658640226
+        },
+        {
+          "step": 360,
+          "radiusOfGyration": 11.722209815054532,
+          "polarization": 0.32193542885965354,
+          "averageNeighbors": 34.68,
+          "schoolCount": 3,
+          "largestSchool": 440,
+          "largestFraction": 0.88,
+          "meanSpeed": 3.5843406452097795
+        },
+        {
+          "step": 390,
+          "radiusOfGyration": 11.96567666241635,
+          "polarization": 0.1824583232911631,
+          "averageNeighbors": 34.508,
+          "schoolCount": 2,
+          "largestSchool": 457,
+          "largestFraction": 0.914,
+          "meanSpeed": 3.637926858945404
+        },
+        {
+          "step": 420,
+          "radiusOfGyration": 12.252802573910763,
+          "polarization": 0.06931293423605946,
+          "averageNeighbors": 33.76,
+          "schoolCount": 3,
+          "largestSchool": 462,
+          "largestFraction": 0.924,
+          "meanSpeed": 3.67800342670448
+        },
+        {
+          "step": 450,
+          "radiusOfGyration": 12.599281063878315,
+          "polarization": 0.05350528007877398,
+          "averageNeighbors": 31.884,
+          "schoolCount": 1,
+          "largestSchool": 470,
+          "largestFraction": 0.94,
+          "meanSpeed": 3.7353744260444524
+        },
+        {
+          "step": 480,
+          "radiusOfGyration": 12.993567797156269,
+          "polarization": 0.16279528515878006,
+          "averageNeighbors": 30.292,
+          "schoolCount": 3,
+          "largestSchool": 456,
+          "largestFraction": 0.912,
+          "meanSpeed": 3.768023932274024
+        },
+        {
+          "step": 510,
+          "radiusOfGyration": 13.420122869616636,
+          "polarization": 0.25514863041645097,
+          "averageNeighbors": 28.312,
+          "schoolCount": 2,
+          "largestSchool": 476,
+          "largestFraction": 0.952,
+          "meanSpeed": 3.8345475342504316
+        },
+        {
+          "step": 540,
+          "radiusOfGyration": 13.883463066300822,
+          "polarization": 0.3155893628830556,
+          "averageNeighbors": 26.724,
+          "schoolCount": 4,
+          "largestSchool": 421,
+          "largestFraction": 0.842,
+          "meanSpeed": 3.864798721711025
+        },
+        {
+          "step": 570,
+          "radiusOfGyration": 14.377320956325933,
+          "polarization": 0.35665462048830554,
+          "averageNeighbors": 24.864,
+          "schoolCount": 4,
+          "largestSchool": 413,
+          "largestFraction": 0.826,
+          "meanSpeed": 3.890608646020523
+        },
+        {
+          "step": 600,
+          "radiusOfGyration": 14.883022173085074,
+          "polarization": 0.4170804703761759,
+          "averageNeighbors": 22.264,
+          "schoolCount": 7,
+          "largestSchool": 379,
+          "largestFraction": 0.758,
+          "meanSpeed": 3.9087120795794963
+        },
+        {
+          "step": 630,
+          "radiusOfGyration": 15.380134065753369,
+          "polarization": 0.4568499250586432,
+          "averageNeighbors": 20.204,
+          "schoolCount": 9,
+          "largestSchool": 348,
+          "largestFraction": 0.696,
+          "meanSpeed": 3.9283099520533926
+        },
+        {
+          "step": 660,
+          "radiusOfGyration": 15.83874214570506,
+          "polarization": 0.4642772387818585,
+          "averageNeighbors": 18.452,
+          "schoolCount": 6,
+          "largestSchool": 326,
+          "largestFraction": 0.652,
+          "meanSpeed": 3.8973692272493063
+        },
+        {
+          "step": 690,
+          "radiusOfGyration": 16.231371242639124,
+          "polarization": 0.47405521906998827,
+          "averageNeighbors": 16.76,
+          "schoolCount": 9,
+          "largestSchool": 270,
+          "largestFraction": 0.54,
+          "meanSpeed": 3.9171982880882474
+        },
+        {
+          "step": 720,
+          "radiusOfGyration": 16.537658198083403,
+          "polarization": 0.46702854105059677,
+          "averageNeighbors": 15.88,
+          "schoolCount": 17,
+          "largestSchool": 142,
+          "largestFraction": 0.284,
+          "meanSpeed": 3.8806805446483255
+        },
+        {
+          "step": 750,
+          "radiusOfGyration": 16.70733342170103,
+          "polarization": 0.4476428370927335,
+          "averageNeighbors": 15.26,
+          "schoolCount": 13,
+          "largestSchool": 183,
+          "largestFraction": 0.366,
+          "meanSpeed": 3.907640103633799
+        },
+        {
+          "step": 780,
+          "radiusOfGyration": 16.733209279706877,
+          "polarization": 0.4207411631702092,
+          "averageNeighbors": 14.88,
+          "schoolCount": 17,
+          "largestSchool": 90,
+          "largestFraction": 0.18,
+          "meanSpeed": 3.888976681193612
+        },
+        {
+          "step": 810,
+          "radiusOfGyration": 16.625764811496385,
+          "polarization": 0.38727312417785953,
+          "averageNeighbors": 14.9,
+          "schoolCount": 14,
+          "largestSchool": 106,
+          "largestFraction": 0.212,
+          "meanSpeed": 3.9393891199960116
+        },
+        {
+          "step": 840,
+          "radiusOfGyration": 16.446667650737666,
+          "polarization": 0.36503125302697004,
+          "averageNeighbors": 15.112,
+          "schoolCount": 20,
+          "largestSchool": 127,
+          "largestFraction": 0.254,
+          "meanSpeed": 4.004330370614177
+        },
+        {
+          "step": 870,
+          "radiusOfGyration": 16.2632311025399,
+          "polarization": 0.34442227293683697,
+          "averageNeighbors": 15.512,
+          "schoolCount": 16,
+          "largestSchool": 133,
+          "largestFraction": 0.266,
+          "meanSpeed": 3.9689873734535155
+        },
+        {
+          "step": 900,
+          "radiusOfGyration": 16.056550251381672,
+          "polarization": 0.2929358563629129,
+          "averageNeighbors": 15.968,
+          "schoolCount": 17,
+          "largestSchool": 125,
+          "largestFraction": 0.25,
+          "meanSpeed": 4.001563652562344
+        }
+      ],
+      "summary": {
+        "radiusOfGyration": 14.621406956906274,
+        "polarization": 0.3352031333364023,
+        "averageNeighbors": 23.2412,
+        "schoolCount": 8.5,
+        "maxSchoolCount": 20,
+        "largestFraction": 0.6266999999999998,
+        "meanLargestSchool": 313.35,
+        "meanSpeed": 3.8398061175048177
+      }
+    },
+    {
+      "seed": 1270981332,
+      "configuration": {
+        "id": "separation-alignment",
+        "label": "Separation + alignment",
+        "separationWeight": 2.4,
+        "alignmentWeight": 0.9,
+        "cohesionWeight": 0
+      },
+      "samples": [
+        {
+          "step": 330,
+          "radiusOfGyration": 8.845669148103001,
+          "polarization": 0.7567171727819265,
+          "averageNeighbors": 56.88,
+          "schoolCount": 1,
+          "largestSchool": 494,
+          "largestFraction": 0.988,
+          "meanSpeed": 2.8121729803905415
+        },
+        {
+          "step": 360,
+          "radiusOfGyration": 8.896678133068345,
+          "polarization": 0.6406954934719132,
+          "averageNeighbors": 59.604,
+          "schoolCount": 2,
+          "largestSchool": 488,
+          "largestFraction": 0.976,
+          "meanSpeed": 2.6100172707640805
+        },
+        {
+          "step": 390,
+          "radiusOfGyration": 8.981591083220234,
+          "polarization": 0.525231873486437,
+          "averageNeighbors": 62.984,
+          "schoolCount": 2,
+          "largestSchool": 486,
+          "largestFraction": 0.972,
+          "meanSpeed": 2.446135668858727
+        },
+        {
+          "step": 420,
+          "radiusOfGyration": 9.150590073920736,
+          "polarization": 0.42276587104821667,
+          "averageNeighbors": 64.932,
+          "schoolCount": 2,
+          "largestSchool": 487,
+          "largestFraction": 0.974,
+          "meanSpeed": 2.3110133818928364
+        },
+        {
+          "step": 450,
+          "radiusOfGyration": 9.426684410270305,
+          "polarization": 0.3142283218875749,
+          "averageNeighbors": 66.26,
+          "schoolCount": 1,
+          "largestSchool": 494,
+          "largestFraction": 0.988,
+          "meanSpeed": 2.238673589221827
+        },
+        {
+          "step": 480,
+          "radiusOfGyration": 9.819963001829493,
+          "polarization": 0.2193292956566839,
+          "averageNeighbors": 67.312,
+          "schoolCount": 1,
+          "largestSchool": 496,
+          "largestFraction": 0.992,
+          "meanSpeed": 2.2139437299026397
+        },
+        {
+          "step": 510,
+          "radiusOfGyration": 10.329772317617834,
+          "polarization": 0.13178195413885677,
+          "averageNeighbors": 67.684,
+          "schoolCount": 1,
+          "largestSchool": 496,
+          "largestFraction": 0.992,
+          "meanSpeed": 2.211806461086973
+        },
+        {
+          "step": 540,
+          "radiusOfGyration": 10.941365741113357,
+          "polarization": 0.08882079277622339,
+          "averageNeighbors": 67.632,
+          "schoolCount": 1,
+          "largestSchool": 499,
+          "largestFraction": 0.998,
+          "meanSpeed": 2.2069500377437175
+        },
+        {
+          "step": 570,
+          "radiusOfGyration": 11.618382844636608,
+          "polarization": 0.08692408104026286,
+          "averageNeighbors": 67.36,
+          "schoolCount": 1,
+          "largestSchool": 500,
+          "largestFraction": 1,
+          "meanSpeed": 2.2038412671936563
+        },
+        {
+          "step": 600,
+          "radiusOfGyration": 12.292308661561785,
+          "polarization": 0.11519455136729428,
+          "averageNeighbors": 67.84,
+          "schoolCount": 1,
+          "largestSchool": 500,
+          "largestFraction": 1,
+          "meanSpeed": 2.193675075798339
+        },
+        {
+          "step": 630,
+          "radiusOfGyration": 12.926491734684358,
+          "polarization": 0.1575875637688151,
+          "averageNeighbors": 69.528,
+          "schoolCount": 1,
+          "largestSchool": 500,
+          "largestFraction": 1,
+          "meanSpeed": 2.1570326320955013
+        },
+        {
+          "step": 660,
+          "radiusOfGyration": 13.495674901696253,
+          "polarization": 0.20316441091391152,
+          "averageNeighbors": 72.764,
+          "schoolCount": 1,
+          "largestSchool": 500,
+          "largestFraction": 1,
+          "meanSpeed": 2.140143711033313
+        },
+        {
+          "step": 690,
+          "radiusOfGyration": 14.027964591310381,
+          "polarization": 0.26097364913774546,
+          "averageNeighbors": 76.568,
+          "schoolCount": 1,
+          "largestSchool": 499,
+          "largestFraction": 0.998,
+          "meanSpeed": 2.1206584414718637
+        },
+        {
+          "step": 720,
+          "radiusOfGyration": 14.512113632914726,
+          "polarization": 0.33018563396465106,
+          "averageNeighbors": 80.684,
+          "schoolCount": 1,
+          "largestSchool": 498,
+          "largestFraction": 0.996,
+          "meanSpeed": 2.1335917190282934
+        },
+        {
+          "step": 750,
+          "radiusOfGyration": 14.94564134725381,
+          "polarization": 0.4235489577818821,
+          "averageNeighbors": 84.224,
+          "schoolCount": 1,
+          "largestSchool": 498,
+          "largestFraction": 0.996,
+          "meanSpeed": 2.124528342557732
+        },
+        {
+          "step": 780,
+          "radiusOfGyration": 15.322682167273621,
+          "polarization": 0.5038994117789414,
+          "averageNeighbors": 87.8,
+          "schoolCount": 1,
+          "largestSchool": 498,
+          "largestFraction": 0.996,
+          "meanSpeed": 2.1469942294725004
+        },
+        {
+          "step": 810,
+          "radiusOfGyration": 15.646607040270746,
+          "polarization": 0.5812346796804968,
+          "averageNeighbors": 90.124,
+          "schoolCount": 1,
+          "largestSchool": 498,
+          "largestFraction": 0.996,
+          "meanSpeed": 2.164765399985298
+        },
+        {
+          "step": 840,
+          "radiusOfGyration": 15.916507997681203,
+          "polarization": 0.6525312921519494,
+          "averageNeighbors": 90.744,
+          "schoolCount": 2,
+          "largestSchool": 255,
+          "largestFraction": 0.51,
+          "meanSpeed": 2.192926491441508
+        },
+        {
+          "step": 870,
+          "radiusOfGyration": 16.124913456159824,
+          "polarization": 0.7187941908167866,
+          "averageNeighbors": 90.112,
+          "schoolCount": 2,
+          "largestSchool": 255,
+          "largestFraction": 0.51,
+          "meanSpeed": 2.21800682193482
+        },
+        {
+          "step": 900,
+          "radiusOfGyration": 16.279657144098284,
+          "polarization": 0.766070336870079,
+          "averageNeighbors": 89.124,
+          "schoolCount": 2,
+          "largestSchool": 256,
+          "largestFraction": 0.512,
+          "meanSpeed": 2.2439661435135716
+        }
+      ],
+      "summary": {
+        "radiusOfGyration": 12.475062971434244,
+        "polarization": 0.39498397672603236,
+        "averageNeighbors": 74.00800000000001,
+        "schoolCount": 1.3,
+        "maxSchoolCount": 2,
+        "largestFraction": 0.9197000000000001,
+        "meanLargestSchool": 459.85,
+        "meanSpeed": 2.254542169769387
+      }
+    },
+    {
+      "seed": 1270981332,
+      "configuration": {
+        "id": "full-boids",
+        "label": "All three rules",
+        "separationWeight": 2.4,
+        "alignmentWeight": 0.9,
+        "cohesionWeight": 0.32
+      },
+      "samples": [
+        {
+          "step": 330,
+          "radiusOfGyration": 4.762314175033247,
+          "polarization": 0.9941299317628552,
+          "averageNeighbors": 228.608,
+          "schoolCount": 1,
+          "largestSchool": 500,
+          "largestFraction": 1,
+          "meanSpeed": 3.0921984570825534
+        },
+        {
+          "step": 360,
+          "radiusOfGyration": 4.7056806299336,
+          "polarization": 0.9640206960328459,
+          "averageNeighbors": 233.336,
+          "schoolCount": 1,
+          "largestSchool": 500,
+          "largestFraction": 1,
+          "meanSpeed": 2.9510794744390254
+        },
+        {
+          "step": 390,
+          "radiusOfGyration": 4.633081161107563,
+          "polarization": 0.8107741106473766,
+          "averageNeighbors": 241.308,
+          "schoolCount": 1,
+          "largestSchool": 500,
+          "largestFraction": 1,
+          "meanSpeed": 2.7258739757803427
+        },
+        {
+          "step": 420,
+          "radiusOfGyration": 4.631579319613146,
+          "polarization": 0.5296296574510311,
+          "averageNeighbors": 249.776,
+          "schoolCount": 1,
+          "largestSchool": 500,
+          "largestFraction": 1,
+          "meanSpeed": 2.4911670419939624
+        },
+        {
+          "step": 450,
+          "radiusOfGyration": 4.93097674515619,
+          "polarization": 0.2148010532960281,
+          "averageNeighbors": 236.636,
+          "schoolCount": 1,
+          "largestSchool": 500,
+          "largestFraction": 1,
+          "meanSpeed": 2.3387800435856003
+        },
+        {
+          "step": 480,
+          "radiusOfGyration": 5.521925292021608,
+          "polarization": 0.11313620011601101,
+          "averageNeighbors": 201.896,
+          "schoolCount": 1,
+          "largestSchool": 500,
+          "largestFraction": 1,
+          "meanSpeed": 2.308080776199085
+        },
+        {
+          "step": 510,
+          "radiusOfGyration": 6.234917418778076,
+          "polarization": 0.33884923766678793,
+          "averageNeighbors": 163.04,
+          "schoolCount": 1,
+          "largestSchool": 500,
+          "largestFraction": 1,
+          "meanSpeed": 2.3294481122639454
+        },
+        {
+          "step": 540,
+          "radiusOfGyration": 6.938327476964101,
+          "polarization": 0.5352279802267815,
+          "averageNeighbors": 131.608,
+          "schoolCount": 1,
+          "largestSchool": 500,
+          "largestFraction": 1,
+          "meanSpeed": 2.3278148537150556
+        },
+        {
+          "step": 570,
+          "radiusOfGyration": 7.567373028164346,
+          "polarization": 0.6609099431290366,
+          "averageNeighbors": 111.5,
+          "schoolCount": 1,
+          "largestSchool": 500,
+          "largestFraction": 1,
+          "meanSpeed": 2.3293087262062064
+        },
+        {
+          "step": 600,
+          "radiusOfGyration": 8.111401122223358,
+          "polarization": 0.7357405032536892,
+          "averageNeighbors": 99.88,
+          "schoolCount": 1,
+          "largestSchool": 500,
+          "largestFraction": 1,
+          "meanSpeed": 2.298309650903101
+        },
+        {
+          "step": 630,
+          "radiusOfGyration": 8.584316301026302,
+          "polarization": 0.7787423882236957,
+          "averageNeighbors": 93.124,
+          "schoolCount": 1,
+          "largestSchool": 500,
+          "largestFraction": 1,
+          "meanSpeed": 2.281319396788932
+        },
+        {
+          "step": 660,
+          "radiusOfGyration": 9.01575567604737,
+          "polarization": 0.8102383748091325,
+          "averageNeighbors": 88.936,
+          "schoolCount": 1,
+          "largestSchool": 500,
+          "largestFraction": 1,
+          "meanSpeed": 2.2630143012518706
+        },
+        {
+          "step": 690,
+          "radiusOfGyration": 9.416006994692166,
+          "polarization": 0.8293569837415441,
+          "averageNeighbors": 86.428,
+          "schoolCount": 1,
+          "largestSchool": 500,
+          "largestFraction": 1,
+          "meanSpeed": 2.2628733871461306
+        },
+        {
+          "step": 720,
+          "radiusOfGyration": 9.793893078266288,
+          "polarization": 0.8433572214870878,
+          "averageNeighbors": 85.812,
+          "schoolCount": 1,
+          "largestSchool": 499,
+          "largestFraction": 0.998,
+          "meanSpeed": 2.269208217363472
+        },
+        {
+          "step": 750,
+          "radiusOfGyration": 10.156418010588185,
+          "polarization": 0.8514241331684483,
+          "averageNeighbors": 86.312,
+          "schoolCount": 1,
+          "largestSchool": 499,
+          "largestFraction": 0.998,
+          "meanSpeed": 2.2830637738607438
+        },
+        {
+          "step": 780,
+          "radiusOfGyration": 10.508302535880617,
+          "polarization": 0.8544941737848798,
+          "averageNeighbors": 88.544,
+          "schoolCount": 1,
+          "largestSchool": 500,
+          "largestFraction": 1,
+          "meanSpeed": 2.2952042682645555
+        },
+        {
+          "step": 810,
+          "radiusOfGyration": 10.856383354273417,
+          "polarization": 0.8550495529456001,
+          "averageNeighbors": 92.096,
+          "schoolCount": 1,
+          "largestSchool": 500,
+          "largestFraction": 1,
+          "meanSpeed": 2.3126126005433205
+        },
+        {
+          "step": 840,
+          "radiusOfGyration": 11.205976549471258,
+          "polarization": 0.8526789232652351,
+          "averageNeighbors": 96.784,
+          "schoolCount": 1,
+          "largestSchool": 500,
+          "largestFraction": 1,
+          "meanSpeed": 2.3298345733909107
+        },
+        {
+          "step": 870,
+          "radiusOfGyration": 11.561649242987558,
+          "polarization": 0.8493873417888353,
+          "averageNeighbors": 103.368,
+          "schoolCount": 1,
+          "largestSchool": 500,
+          "largestFraction": 1,
+          "meanSpeed": 2.3479010083563603
+        },
+        {
+          "step": 900,
+          "radiusOfGyration": 11.928828254034867,
+          "polarization": 0.8459971656263543,
+          "averageNeighbors": 111.632,
+          "schoolCount": 1,
+          "largestSchool": 500,
+          "largestFraction": 1,
+          "meanSpeed": 2.365199731175327
+        }
+      ],
+      "summary": {
+        "radiusOfGyration": 8.053255318313163,
+        "polarization": 0.7133972786211629,
+        "averageNeighbors": 141.53119999999996,
+        "schoolCount": 1,
+        "maxSchoolCount": 1,
+        "largestFraction": 0.9997999999999999,
+        "meanLargestSchool": 499.9,
+        "meanSpeed": 2.410114618515525
+      }
+    },
+    {
+      "seed": 1270981333,
+      "configuration": {
+        "id": "separation-only",
+        "label": "Separation only",
+        "separationWeight": 2.4,
+        "alignmentWeight": 0,
+        "cohesionWeight": 0
+      },
+      "samples": [
+        {
+          "step": 330,
+          "radiusOfGyration": 11.645755727298903,
+          "polarization": 0.4599722898834789,
+          "averageNeighbors": 33.204,
+          "schoolCount": 3,
+          "largestSchool": 446,
+          "largestFraction": 0.892,
+          "meanSpeed": 3.5857470314197006
+        },
+        {
+          "step": 360,
+          "radiusOfGyration": 11.875485025676939,
+          "polarization": 0.3341779083700382,
+          "averageNeighbors": 33.5,
+          "schoolCount": 4,
+          "largestSchool": 438,
+          "largestFraction": 0.876,
+          "meanSpeed": 3.624420775552778
+        },
+        {
+          "step": 390,
+          "radiusOfGyration": 12.145508329637083,
+          "polarization": 0.20612179686602888,
+          "averageNeighbors": 33.364,
+          "schoolCount": 1,
+          "largestSchool": 467,
+          "largestFraction": 0.934,
+          "meanSpeed": 3.6542735865079163
+        },
+        {
+          "step": 420,
+          "radiusOfGyration": 12.456775654241053,
+          "polarization": 0.09555500915196372,
+          "averageNeighbors": 32.42,
+          "schoolCount": 2,
+          "largestSchool": 452,
+          "largestFraction": 0.904,
+          "meanSpeed": 3.6928231518452517
+        },
+        {
+          "step": 450,
+          "radiusOfGyration": 12.802503955767587,
+          "polarization": 0.0384034696330671,
+          "averageNeighbors": 31.404,
+          "schoolCount": 4,
+          "largestSchool": 451,
+          "largestFraction": 0.902,
+          "meanSpeed": 3.744480116379397
+        },
+        {
+          "step": 480,
+          "radiusOfGyration": 13.182417858859598,
+          "polarization": 0.12971195195283103,
+          "averageNeighbors": 29.56,
+          "schoolCount": 4,
+          "largestSchool": 451,
+          "largestFraction": 0.902,
+          "meanSpeed": 3.804243625984457
+        },
+        {
+          "step": 510,
+          "radiusOfGyration": 13.596126453373286,
+          "polarization": 0.23227629428962204,
+          "averageNeighbors": 27.808,
+          "schoolCount": 3,
+          "largestSchool": 444,
+          "largestFraction": 0.888,
+          "meanSpeed": 3.822557438251162
+        },
+        {
+          "step": 540,
+          "radiusOfGyration": 14.014169521008563,
+          "polarization": 0.30257820164550814,
+          "averageNeighbors": 26.16,
+          "schoolCount": 3,
+          "largestSchool": 431,
+          "largestFraction": 0.862,
+          "meanSpeed": 3.8669722414854304
+        },
+        {
+          "step": 570,
+          "radiusOfGyration": 14.442601752237884,
+          "polarization": 0.3703194504626929,
+          "averageNeighbors": 24.6,
+          "schoolCount": 5,
+          "largestSchool": 385,
+          "largestFraction": 0.77,
+          "meanSpeed": 3.9098755686262123
+        },
+        {
+          "step": 600,
+          "radiusOfGyration": 14.89970944287381,
+          "polarization": 0.42174165032508654,
+          "averageNeighbors": 23.196,
+          "schoolCount": 7,
+          "largestSchool": 359,
+          "largestFraction": 0.718,
+          "meanSpeed": 3.9406472730594007
+        },
+        {
+          "step": 630,
+          "radiusOfGyration": 15.384020203414451,
+          "polarization": 0.4639701718969619,
+          "averageNeighbors": 21.508,
+          "schoolCount": 5,
+          "largestSchool": 376,
+          "largestFraction": 0.752,
+          "meanSpeed": 3.944262034491642
+        },
+        {
+          "step": 660,
+          "radiusOfGyration": 15.847509622112177,
+          "polarization": 0.49302546512087847,
+          "averageNeighbors": 19.708,
+          "schoolCount": 11,
+          "largestSchool": 314,
+          "largestFraction": 0.628,
+          "meanSpeed": 3.942207562569658
+        },
+        {
+          "step": 690,
+          "radiusOfGyration": 16.22380446553759,
+          "polarization": 0.497597191151103,
+          "averageNeighbors": 18.172,
+          "schoolCount": 10,
+          "largestSchool": 278,
+          "largestFraction": 0.556,
+          "meanSpeed": 3.8786594675833834
+        },
+        {
+          "step": 720,
+          "radiusOfGyration": 16.45979207332675,
+          "polarization": 0.4748443600817257,
+          "averageNeighbors": 16.8,
+          "schoolCount": 11,
+          "largestSchool": 280,
+          "largestFraction": 0.56,
+          "meanSpeed": 3.966067664312149
+        },
+        {
+          "step": 750,
+          "radiusOfGyration": 16.620620129119818,
+          "polarization": 0.48191103758591775,
+          "averageNeighbors": 15.952,
+          "schoolCount": 12,
+          "largestSchool": 282,
+          "largestFraction": 0.564,
+          "meanSpeed": 3.9659546289810463
+        },
+        {
+          "step": 780,
+          "radiusOfGyration": 16.7103017925726,
+          "polarization": 0.4674604221232533,
+          "averageNeighbors": 15.6,
+          "schoolCount": 15,
+          "largestSchool": 127,
+          "largestFraction": 0.254,
+          "meanSpeed": 3.9404328988167436
+        },
+        {
+          "step": 810,
+          "radiusOfGyration": 16.695749401517933,
+          "polarization": 0.4212960596288637,
+          "averageNeighbors": 15.368,
+          "schoolCount": 14,
+          "largestSchool": 118,
+          "largestFraction": 0.236,
+          "meanSpeed": 3.957595198546605
+        },
+        {
+          "step": 840,
+          "radiusOfGyration": 16.595349445353737,
+          "polarization": 0.3803004774890133,
+          "averageNeighbors": 15.316,
+          "schoolCount": 13,
+          "largestSchool": 96,
+          "largestFraction": 0.192,
+          "meanSpeed": 3.959403247835628
+        },
+        {
+          "step": 870,
+          "radiusOfGyration": 16.42592484499933,
+          "polarization": 0.3296660655644905,
+          "averageNeighbors": 15.348,
+          "schoolCount": 19,
+          "largestSchool": 77,
+          "largestFraction": 0.154,
+          "meanSpeed": 3.966605521939578
+        },
+        {
+          "step": 900,
+          "radiusOfGyration": 16.203198576879668,
+          "polarization": 0.2727260498311864,
+          "averageNeighbors": 15.144,
+          "schoolCount": 20,
+          "largestSchool": 82,
+          "largestFraction": 0.164,
+          "meanSpeed": 3.9973354986730296
+        }
+      ],
+      "summary": {
+        "radiusOfGyration": 14.711366213790438,
+        "polarization": 0.34368276615268556,
+        "averageNeighbors": 23.2066,
+        "schoolCount": 8.3,
+        "maxSchoolCount": 20,
+        "largestFraction": 0.6354,
+        "meanLargestSchool": 317.7,
+        "meanSpeed": 3.858228226643058
+      }
+    },
+    {
+      "seed": 1270981333,
+      "configuration": {
+        "id": "separation-alignment",
+        "label": "Separation + alignment",
+        "separationWeight": 2.4,
+        "alignmentWeight": 0.9,
+        "cohesionWeight": 0
+      },
+      "samples": [
+        {
+          "step": 330,
+          "radiusOfGyration": 8.963289867622244,
+          "polarization": 0.7588550493998578,
+          "averageNeighbors": 53.728,
+          "schoolCount": 1,
+          "largestSchool": 495,
+          "largestFraction": 0.99,
+          "meanSpeed": 2.7789538660945565
+        },
+        {
+          "step": 360,
+          "radiusOfGyration": 9.029916679352755,
+          "polarization": 0.6450808017920193,
+          "averageNeighbors": 55.932,
+          "schoolCount": 1,
+          "largestSchool": 495,
+          "largestFraction": 0.99,
+          "meanSpeed": 2.584662412930203
+        },
+        {
+          "step": 390,
+          "radiusOfGyration": 9.127860426719923,
+          "polarization": 0.5351121746921526,
+          "averageNeighbors": 58.556,
+          "schoolCount": 1,
+          "largestSchool": 495,
+          "largestFraction": 0.99,
+          "meanSpeed": 2.414661567420169
+        },
+        {
+          "step": 420,
+          "radiusOfGyration": 9.297716668298003,
+          "polarization": 0.44135572279475305,
+          "averageNeighbors": 61.06,
+          "schoolCount": 1,
+          "largestSchool": 495,
+          "largestFraction": 0.99,
+          "meanSpeed": 2.2944281815175165
+        },
+        {
+          "step": 450,
+          "radiusOfGyration": 9.565409778951349,
+          "polarization": 0.33357565675953954,
+          "averageNeighbors": 62.876,
+          "schoolCount": 1,
+          "largestSchool": 495,
+          "largestFraction": 0.99,
+          "meanSpeed": 2.230273197301541
+        },
+        {
+          "step": 480,
+          "radiusOfGyration": 9.946247825914135,
+          "polarization": 0.2607721743529987,
+          "averageNeighbors": 64.088,
+          "schoolCount": 1,
+          "largestSchool": 498,
+          "largestFraction": 0.996,
+          "meanSpeed": 2.194728888084069
+        },
+        {
+          "step": 510,
+          "radiusOfGyration": 10.44346835673156,
+          "polarization": 0.19115198016462123,
+          "averageNeighbors": 64.44,
+          "schoolCount": 1,
+          "largestSchool": 498,
+          "largestFraction": 0.996,
+          "meanSpeed": 2.192505782378458
+        },
+        {
+          "step": 540,
+          "radiusOfGyration": 11.034901793935182,
+          "polarization": 0.13522910437214394,
+          "averageNeighbors": 64.812,
+          "schoolCount": 1,
+          "largestSchool": 499,
+          "largestFraction": 0.998,
+          "meanSpeed": 2.2220433610412833
+        },
+        {
+          "step": 570,
+          "radiusOfGyration": 11.695884580673326,
+          "polarization": 0.11440724743766038,
+          "averageNeighbors": 65.348,
+          "schoolCount": 1,
+          "largestSchool": 499,
+          "largestFraction": 0.998,
+          "meanSpeed": 2.2005104500026045
+        },
+        {
+          "step": 600,
+          "radiusOfGyration": 12.360442993579838,
+          "polarization": 0.1131104044682145,
+          "averageNeighbors": 65.912,
+          "schoolCount": 1,
+          "largestSchool": 499,
+          "largestFraction": 0.998,
+          "meanSpeed": 2.1806408484614814
+        },
+        {
+          "step": 630,
+          "radiusOfGyration": 12.962413563122997,
+          "polarization": 0.1307875799328302,
+          "averageNeighbors": 67.976,
+          "schoolCount": 1,
+          "largestSchool": 498,
+          "largestFraction": 0.996,
+          "meanSpeed": 2.1804163059146777
+        },
+        {
+          "step": 660,
+          "radiusOfGyration": 13.474852299227434,
+          "polarization": 0.18401087428937557,
+          "averageNeighbors": 72.396,
+          "schoolCount": 1,
+          "largestSchool": 498,
+          "largestFraction": 0.996,
+          "meanSpeed": 2.1733573279968925
+        },
+        {
+          "step": 690,
+          "radiusOfGyration": 13.909845772787202,
+          "polarization": 0.24618690298572218,
+          "averageNeighbors": 78.552,
+          "schoolCount": 1,
+          "largestSchool": 497,
+          "largestFraction": 0.994,
+          "meanSpeed": 2.1442303773960347
+        },
+        {
+          "step": 720,
+          "radiusOfGyration": 14.327190788418836,
+          "polarization": 0.31923855491382747,
+          "averageNeighbors": 84.16,
+          "schoolCount": 1,
+          "largestSchool": 498,
+          "largestFraction": 0.996,
+          "meanSpeed": 2.1218329803050375
+        },
+        {
+          "step": 750,
+          "radiusOfGyration": 14.725157550637086,
+          "polarization": 0.40656125772200746,
+          "averageNeighbors": 88.368,
+          "schoolCount": 1,
+          "largestSchool": 498,
+          "largestFraction": 0.996,
+          "meanSpeed": 2.114110604383553
+        },
+        {
+          "step": 780,
+          "radiusOfGyration": 15.089988844651213,
+          "polarization": 0.49194227985234656,
+          "averageNeighbors": 90.976,
+          "schoolCount": 2,
+          "largestSchool": 273,
+          "largestFraction": 0.546,
+          "meanSpeed": 2.1400934757640737
+        },
+        {
+          "step": 810,
+          "radiusOfGyration": 15.425228131065376,
+          "polarization": 0.5827817082792193,
+          "averageNeighbors": 91.936,
+          "schoolCount": 2,
+          "largestSchool": 273,
+          "largestFraction": 0.546,
+          "meanSpeed": 2.1645915236648055
+        },
+        {
+          "step": 840,
+          "radiusOfGyration": 15.718078970365944,
+          "polarization": 0.6629470715546322,
+          "averageNeighbors": 91.052,
+          "schoolCount": 2,
+          "largestSchool": 273,
+          "largestFraction": 0.546,
+          "meanSpeed": 2.2006041009690427
+        },
+        {
+          "step": 870,
+          "radiusOfGyration": 15.950077353859406,
+          "polarization": 0.7251095755071199,
+          "averageNeighbors": 89.032,
+          "schoolCount": 2,
+          "largestSchool": 272,
+          "largestFraction": 0.544,
+          "meanSpeed": 2.2232409378032387
+        },
+        {
+          "step": 900,
+          "radiusOfGyration": 16.121792821028272,
+          "polarization": 0.7641002525363962,
+          "averageNeighbors": 86.324,
+          "schoolCount": 2,
+          "largestSchool": 272,
+          "largestFraction": 0.544,
+          "meanSpeed": 2.2737223242402202
+        }
+      ],
+      "summary": {
+        "radiusOfGyration": 12.458488253347102,
+        "polarization": 0.4021158186903719,
+        "averageNeighbors": 72.87619999999998,
+        "schoolCount": 1.25,
+        "maxSchoolCount": 2,
+        "largestFraction": 0.882,
+        "meanLargestSchool": 441,
+        "meanSpeed": 2.251480425683473
+      }
+    },
+    {
+      "seed": 1270981333,
+      "configuration": {
+        "id": "full-boids",
+        "label": "All three rules",
+        "separationWeight": 2.4,
+        "alignmentWeight": 0.9,
+        "cohesionWeight": 0.32
+      },
+      "samples": [
+        {
+          "step": 330,
+          "radiusOfGyration": 4.766370477110003,
+          "polarization": 0.9942790343626485,
+          "averageNeighbors": 228.616,
+          "schoolCount": 1,
+          "largestSchool": 500,
+          "largestFraction": 1,
+          "meanSpeed": 3.064162076477297
+        },
+        {
+          "step": 360,
+          "radiusOfGyration": 4.7054007963631435,
+          "polarization": 0.9742864449338783,
+          "averageNeighbors": 233.008,
+          "schoolCount": 1,
+          "largestSchool": 500,
+          "largestFraction": 1,
+          "meanSpeed": 2.9387812902959247
+        },
+        {
+          "step": 390,
+          "radiusOfGyration": 4.631199834325535,
+          "polarization": 0.8301548209116274,
+          "averageNeighbors": 240.376,
+          "schoolCount": 1,
+          "largestSchool": 500,
+          "largestFraction": 1,
+          "meanSpeed": 2.7444027307175882
+        },
+        {
+          "step": 420,
+          "radiusOfGyration": 4.613243423255188,
+          "polarization": 0.5650937150513526,
+          "averageNeighbors": 248.876,
+          "schoolCount": 1,
+          "largestSchool": 500,
+          "largestFraction": 1,
+          "meanSpeed": 2.5078538195374827
+        },
+        {
+          "step": 450,
+          "radiusOfGyration": 4.885713786495786,
+          "polarization": 0.27253254194891113,
+          "averageNeighbors": 238.004,
+          "schoolCount": 1,
+          "largestSchool": 500,
+          "largestFraction": 1,
+          "meanSpeed": 2.3407465207360727
+        },
+        {
+          "step": 480,
+          "radiusOfGyration": 5.48077529278385,
+          "polarization": 0.0889735782713276,
+          "averageNeighbors": 204.376,
+          "schoolCount": 1,
+          "largestSchool": 500,
+          "largestFraction": 1,
+          "meanSpeed": 2.319072602877083
+        },
+        {
+          "step": 510,
+          "radiusOfGyration": 6.206167988094769,
+          "polarization": 0.2960304169341884,
+          "averageNeighbors": 165.304,
+          "schoolCount": 1,
+          "largestSchool": 500,
+          "largestFraction": 1,
+          "meanSpeed": 2.3320523577282084
+        },
+        {
+          "step": 540,
+          "radiusOfGyration": 6.923414538134392,
+          "polarization": 0.48473341138470466,
+          "averageNeighbors": 133.388,
+          "schoolCount": 1,
+          "largestSchool": 500,
+          "largestFraction": 1,
+          "meanSpeed": 2.3207208162840858
+        },
+        {
+          "step": 570,
+          "radiusOfGyration": 7.567881338162427,
+          "polarization": 0.6135157592397167,
+          "averageNeighbors": 111.592,
+          "schoolCount": 1,
+          "largestSchool": 500,
+          "largestFraction": 1,
+          "meanSpeed": 2.294432736030383
+        },
+        {
+          "step": 600,
+          "radiusOfGyration": 8.128388853513012,
+          "polarization": 0.7066178048599617,
+          "averageNeighbors": 97.992,
+          "schoolCount": 1,
+          "largestSchool": 500,
+          "largestFraction": 1,
+          "meanSpeed": 2.275876537960705
+        },
+        {
+          "step": 630,
+          "radiusOfGyration": 8.611925519378305,
+          "polarization": 0.7658926708088709,
+          "averageNeighbors": 90.128,
+          "schoolCount": 1,
+          "largestSchool": 500,
+          "largestFraction": 1,
+          "meanSpeed": 2.258121518933232
+        },
+        {
+          "step": 660,
+          "radiusOfGyration": 9.037212909441148,
+          "polarization": 0.8060044878887623,
+          "averageNeighbors": 84.94,
+          "schoolCount": 1,
+          "largestSchool": 500,
+          "largestFraction": 1,
+          "meanSpeed": 2.2457698408989066
+        },
+        {
+          "step": 690,
+          "radiusOfGyration": 9.418374854637541,
+          "polarization": 0.8330429731484947,
+          "averageNeighbors": 82.308,
+          "schoolCount": 1,
+          "largestSchool": 500,
+          "largestFraction": 1,
+          "meanSpeed": 2.2451046591838497
+        },
+        {
+          "step": 720,
+          "radiusOfGyration": 9.770461833120123,
+          "polarization": 0.8538288558616542,
+          "averageNeighbors": 80.968,
+          "schoolCount": 1,
+          "largestSchool": 500,
+          "largestFraction": 1,
+          "meanSpeed": 2.2576059707824774
+        },
+        {
+          "step": 750,
+          "radiusOfGyration": 10.103776920041682,
+          "polarization": 0.8663267361627532,
+          "averageNeighbors": 80.876,
+          "schoolCount": 1,
+          "largestSchool": 500,
+          "largestFraction": 1,
+          "meanSpeed": 2.273706375304507
+        },
+        {
+          "step": 780,
+          "radiusOfGyration": 10.424822128235041,
+          "polarization": 0.8742725196218422,
+          "averageNeighbors": 81.636,
+          "schoolCount": 1,
+          "largestSchool": 500,
+          "largestFraction": 1,
+          "meanSpeed": 2.292312606769704
+        },
+        {
+          "step": 810,
+          "radiusOfGyration": 10.737102786657426,
+          "polarization": 0.8786039786724316,
+          "averageNeighbors": 83.252,
+          "schoolCount": 1,
+          "largestSchool": 500,
+          "largestFraction": 1,
+          "meanSpeed": 2.3026698421213725
+        },
+        {
+          "step": 840,
+          "radiusOfGyration": 11.044693436326884,
+          "polarization": 0.8803702331692947,
+          "averageNeighbors": 85.932,
+          "schoolCount": 1,
+          "largestSchool": 500,
+          "largestFraction": 1,
+          "meanSpeed": 2.3150835218631043
+        },
+        {
+          "step": 870,
+          "radiusOfGyration": 11.350277434091511,
+          "polarization": 0.8798368243501489,
+          "averageNeighbors": 89.58,
+          "schoolCount": 1,
+          "largestSchool": 500,
+          "largestFraction": 1,
+          "meanSpeed": 2.3283279170314617
+        },
+        {
+          "step": 900,
+          "radiusOfGyration": 11.652202160074316,
+          "polarization": 0.8799080921162228,
+          "averageNeighbors": 94.968,
+          "schoolCount": 1,
+          "largestSchool": 500,
+          "largestFraction": 1,
+          "meanSpeed": 2.339765896094649
+        }
+      ],
+      "summary": {
+        "radiusOfGyration": 8.002970315512105,
+        "polarization": 0.7172152449849395,
+        "averageNeighbors": 137.80599999999998,
+        "schoolCount": 1,
+        "maxSchoolCount": 1,
+        "largestFraction": 1,
+        "meanLargestSchool": 500,
+        "meanSpeed": 2.3998284818814044
+      }
+    }
+  ]
+}

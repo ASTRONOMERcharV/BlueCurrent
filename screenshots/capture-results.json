@@ -1,0 +1,221 @@
+{
+  "capturedAt": "2026-11-08T10:09:40.992Z",
+  "browser": "158.0.8127.18",
+  "webglRenderer": "ANGLE (Google, Vulkan 1.3.0 (SwiftShader Device (Subzero) (0x0000C0DE)), SwiftShader driver)",
+  "note": "Captured from the running program. The sandbox renderer is software based; frame-rate values in these images do not represent hardware GPU performance.",
+  "desktopComplete": true,
+  "shots": [
+    {
+      "file": "final-01-deepwater-schooling.png",
+      "label": "Deep-water overview with natural schooling",
+      "diagnostics": {
+        "ready": true,
+        "fps": 1.8751171948246792,
+        "renderMs": 2.937430602257362,
+        "searchMode": "grid",
+        "predatorState": "standby",
+        "occupiedCells": 34,
+        "fishCount": 500,
+        "simulationTime": 12.666666666666876,
+        "totalSteps": 760,
+        "captures": 0,
+        "averageNeighbors": 84.052,
+        "canvasWidth": 1232,
+        "canvasHeight": 888
+      }
+    },
+    {
+      "file": "final-02-follow-school.png",
+      "label": "Follow-school camera and turning bank angles",
+      "diagnostics": {
+        "ready": true,
+        "fps": 1.8185124568103241,
+        "renderMs": 3.580581185551602,
+        "searchMode": "grid",
+        "predatorState": "standby",
+        "occupiedCells": 40,
+        "fishCount": 500,
+        "simulationTime": 15.30000000000034,
+        "totalSteps": 918,
+        "captures": 0,
+        "averageNeighbors": 107.388,
+        "canvasWidth": 1232,
+        "canvasHeight": 888
+      }
+    },
+    {
+      "file": "final-03-low-separation.png",
+      "label": "Live response after lowering separation weight to 0.35",
+      "diagnostics": {
+        "ready": true,
+        "fps": 3.6370249136206483,
+        "renderMs": 2.3709962872619608,
+        "searchMode": "grid",
+        "predatorState": "standby",
+        "occupiedCells": 19,
+        "fishCount": 500,
+        "simulationTime": 22.966666666666644,
+        "totalSteps": 1378,
+        "captures": 0,
+        "averageNeighbors": 227.728,
+        "canvasWidth": 1232,
+        "canvasHeight": 888
+      }
+    },
+    {
+      "file": "final-04-predator-encounter.png",
+      "label": "Predator encounter in the follow-predator camera",
+      "diagnostics": {
+        "ready": true,
+        "fps": 1.764602082230466,
+        "renderMs": 3.415495820022284,
+        "searchMode": "grid",
+        "predatorState": "search",
+        "occupiedCells": 39,
+        "fishCount": 499,
+        "simulationTime": 9.783333333333399,
+        "totalSteps": 587,
+        "captures": 1,
+        "averageNeighbors": 77.15831663326654,
+        "canvasWidth": 1232,
+        "canvasHeight": 888
+      }
+    },
+    {
+      "file": "final-04b-predator-close.png",
+      "label": "Closer predator view showing body, fins and tail motion",
+      "diagnostics": {
+        "ready": true,
+        "fps": 3.7509377344336285,
+        "renderMs": 2.494018178677925,
+        "searchMode": "grid",
+        "predatorState": "pursuit",
+        "occupiedCells": 32,
+        "fishCount": 499,
+        "simulationTime": 12.550000000000203,
+        "totalSteps": 753,
+        "captures": 1,
+        "averageNeighbors": 111.70340681362725,
+        "canvasWidth": 1232,
+        "canvasHeight": 888
+      }
+    },
+    {
+      "file": "final-05-post-capture.png",
+      "label": "Live state after the first capture; population has been reduced",
+      "diagnostics": {
+        "ready": true,
+        "fps": 2.400096003840145,
+        "renderMs": 2.6047090374179374,
+        "searchMode": "grid",
+        "predatorState": "pursuit",
+        "occupiedCells": 33,
+        "fishCount": 499,
+        "simulationTime": 15.216666666667003,
+        "totalSteps": 913,
+        "captures": 1,
+        "averageNeighbors": 99.17835671342685,
+        "canvasWidth": 1232,
+        "canvasHeight": 888
+      }
+    },
+    {
+      "file": "final-06-school-recovery.png",
+      "label": "School during the recovery window after the predator departs",
+      "diagnostics": {
+        "ready": true,
+        "fps": 1.7823193916349842,
+        "renderMs": 3.088092455550024,
+        "searchMode": "grid",
+        "predatorState": "standby",
+        "occupiedCells": 25,
+        "fishCount": 499,
+        "simulationTime": 32.91666666666608,
+        "totalSteps": 1975,
+        "captures": 1,
+        "averageNeighbors": 146.47294589178355,
+        "canvasWidth": 1232,
+        "canvasHeight": 888
+      }
+    },
+    {
+      "file": "final-07-occupied-grid.png",
+      "label": "Occupied Uniform Grid cells over the live school",
+      "diagnostics": {
+        "ready": true,
+        "fps": 2,
+        "renderMs": 10.126665244413426,
+        "searchMode": "grid",
+        "predatorState": "standby",
+        "occupiedCells": 20,
+        "fishCount": 500,
+        "simulationTime": 4.533333333333323,
+        "totalSteps": 272,
+        "captures": 0,
+        "averageNeighbors": 207.368,
+        "canvasWidth": 1232,
+        "canvasHeight": 888
+      }
+    },
+    {
+      "file": "final-08-fish-1500.png",
+      "label": "Real-time scene after changing the population to 1,500 fish",
+      "diagnostics": {
+        "ready": true,
+        "fps": 1.1322463768115794,
+        "renderMs": 5.253484840757064,
+        "searchMode": "grid",
+        "predatorState": "standby",
+        "occupiedCells": 56,
+        "fishCount": 1500,
+        "simulationTime": 5.199999999999987,
+        "totalSteps": 312,
+        "captures": 0,
+        "averageNeighbors": 171.76266666666666,
+        "canvasWidth": 1232,
+        "canvasHeight": 888
+      }
+    },
+    {
+      "file": "final-09-brute-force.png",
+      "label": "Brute-force search selected; occupied-cell telemetry shows N/A",
+      "diagnostics": {
+        "ready": true,
+        "fps": 1.2768130745658646,
+        "renderMs": 4.417771304300555,
+        "searchMode": "brute-force",
+        "predatorState": "standby",
+        "occupiedCells": null,
+        "fishCount": 1500,
+        "simulationTime": 7.349999999999979,
+        "totalSteps": 441,
+        "captures": 0,
+        "averageNeighbors": 343.7746666666667,
+        "canvasWidth": 1232,
+        "canvasHeight": 888
+      }
+    }
+  ],
+  "finalDiagnostics": {
+    "ready": true,
+    "fps": 1.2768130745658646,
+    "renderMs": 4.417771304300555,
+    "searchMode": "brute-force",
+    "predatorState": "standby",
+    "occupiedCells": null,
+    "fishCount": 1500,
+    "simulationTime": 7.349999999999979,
+    "totalSteps": 441,
+    "captures": 0,
+    "averageNeighbors": 343.7746666666667,
+    "canvasWidth": 1232,
+    "canvasHeight": 888
+  },
+  "browserErrors": [],
+  "mobile": {
+    "file": "final-10-mobile.png",
+    "source": "test-artifacts/blue-current-mobile.png produced by npm run smoke",
+    "viewport": "390x844",
+    "note": "Copied unchanged from the successful Playwright smoke run; panel starts closed on mobile."
+  }
+}

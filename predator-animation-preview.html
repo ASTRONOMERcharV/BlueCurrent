@@ -1,0 +1,99 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <meta name="theme-color" content="#061d25" />
+    <meta name="description" content="Blue Current — procedural shark swimming animation test scene." />
+    <title>Blue Current — Predator Swimming Test</title>
+    <link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 32 32'%3E%3Cpath fill='%23d9b38c' d='M2 16c4-7 9-9 14-9 4 0 7 2 9 5l5-3-2 7 2 7-5-3c-2 3-5 5-9 5-5 0-10-2-14-9Zm7-1a2 2 0 1 0 0 4 2 2 0 0 0 0-4Z'/%3E%3C/svg%3E" />
+    <style>
+      :root { color-scheme: dark; }
+      * { box-sizing: border-box; }
+      html, body { margin: 0; width: 100%; height: 100%; overflow: hidden; background: #04212a; }
+      body {
+        font-family: ui-monospace, "Cascadia Code", "SFMono-Regular", Menlo, monospace;
+        color: #d7f0ec;
+      }
+      #preview-viewport { position: fixed; inset: 0; }
+      #preview-viewport canvas { display: block; width: 100%; height: 100%; }
+      #hud {
+        position: fixed;
+        top: 18px;
+        left: 18px;
+        width: min(400px, calc(100vw - 36px));
+        padding: 16px 18px;
+        border: 1px solid rgba(135, 221, 211, 0.28);
+        background: rgba(4, 26, 34, 0.92);
+        border-radius: 10px;
+        box-shadow: 0 18px 40px rgba(0, 0, 0, 0.32);
+        z-index: 2;
+      }
+      #hud h1 { margin: 0 0 4px; font-size: 14px; letter-spacing: 0.03em; font-weight: 600; }
+      #hud .subtitle { margin: 0 0 12px; font-size: 11px; color: #80b4ae; line-height: 1.45; }
+      #hud .row { display: flex; flex-wrap: wrap; gap: 6px; margin-bottom: 10px; }
+      #hud button {
+        font: inherit;
+        color: #9fe0d6;
+        font-size: 11px;
+        background: transparent;
+        border: 1px solid rgba(135, 221, 211, 0.3);
+        padding: 4px 9px;
+        border-radius: 999px;
+        cursor: pointer;
+      }
+      #hud button[aria-pressed="true"] { background: rgba(120, 222, 210, 0.16); border-color: rgba(120, 222, 210, 0.6); }
+      #stats { display: grid; grid-template-columns: 1fr auto; gap: 3px 12px; margin: 0; font-size: 11px; line-height: 1.5; }
+      #stats dt { color: #7fb0ab; }
+      #stats dd { margin: 0; text-align: right; color: #d7f0ec; }
+      #stats dd.ok { color: #8fe3b0; }
+      #stats dd.bad { color: #ffb39a; }
+      #timeline { margin: 12px 0 0; height: 5px; border-radius: 999px; background: rgba(120, 222, 210, 0.14); overflow: hidden; }
+      #timeline-fill { height: 100%; width: 0%; background: #6fd8c8; transition: width 0.08s linear; }
+      #segment { margin: 6px 0 0; font-size: 10px; color: #8fc9c2; letter-spacing: 0.04em; }
+      .hint { margin: 10px 0 0; font-size: 10px; color: #6c9a96; line-height: 1.5; }
+      #preview-loading {
+        position: fixed;
+        inset: 0;
+        display: grid;
+        place-items: center;
+        background: #04212a;
+        color: #9fe0d6;
+        font-size: 13px;
+        letter-spacing: 0.04em;
+        z-index: 3;
+        transition: opacity 0.35s ease;
+      }
+      #preview-loading.hidden { opacity: 0; pointer-events: none; }
+      #preview-loading.error { color: #ffb39a; }
+    </style>
+  </head>
+  <body>
+    <div id="preview-viewport"></div>
+    <aside id="hud">
+      <h1>Predator — Procedural swimming</h1>
+      <p class="subtitle">
+        Isolated test: a scripted motion profile drives the real
+        <code>PredatorAnimationController</code> and the rigged shayu skeleton.
+      </p>
+      <div class="row" id="view-buttons">
+        <button type="button" data-view="side" aria-pressed="true">Side</button>
+        <button type="button" data-view="top" aria-pressed="false">Top</button>
+        <button type="button" data-view="front" aria-pressed="false">Front</button>
+        <button type="button" data-view="quarter" aria-pressed="false">Quarter</button>
+        <button type="button" id="toggle-skeleton" aria-pressed="false">Skeleton</button>
+        <button type="button" id="toggle-play" aria-pressed="true">Pause</button>
+        <button type="button" id="restart">Restart</button>
+      </div>
+      <dl id="stats"><dt>status</dt><dd>loading</dd></dl>
+      <div id="timeline"><div id="timeline-fill"></div></div>
+      <p id="segment">—</p>
+      <p class="hint">
+        Sequence: cruise → left 90° → right 90° → ascend → descend → burst → recover.
+        Fixed-frame capture: <code>?t=12.5&view=top</code>. Use <code>?bones=1</code> for the skeleton overlay.
+      </p>
+    </aside>
+    <div id="preview-loading">Loading rigged predator…</div>
+    <script type="module" src="/src/preview/predator-animation-preview.ts"></script>
+  </body>
+</html>

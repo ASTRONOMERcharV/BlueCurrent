@@ -1,0 +1,4 @@
+configuration,seeds,mean_radius_of_gyration,mean_polarization,mean_average_neighbors,mean_school_count,mean_max_school_count,mean_largest_fraction,mean_speed
+separation-only,3,14.693502,0.336343,23.327,8.217,19.333,0.636467,3.845893
+separation-alignment,3,12.453767,0.396508,73.816,1.233,2.000,0.914767,2.247340
+full-boids,3,8.133787,0.711708,138.911,1.000,1.000,0.999933,2.408061

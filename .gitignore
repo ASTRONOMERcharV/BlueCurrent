@@ -1,0 +1,38 @@
+# Node dependencies
+node_modules/
+
+# Build outputs
+dist/
+dist-*/
+.vite/
+*.tsbuildinfo
+
+# Test and capture artifacts
+test-artifacts/
+test-results/
+playwright-report/
+*.log
+
+# Local agent files and project memory (not part of the deliverable)
+CLAUDE.md
+AGENTS.md
+.mcp.json
+.claude/
+.tmp/
+.task-locks/
+docs/MEMORY_ARCHIVE.md
+docs/BLENDER_AGENT_PROMPTS.md
+docs/BLENDER_MCP_SETUP.md
+docs/claude_desktop_config.snippet.json
+docs/mcp-for-blender.example.json
+scripts/setup/merge-claude-desktop-config.mjs
+
+# Heavy source assets and generated previews (not needed to build or run)
+assets_src/
+docs/asset-previews/
+
+# Local editor/OS files
+.DS_Store
+Thumbs.db
+.idea/
+.vscode/

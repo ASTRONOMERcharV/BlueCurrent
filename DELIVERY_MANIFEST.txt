@@ -1,0 +1,101 @@
+NOTE (2026-11-08, evening): This manifest predates the Blender asset work. The runtime now optionally serves public/models/fish_school.glb, public/models/predator_reef_shark.glb and reef_rock_a.glb; dist/, docs/, src/, scripts/, assets_src/ and test-artifacts/ changed. Regenerate this manifest before final submission.
+
+Blue Current 0.1.0 — final delivery manifest
+Generated: 2026-11-08T10:22:34Z
+Runtime assets: procedural; no external model or texture files.
+Excluded from submission ZIP: node_modules/, .vite/, .mcp.json, docs/BLENDER_*, docs/mcp-for-blender.example.json.
+The excluded Blender planning files remain in the working directory but were not used by this version.
+The manifest excludes itself from the hash list.
+
+SHA256                                                            SIZE(bytes)  PATH
+1ee7d35ef27fac2de96ecac4025eb1fa8abb9b4714b60309688710edaec11b7a            66  ./.gitignore
+24dee532b47ec25fa1b6429d940c09126401172bc0e6229480c3050c286ee93f         11559  ./README.md
+dfef2ac80ee2774c0666bc98cc1743071db3699de6874c351ca8211bb351ef2c           945  ./benchmark/latest-results.csv
+1742dc7f9aa7a60e1f8b24108ad1ed48646db9fe69af36e84a6d31aae33b57b0         13807  ./benchmark/latest-results.json
+66b156eef4dd1f69d160adbe91eb9facbcb6c0c999a23d037ec95dec43bb498e          3281  ./benchmarks/README.md
+2f47da1c8673bfa95095e8122780ba51cfc515b1648a7b06b5934ab945ef092a         14702  ./benchmarks/ablation-results.csv
+ba1cd548da2f4e28892542ad18da22b7b509796c21d71370ea764d96352edb86         64446  ./benchmarks/ablation-results.json
+4f0e66ace318eff8f4dd361b526c16247b48575f5c36cb6d0d1478dbb87407ed           381  ./benchmarks/ablation-summary.csv
+dfef2ac80ee2774c0666bc98cc1743071db3699de6874c351ca8211bb351ef2c           945  ./benchmarks/performance-grid-vs-brute.csv
+1742dc7f9aa7a60e1f8b24108ad1ed48646db9fe69af36e84a6d31aae33b57b0         13807  ./benchmarks/performance-grid-vs-brute.json
+aafc94a68cead66ea10207af6ae564ede18b538c3b4b4fc2ec6c651345c7b4a2         23632  ./benchmarks/pilot/predator-results-seed-1270981331.csv
+8cd06f17ddfde22ba629947cd74ecd8a82db4345cf2f3b3b956a98b943f00c82        127594  ./benchmarks/pilot/predator-results-seed-1270981331.json
+c1791e3dbca2bd11c591f8605cdccdc80a865a849c72555cbe01485130337c70         67336  ./benchmarks/predator-results-seed-1270981331.csv
+c5a2a753ebced27b00121726704d49689e9fc9e3757d367d0446da57849fa065        359074  ./benchmarks/predator-results-seed-1270981331.json
+3f192c26d9502cbb9b9931a09944aac85d9cb2aa20f9fd44ba3b6b324c709e9f         67318  ./benchmarks/predator-results-seed-1270981332.csv
+65fc39d1065f64c5e1b096e6a721a85d629ca298d32a80f45358890bfb73b4da        359750  ./benchmarks/predator-results-seed-1270981332.json
+568da832ba6f718539bd95dede100a01d397a0ae93e642388170fa2fb9ef7a11         67306  ./benchmarks/predator-results-seed-1270981333.csv
+a248d030d227fbc2d68a4903285e07f08a638d05531282f7406483893477f87f        356883  ./benchmarks/predator-results-seed-1270981333.json
+b10a9bc27e63d4617a70abdcce293d2366c91434010e85a6df15d6aa405b9729        201560  ./benchmarks/predator-results.csv
+72bae6e7971b136b1bba64438dd1664b9bd031d46fd98873d19be74da5c86671       1075029  ./benchmarks/predator-results.json
+74dc9af1cc7e2b511e0f6bf49f9a09ef0da3de4b9341a5c13005e9885059338e         51135  ./dist/assets/index-DFOeCos6.js
+4e46829ac4c7f5dc663f51f7a7414b9a5a1e2a8f4244e78e955491b98c19e10f         12130  ./dist/assets/index-DuWBvmOF.css
+deeb90335fd6e98a297dc79276c385a6e3e0e690d479b71ff94c2ca258d33608         22893  ./dist/assets/three-addons-B03d9GV5.js
+427a230bfd3c309af7fa868e6de37ef5326cddbffd9dd4bf9eb3cef65d5cc5a3        490681  ./dist/assets/three-core-Bnj_2lpT.js
+1ba0d4bbc41b189e1639ecb88f6d5b17af11adcc37623efcc29753a35d2e2785           976  ./dist/index.html
+46015f0b4da69a2b69cb4c14bc18fbd58eeca8295c77f956ac0d22d5963fc2c8         10653  ./docs/BENCHMARK_RESULTS.md
+0a28d20f881aa406ef2c1f39ea1bac6e66ccfd1b5df82b0d9b42b1b266ed5ce4          5926  ./docs/DEMO_VIDEO_SCRIPT.md
+d14caabb1f7be50b531f6cd7c3823164c4a34916e8f1db300f65e2f44db01550         19314  ./docs/FINAL_REPORT.md
+5f816b69ffbc577d01b49f827ea3852f712aff061688346139ff8a2deb3961a4          8139  ./docs/VALIDATION_REPORT.md
+669becd67581872b54014bc2aa2551af64cef2ba7b23a3486f6d4bb10a705147           713  ./index.html
+e92cf2595d8266f2c20990a61365cfff76072c4f2efdf04d459d1bb78899477a         57471  ./package-lock.json
+62fa20cdd2faebafeffd370f0974c6728edbdc52664e1aa6f4daea26f8179b79          1045  ./package.json
+8bbbd71b56d83e8b2612ed60f65b433cbe083ed292803edd238e78a846fc20ba          6841  ./screenshots/capture-results.json
+30b23fe5f61914f3c3f440e3edc2cb31f47696cb1fa8a90098ce0280661381d6         66898  ./screenshots/fig-ablation.png
+4b106cebf45c1e7d1b9158f9176f909d4013731ea1516fef689c177bd1ec0803         10193  ./screenshots/fig-ablation.svg
+a91081aca30dd839781e15c33b8cbe1dea27662e49e12a8447af921c8e84f735        100174  ./screenshots/fig-performance.png
+1766bfec8495ce9376a29452cc6829cb8fd44fb2373c31dfe9a9faffbe198d4e          7971  ./screenshots/fig-performance.svg
+6c0ae29bda1a678e6eb659b18112ee1c3f29d883e5d44ba16973e3ea817f3c27         66948  ./screenshots/fig-predator.png
+f945734259238b1bea62f16b00ec2bb22890278258976ec57fb7c61e07e8a6ab         12291  ./screenshots/fig-predator.svg
+b15998140d1f39e15108a55c8660924d9e87bf84dad1899c785fb62ae97d726c        413742  ./screenshots/final-01-deepwater-schooling.png
+17e90a3732915a178a41cad4241152ece3e99f9f68051371b2777ead788804ef        370879  ./screenshots/final-02-follow-school.png
+99e8d8761b8755f1084dd371699e4f8629e378254c5174950c6442ce9199f7ac        248970  ./screenshots/final-03-low-separation.png
+b357ecdcd30b2e82e077c7131cc0a0caa03ef4f0da23237ac1b54697f8cb93b1        298873  ./screenshots/final-04-predator-encounter.png
+96bfa92e4564a8993ed19b5462767bb2fd2c5593ac3ace2f9723cb9f2433c638        441133  ./screenshots/final-04b-predator-close.png
+d17d50f114405e20ff56c3e3c9d3392ddbcfa174ba467ca32658faf8a494e56c        389410  ./screenshots/final-05-post-capture.png
+e5d1b6fb4dca55b974dedb040029e5885f9ed723f2e053253e2a0b8aebbafaf0        275068  ./screenshots/final-06-school-recovery.png
+8057e764247659f31e578c2bbd9e6257de78c88509cf17db087cac45b3a403c9        294097  ./screenshots/final-07-occupied-grid.png
+d28bdf513235548985a36414492f31fb683474b496ac57334b4208c70a30c94b        491934  ./screenshots/final-08-fish-1500.png
+831bc25d8b86fcb603a6ddae6b467c05e5e31e68e4c88eeb04be2140d9b2c962        467635  ./screenshots/final-09-brute-force.png
+8d2fe9f75f53b223ee10b9599cb89eecbfc201558123f0e9e351f94c1cd4bc53        139187  ./screenshots/final-10-mobile.png
+5690db1d3415d8980190acbb0746d10b735647bba97df6a3bbb6e9a32bf926b2          8430  ./scripts/ablation.ts
+b1111294ce24c5d553b4d0b519c64e2270db94541049dc20687d0611319e8a30          6172  ./scripts/benchmark.ts
+f7b2046b6c31bb47de7b29b3b418efea534b0677df97d32fd275987757608bbb          6343  ./scripts/browser-smoke.ts
+1c64659a71e36e902c6647e791c4b1c1483484f500a6ad409fe02f7892fceaec          8435  ./scripts/capture-demo.ts
+7617b67da9897f0aa76425b79c5c715f86c4515f7ee0db0475139d25b3005bce         14680  ./scripts/generate-figures.ts
+ac7a9e02adf631c06e128bf48f7ca0bc06cf4d68a600a487a5a95ab52b872d64         17230  ./scripts/predator-experiment.ts
+d2d3178f4dace3e2349b7f36bc7f0173b60d1ca966726ce9562f65121d31d624          6100  ./src/main.ts
+0e8bcb06cdd977f2e6374020b785246b973fef26d41350e79f9150fe624a8585          1527  ./src/rendering/CameraController.ts
+cc3a41244c66b9f90e7e193d5e1498921c56a6d609a4994f7f41e4c345546b56          8585  ./src/rendering/Environment.ts
+85e7719454c5c0e2ee989364b7e0f9a0bd722e59c35dd38c0951a86de05a4fe6          4033  ./src/rendering/FishRenderer.ts
+21c127a98bb5f24c09cfc2d4effe65d99660882b982c44a3b6711cf0faacaed8          1658  ./src/rendering/GridVisualizer.ts
+f286876420260dd52087598dc7cb907c4983fa30ad6684900f69ce214c290da5          2799  ./src/rendering/PredatorRenderer.ts
+576f326b1f287530dca4133625deda8360a0cc5b03c69f54fb9b772334c709d7          2867  ./src/rendering/SceneManager.ts
+af9e65876861ff33474f2e4fc0100502500e2fe523564d7c9df487b67ca33b31          8749  ./src/simulation/BoidSystem.ts
+0847194db3a0534304204c468cd85b197f9150a93235c5169e63bfd8cc40dd02          1469  ./src/simulation/EnvironmentForces.ts
+9b7b88dcb4251829fcd8a31914660e7ec0dbaf8a4bcb9df998346e76a3250ecb          1264  ./src/simulation/FixedStepScheduler.ts
+8a6388e2c63c3555fd897dcb37679a9095688aba1f0592f96fc0bf03e264bafb          3265  ./src/simulation/FlockData.ts
+b9248c6f8fa04e96e8836a4810603f3d013328a47c94a5f0908ebf1b789fd599          4395  ./src/simulation/ObstacleSystem.ts
+659f9b8ca1080cce14f59c737336a8474d414723b96c16de289f91251318c1a4         10285  ./src/simulation/PredatorSystem.ts
+781cfb4cc22adf479fe505a34fdc8e9224f4f4f4d61e946ab93f72f8911d8340          2377  ./src/simulation/SimulationConfig.ts
+f21a598ff6b4f22aeda32e5605db9946c3e1947d6f62a0ef678d222a868f4d5e          7289  ./src/simulation/SimulationWorld.ts
+40ca54008d9443c06632677669bda507d5b1e877d4ffd02a0ac7c2cf1a27b0b3          1257  ./src/simulation/math.ts
+cd15de582e7bc835eeec68b904eeb18b78bb91e9b556a83dde2966bcf1cf6614          1307  ./src/spatial/BruteForceSearch.ts
+6c0deea6d8d9009e33f3911aca36d0670a1412f7907de478d0498e091bdd2993           357  ./src/spatial/NeighborSearch.ts
+d19c94c0fcefb78606988cb06a58aaeab559e53b468d3b39a69133539f35b62a          5344  ./src/spatial/UniformGrid3D.ts
+5edded633835aa6849ad0f739895d9d2b67a0b8c53a1567237185e2ff5cf9994         13883  ./src/style.css
+146c1f45a60f07c0200f70a251248e4923345429ec9d05dd2539428442591d6e          6896  ./src/ui/ControlPanel.ts
+1c626623ddd54d2d81f6708ecb16fd10b8f89c46e94753e99f454b6bca5cb3af          1954  ./src/ui/PerformanceGraph.ts
+0a6a28b305fa9606ebfbf4848060339f9180dd4e373c8220ce6542e2c0544b09          3856  ./src/ui/StatisticsPanel.ts
+c7f8e39ddd3c1a3cc713860fd7c0e6e505e8258bb6abbb4f1fc6775059c0c996          8616  ./src/ui/layout.ts
+2dff35226e32c0d06758415947ee141c309654a80855a8edf0f086f947fc0920        364303  ./test-artifacts/blue-current-desktop.png
+8d2fe9f75f53b223ee10b9599cb89eecbfc201558123f0e9e351f94c1cd4bc53        139187  ./test-artifacts/blue-current-mobile.png
+b1badf83cd36497b882c6f3385d13b7aa1fcfdb9ef3bd2fdc62d2341d74e9f64        369098  ./test-artifacts/round-1/blue-current-desktop.png
+b56a9286254f5fd54c01bfdb7c94e9c6f8ac209a01dd67eaeffd85c25d9148ae        144661  ./test-artifacts/round-1/blue-current-mobile.png
+c8dd9f01225bebf359e42eba391afd32f142b5bbe370a1523ba77e478486bfbf          1536  ./test-artifacts/round-1/smoke-results.json
+baad132408ba45d606d2dfaa2aa8d1b047a62d135e1596fdf7d5e3067cc4f1a2          1534  ./test-artifacts/smoke-results.json
+5e19dd086165cba6a0e72f060dd502c92fc5d09fd1fa3fe43dea8c84b135b6e9          1697  ./tests/ObstacleSystem.test.ts
+239fd0d6e7f8c26c551a70336acb88999b3e905bf8af6c347dccd64ae717c360          4970  ./tests/SimulationWorld.test.ts
+f80ee901725ffbd311c1cef651ada1f721d30e069f82fd25d45948a06b87cb52          2970  ./tests/UniformGrid3D.test.ts
+c85ceb8eabc990004fc81951b42508542e71fc2c5f5c703703a59e282cfaceb2           543  ./tsconfig.json
+1f9a9d998209c9929065cb7c1a8dbefb13534fb4828819414be91386a9d2c9c3           330  ./vite.config.ts
