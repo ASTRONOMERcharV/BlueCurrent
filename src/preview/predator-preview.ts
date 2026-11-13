@@ -108,7 +108,7 @@ function setNav(): void {
     <a href="?mode=${mode}&predator=shayu&fish=${fish}" ${requestedVariant === 'shayu' ? 'aria-current="true"' : ''}>Shayu</a>
     <a href="?mode=${mode}&predator=v2&fish=${fish}" ${requestedVariant === 'v2' ? 'aria-current="true"' : ''}>V2</a>
     <a href="?mode=${mode}&predator=phase2&fish=${fish}" ${requestedPhase2 ? 'aria-current="true"' : ''}>Phase 2</a>
-    <a href="/coral-preview.html">Coral</a>
+    <a href="/preview/coral-preview.html">Coral</a>
   `;
 }
 

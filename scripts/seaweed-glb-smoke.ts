@@ -67,7 +67,7 @@ try {
     if (message.type() === 'error') errors.push(`console: ${message.text()}`);
   });
 
-  await page.goto('http://127.0.0.1:5180/seaweed-preview.html', { waitUntil: 'networkidle' });
+  await page.goto('http://127.0.0.1:5180/preview/seaweed-preview.html', { waitUntil: 'networkidle' });
   console.log('stage: seaweed preview loaded');
   await page.waitForFunction(
     () => (window as unknown as { __seaweedPreview?: SeaweedPreviewApi }).__seaweedPreview?.ready === true,

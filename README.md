@@ -19,10 +19,10 @@ Blue Current 是一个独立的 TypeScript + Three.js 实时生态观测系统�
 - Blender School Fish GLB（1,448 三角形、PBR 贴图、`_TAILWEIGHT` 顶点权重、双材质实例化）默认启用；`?fish=procedural` 回退程序化几何。加载或契约校验失败时自动回退。
 - Blender Clownfish School GLB（2,399 三角形、1024² 双 JPEG 贴图、`_TAILWEIGHT`、单材质实例化）默认启用，100 条独立礁区鱼群，0.50–0.60 m，围绕第一礁石上方的海葵区活动；`?clownfish=0` 关闭，`?clownfish=N` 调整数量（0–400）。主鱼群世界长度同步调整为 0.90–1.10 m，两种鱼比例约 1.9:1。
 - Blender Predator（用户 shayu 模型）**rigged SkinnedMesh**（9,826 三角形、3 材质、11 骨骼、1024² PBR 贴图、口腔 + 牙齿；`PredatorAnimationController` 程序化驱动身体行波、尾鳍摆动、转弯弯曲、平滑俯仰、胸鳍迎角、攻击包络与转弯侧倾）；默认启用，`?predator=shayu` 回到静态 GLB，`?predator=v2` 切换 v2 大白鲨，`?predator=procedural` 回退程序化捕食者。
-- 六种 Blender 珊瑚基地模（枝状、桌面、管状海绵、扇状、脑珊瑚、海葵；1.9k–2.9k 三角形，共享 1024² 图集）。默认使用最丰富层：五礁石 + 远景 + 前缘的 48 实例 / 6 个 `InstancedMesh` / 121,728 三角形，分物种 3.6–4.2× 放大到约 1.2–5.0 m 高；`?coral=temperate` 回到 12 实例温带层，`?coral=0` 关闭。独立预览仍为 `coral-preview.html`。
+- 六种 Blender 珊瑚基地模（枝状、桌面、管状海绵、扇状、脑珊瑚、海葵；1.9k–2.9k 三角形，共享 1024² 图集）。默认使用最丰富层：五礁石 + 远景 + 前缘的 48 实例 / 6 个 `InstancedMesh` / 121,728 三角形，分物种 3.6–4.2× 放大到约 1.2–5.0 m 高；`?coral=temperate` 回到 12 实例温带层，`?coral=0` 关闭。独立预览仍为 `preview/coral-preview.html`。
 - 13 个 Blender 岩石/沙丘资产（3 大礁石、4 中岩石、4 碎石、2 沙丘；7,869 三角形，2048² 法线/AO 共享图集），默认在主场景替换 5 块主礁石并按固定种子散布 54 个装饰实例；`?glbRocks=0` 关闭，`?environment=bare` 使用轻量环境，失败回退。
-- 两株 Blender 海藻基地模（`kelp_a` 密集卷曲丛 184 三角形 / `kelp_b` 宽叶扇 168 三角形；`_SWAYWEIGHT` + `_BLADEPHASE` 顶点摆动，每株/每叶独立相位），默认在主场景左右林带散布 91 株（48 + 43）；`?kelp=0` 关闭，独立预览 `kelp-preview.html`。同一份 91 株布局同时驱动渲染与 `KelpRefugeField` 物理庇护场：竖直圆柱遮蔽、海藻后恐惧衰减、覆盖拖速、受威胁时寻找遮蔽和真实 `shelteredCount` 指标。
-- 用户提供的细节海菜丛（13,792 三角形、1.2 m、3 × 2048² PBR 贴图、302 个独立叶片组件；岩石/海星底座静止，叶片按组件相位摆动）默认在主场景放置 6 株英雄实例；`?seaweed=0` 关闭，独立预览 `seaweed-preview.html`。
+- 两株 Blender 海藻基地模（`kelp_a` 密集卷曲丛 184 三角形 / `kelp_b` 宽叶扇 168 三角形；`_SWAYWEIGHT` + `_BLADEPHASE` 顶点摆动，每株/每叶独立相位），默认在主场景左右林带散布 91 株（48 + 43）；`?kelp=0` 关闭，独立预览 `preview/kelp-preview.html`。同一份 91 株布局同时驱动渲染与 `KelpRefugeField` 物理庇护场：竖直圆柱遮蔽、海藻后恐惧衰减、覆盖拖速、受威胁时寻找遮蔽和真实 `shelteredCount` 指标。
+- 用户提供的细节海菜丛（13,792 三角形、1.2 m、3 × 2048² PBR 贴图、302 个独立叶片组件；岩石/海星底座静止，叶片按组件相位摆动）默认在主场景放置 6 株英雄实例；`?seaweed=0` 关闭，独立预览 `preview/seaweed-preview.html`。
 - 前、中、远三层海底构图、水下颗粒、动态焦散、水面光束、深度雾效，以及 Overview / School Follow / Predator Focus / Free 四种平滑相机。
 - 科研观测仪桌面布局、可折叠四区控制台、Observation / Laboratory 双模式、真实邻居/行为力/目标调试图层和移动端底部抽屉。
 - 三个固定种子演示场景：Calm Ecosystem、Predator Encounter、Obstacle Navigation；统一种子重置与确定预热，不新增行为算法。
@@ -128,19 +128,22 @@ GLB 礁石：默认主场景加载完整 13 资产岩石/沙丘集。`?glbRocks=
 | `/?coral=0` | 关闭珊瑚层。 |
 | `/?seaweed=0` | 关闭 6 株细节海菜；默认 `/` 启用。 |
 | `/?environment=bare` | 关闭完整岩石/珊瑚/海藻环境，只保留基础场景。 |
-| `/fish-preview.html?mode=hero` | Fish 独立资产转台：材质、贴图、包围盒、尾部属性、GLB 大小。 |
-| `/fish-preview.html?mode=school&count=500` | 真实 Boids + `FishRenderer` 实例化路径。 |
-| `/fish-preview.html?mode=school&close=1` | Fish 近景检查鳞片、眼睛、鳍和尾摆。 |
-| `/predator-preview.html?mode=hero` | 静态 shayu 独立转台：三角形、3 材质、长度、尾权重、三张贴图；自动演示 C 形弯曲、倾斜与加速/减速；导航可切换 V2 / Phase 2。 |
-| `/predator-animation-preview.html` | rigged shayu 程序化游泳测试：巡航/左转/右转/上升/下潜/冲刺/恢复，Side/Top/Front/Quarter 视图、骨骼开关、固定时间 `?t=12.5&view=top&hud=0`。 |
-| `/predator-preview.html?mode=close` | Predator 头部/嘴部/鳃裂/胸鳍近景。 |
-| `/predator-preview.html?mode=chase` | 真实捕食者 FSM 追逐 400 条鱼，验证尾摆、转弯倾斜与集成路径。 |
-| `/predator-preview.html?mode=hero&poseTime=2.856&view=top` | 固定强转弯姿态的俯视检查，用于对照脊柱弯曲和尾部延迟。 |
-| `/coral-preview.html` | 六种珊瑚基地模的实例化预览：40 株、共享 1024² 图集、随机缩放/旋转/成簇。 |
-| `/kelp-preview.html` | 两株海藻的实例化预览：15 株、每株/每叶独立摆动相位、共享单材质。 |
-| `/seaweed-preview.html` | 细节海菜预览：5 株、302 个叶片组件相位、3 张 2048² PBR 贴图。 |
-| `/rocks-preview.html` | 13 个岩石/沙丘资产阵容 + 三角形列表；验证共享 2048² 图集与材质。 |
-| `/rocks-preview.html?focus=reef_large_a` | 单一岩石近景（可替换为任一资产名）。 |
+| `/preview/index.html` | 所有独立资产、礁石和动画预览的总览入口。 |
+| `/preview/fish-preview.html?mode=hero` | Fish 独立资产转台：材质、贴图、包围盒、尾部属性、GLB 大小。 |
+| `/preview/fish-preview.html?mode=school&count=500` | 真实 Boids + `FishRenderer` 实例化路径。 |
+| `/preview/fish-preview.html?mode=school&close=1` | Fish 近景检查鳞片、眼睛、鳍和尾摆。 |
+| `/preview/predator-preview.html?mode=hero` | 静态 shayu 独立转台：三角形、3 材质、长度、尾权重、三张贴图；自动演示 C 形弯曲、倾斜与加速/减速；导航可切换 V2 / Phase 2。 |
+| `/preview/predator-animation-preview.html` | rigged shayu 程序化游泳测试：巡航/左转/右转/上升/下潜/冲刺/恢复，Side/Top/Front/Quarter 视图、骨骼开关、固定时间 `?t=12.5&view=top&hud=0`。 |
+| `/preview/predator-preview.html?mode=close` | Predator 头部/嘴部/鳃裂/胸鳍近景。 |
+| `/preview/predator-preview.html?mode=chase` | 真实捕食者 FSM 追逐 400 条鱼，验证尾摆、转弯倾斜与集成路径。 |
+| `/preview/predator-preview.html?mode=hero&poseTime=2.856&view=top` | 固定强转弯姿态的俯视检查，用于对照脊柱弯曲和尾部延迟。 |
+| `/preview/coral-preview.html` | 六种珊瑚基地模的实例化预览：40 株、共享 1024² 图集、随机缩放/旋转/成簇。 |
+| `/preview/kelp-preview.html` | 两株海藻的实例化预览：15 株、每株/每叶独立摆动相位、共享单材质。 |
+| `/preview/seaweed-preview.html` | 细节海菜预览：5 株、302 个叶片组件相位、3 张 2048² PBR 贴图。 |
+| `/preview/rocks-preview.html` | 13 个岩石/沙丘资产阵容 + 三角形列表；验证共享 2048² 图集与材质。 |
+| `/preview/rocks-preview.html?focus=reef_large_a` | 单一岩石近景（可替换为任一资产名）。 |
+| `/preview/reef-sample-preview.html` | Hero 礁石组合的独立工作室预览（near/mid/far LOD、表生物）。 |
+| `/preview/reef-variants-preview.html` | Hero、Spire、Platform、Twin、Terraces 五种礁石变体对照。 |
 
 资产管线命令（细节见 [docs/ASSET_PIPELINE.md](docs/ASSET_PIPELINE.md)）：
 
@@ -367,6 +370,7 @@ src/
 ├── ui/               # 控件绑定、真实统计、帧率图、语义布局
 ├── main.ts           # 应用组合与 requestAnimationFrame
 └── style.css         # 响应式观测仪界面
+preview/              # 独立资产、礁石和动画预览；总览入口 preview/index.html
 docs/                 # 正式报告、验证记录、实验分析、视频录制脚本
 scripts/              # 基准、消融、捕食者实验、图表和浏览器验收/截图
 tests/                # 31 项算法与资产集成自动化测试

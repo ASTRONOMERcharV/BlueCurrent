@@ -1,0 +1,116 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <meta name="theme-color" content="#031a22" />
+    <meta name="description" content="Blue Current — isolated asset, reef and animation preview scenes." />
+    <title>Blue Current — Preview Gallery</title>
+    <link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 32 32'%3E%3Cpath fill='%2378ded2' d='M3 17c8-12 16-12 25 0-9 12-17 12-25 0Zm4 0c6 6 12 6 18 0-6-6-12-6-18 0Z'/%3E%3C/svg%3E" />
+    <link rel="stylesheet" href="./index.css" />
+  </head>
+  <body>
+    <div class="shell">
+      <header class="masthead">
+        <div>
+          <p class="eyebrow">Blue Current / preview gallery</p>
+          <h1>Isolated scenes</h1>
+          <p class="lede">
+            Asset and rig checks live outside the production entry. Each page loads one slice of
+            the real rendering path without the full observatory UI.
+          </p>
+        </div>
+        <a class="home-link" href="/">Open main scene</a>
+      </header>
+
+      <main>
+        <section class="group" aria-labelledby="creatures-title">
+          <h2 id="creatures-title">Creatures &amp; animation</h2>
+          <div class="grid">
+            <a class="card" href="./fish-preview.html">
+              <div>
+                <h3>School fish</h3>
+                <p>Hero turntable, live Boids school, and close-up tail/material inspection.</p>
+              </div>
+              <span class="go">Hero / School / Close</span>
+            </a>
+            <a class="card" href="./predator-preview.html">
+              <div>
+                <h3>Predator</h3>
+                <p>Static rig turntable, head close-up, and the real predator FSM in chase mode.</p>
+              </div>
+              <span class="go">Hero / Close / Chase</span>
+            </a>
+            <a class="card" href="./predator-animation-preview.html">
+              <div>
+                <h3>Swimming rig</h3>
+                <p>Scripted cruise, turns, ascent, descent and burst, with skeleton controls.</p>
+              </div>
+              <span class="go">Side / Top / Front / Quarter</span>
+            </a>
+          </div>
+        </section>
+
+        <section class="group" aria-labelledby="habitat-title">
+          <h2 id="habitat-title">Habitat assets</h2>
+          <div class="grid">
+            <a class="card" href="./coral-preview.html">
+              <div>
+                <h3>Coral set</h3>
+                <p>Six instanced base colonies sharing one atlas and one material family.</p>
+              </div>
+              <span class="go">Instanced preview</span>
+            </a>
+            <a class="card" href="./kelp-preview.html">
+              <div>
+                <h3>Kelp set</h3>
+                <p>Two low-poly plants with per-instance and per-blade vertex sway.</p>
+              </div>
+              <span class="go">Instanced preview</span>
+            </a>
+            <a class="card" href="./seaweed-preview.html">
+              <div>
+                <h3>Detail seaweed</h3>
+                <p>High-detail clump with three PBR maps and per-leaf animation phases.</p>
+              </div>
+              <span class="go">Instanced preview</span>
+            </a>
+            <a class="card" href="./rocks-preview.html">
+              <div>
+                <h3>Rock &amp; seabed set</h3>
+                <p>Thirteen GLBs arranged as a gallery; append <code>?focus=</code> for a close-up.</p>
+              </div>
+              <span class="go">Gallery / Focus</span>
+            </a>
+          </div>
+        </section>
+
+        <section class="group" aria-labelledby="reef-title">
+          <h2 id="reef-title">Reef studies</h2>
+          <div class="grid">
+            <a class="card" href="./reef-sample-preview.html">
+              <div>
+                <h3>Hero reef sample</h3>
+                <p>One composed reef with near/mid/far LOD and epibiont clusters, without game water.</p>
+              </div>
+              <span class="go">Studio turntable</span>
+            </a>
+            <a class="card" href="./reef-variants-preview.html">
+              <div>
+                <h3>Reef variants</h3>
+                <p>Hero, Spire, Platform, Twin and Terraces compared side by side.</p>
+              </div>
+              <span class="go">Studio gallery</span>
+            </a>
+          </div>
+        </section>
+      </main>
+
+      <aside class="note">
+        Preview pages are development tools, not the product entry. The main observatory is at
+        <code>/</code>; use <code>?environment=bare</code> when isolating a single layer is more
+        useful than the full rich scene.
+      </aside>
+    </div>
+  </body>
+</html>

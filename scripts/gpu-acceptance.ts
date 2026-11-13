@@ -398,7 +398,7 @@ try {
           if (message.type() === 'error') browserErrors.push(`hero: console: ${message.text()}`);
         });
         try {
-          await hero.goto(`http://127.0.0.1:${port}/predator-preview.html?mode=hero&predator=blender`, { waitUntil: 'networkidle' });
+          await hero.goto(`http://127.0.0.1:${port}/preview/predator-preview.html?mode=hero&predator=blender`, { waitUntil: 'networkidle' });
           await hero.waitForFunction(
             () => (window as unknown as { __predatorPreview?: { ready?: boolean } }).__predatorPreview?.ready === true,
             { timeout: 180000 },

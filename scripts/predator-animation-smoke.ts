@@ -115,7 +115,7 @@ async function snapshot(page: Page): Promise<Record<string, [number, number, num
 async function openPreview(bones: boolean): Promise<Page> {
   const page = await openPage(1000, 640);
   await page.goto(
-    `${baseUrl}predator-animation-preview.html?t=2.5&view=side${bones ? '&bones=1' : ''}`,
+    `${baseUrl}preview/predator-animation-preview.html?t=2.5&view=side${bones ? '&bones=1' : ''}`,
     { waitUntil: 'networkidle' },
   );
   await page.waitForFunction(

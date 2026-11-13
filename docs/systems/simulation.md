@@ -12,7 +12,7 @@
 | `FixedStepScheduler.ts` | 1/60 s、最多 8 补步、丢弃超额、插值 alpha。 |
 | `SimulationWorld.ts` | reset、固定步顺序、配置同步、30-step metrics。 |
 | `BoidSystem.ts` | 分离/对齐/聚合、密度感知、恐惧、逃逸、庇护、避障、边界、转向与积分。 |
-| `PredatorSystem.ts` | Patrol/Pursuit/Attack/Search、粘性目标、预测追踪和真实捕获。 |
+| `PredatorSystem.ts` | Patrol/Pursuit/Attack/Search、粘性目标、pursuit direct retarget、预测追踪和真实捕获。 |
 | `EnvironmentForces.ts` | 世界边界的软力与切向引导。 |
 | `SimulationConfig.ts` | 主鱼和小丑鱼独立参数；主鱼默认 500、小丑鱼 100。 |
 | `Scenarios.ts` | 内部 ID 为 `calm` / `encounter` / `obstacles`，负责固定种子、基线和预热；UI 将 obstacles 显示为 Navigation。 |
@@ -33,7 +33,7 @@
 
 ## 捕食者边界
 
-检测半径受 aggression 影响，目标定期重选并保持；追踪含有限预测，Attack 有持续时间，Search 使用前方搜索点以避免自身位置作为目标。捕获只从主鱼群移除，UI 捕获数来自真实事件。
+检测半径受 aggression 影响。目标在 `patrol/search` 获取；`pursuit` 中每 0.35 s 检查一次，若另一条存活鱼距离小于当前目标距离 × `predatorRetargetAdvantage`（默认 0.85）且当前目标在 attack radius 外，可直接替换 `targetIndex` 并重置 `stateTime`；`attack` 阶段不换目标。追踪含有限预测，Attack 有持续时间，Search 使用前方搜索点以避免自身位置作为目标。捕获只从主鱼群移除，UI 捕获数来自真实事件。
 
 海带和礁石会影响目标视线，但近距离仍可能捕获。相机和动画可以读取 `targetIndex`、目标和速度，不得强制目标、捕获或 FSM 状态来制造演示。
 

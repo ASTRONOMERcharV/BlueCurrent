@@ -1,0 +1,23 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Blue Current — Reef variants</title>
+    <link rel="stylesheet" href="./studio.css" />
+  </head>
+  <body class="preview-reef-variants">
+    <div id="app"></div>
+    <div id="hud">
+      <h1>Reef variants</h1>
+      <div class="muted">Hero + Spire + Platform + Twin + Terraces · near/mid/far LOD</div>
+      <ul id="stats"></ul>
+    </div>
+    <div id="legend">
+      Studio gallery: no water absorption, caustics or fish. Order left to right is hero, spire,
+      platform, twin, terraces. The in-game set is behind <code>?reef=set</code>.
+    </div>
+    <div id="loading">Loading reef variants…</div>
+    <script type="module" src="/src/preview/reef-variants-preview.ts"></script>
+  </body>
+</html>

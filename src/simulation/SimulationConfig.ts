@@ -58,6 +58,8 @@ export interface SimulationConfig {
   predatorLoseRadius: number;
   predatorAttackRadius: number;
   predatorCaptureRadius: number;
+  /** A live target is replaced only when another fish is at least this fraction of the current distance. */
+  predatorRetargetAdvantage: number;
   predatorCruiseSpeed: number;
   predatorPursuitSpeed: number;
   predatorMaxAcceleration: number;
@@ -130,6 +132,7 @@ export const DEFAULT_CONFIG: SimulationConfig = {
   predatorLoseRadius: 20,
   predatorAttackRadius: 1.65,
   predatorCaptureRadius: 0.95,
+  predatorRetargetAdvantage: 0.85,
   predatorCruiseSpeed: 3.2,
   predatorPursuitSpeed: 7.4,
   predatorMaxAcceleration: 9,

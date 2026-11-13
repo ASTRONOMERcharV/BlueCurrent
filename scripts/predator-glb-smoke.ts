@@ -107,7 +107,7 @@ try {
   preview.on('console', (message) => {
     if (message.type() === 'error') errors.push(`console: ${message.text()}`);
   });
-  await preview.goto('http://127.0.0.1:5177/predator-preview.html?mode=hero', { waitUntil: 'networkidle' });
+  await preview.goto('http://127.0.0.1:5177/preview/predator-preview.html?mode=hero', { waitUntil: 'networkidle' });
   console.log('stage: hero preview loaded');
   await preview.waitForFunction(
     () => (window as unknown as { __predatorPreview?: PredatorPreviewApi }).__predatorPreview?.ready === true,
@@ -136,7 +136,7 @@ try {
   chase.on('console', (message) => {
     if (message.type() === 'error') errors.push(`console: ${message.text()}`);
   });
-  await chase.goto('http://127.0.0.1:5177/predator-preview.html?mode=chase', { waitUntil: 'networkidle' });
+  await chase.goto('http://127.0.0.1:5177/preview/predator-preview.html?mode=chase', { waitUntil: 'networkidle' });
   console.log('stage: chase preview loaded');
   await chase.waitForFunction(
     () => (window as unknown as { __predatorPreview?: PredatorPreviewApi }).__predatorPreview?.ready === true,

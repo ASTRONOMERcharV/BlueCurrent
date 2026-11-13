@@ -47,7 +47,7 @@ try {
     if (message.type() === 'error') errors.push(`console: ${message.text()}`);
   });
 
-  const base = `http://127.0.0.1:${port}/predator-preview.html?predator=phase2&mode=hero`;
+  const base = `http://127.0.0.1:${port}/preview/predator-preview.html?predator=phase2&mode=hero`;
   await page.goto(`${base}&jaw=closed`, { waitUntil: 'networkidle' });
   await page.waitForFunction(
     () => (window as unknown as { __predatorPreview?: Phase2Api }).__predatorPreview?.ready === true,
@@ -73,7 +73,7 @@ try {
   await page.waitForTimeout(900);
   await page.screenshot({ path: `${artifacts}/predator-phase2-open.png`, timeout: 60000 });
 
-  const closeBase = `http://127.0.0.1:${port}/predator-preview.html?predator=phase2&mode=close`;
+  const closeBase = `http://127.0.0.1:${port}/preview/predator-preview.html?predator=phase2&mode=close`;
   await page.goto(`${closeBase}&jaw=closed`, { waitUntil: 'networkidle' });
   await page.waitForFunction(
     () => (window as unknown as { __predatorPreview?: Phase2Api }).__predatorPreview?.ready === true,

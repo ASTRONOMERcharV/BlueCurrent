@@ -29,7 +29,7 @@ Three.js/WebGL 是已实施的选型；原始“为何不选 WebGPU、Unity 等�
 
 ## 入口与目录
 
-生产入口为 `index.html → src/main.ts`。`src/simulation/` 拥有模拟，`src/spatial/` 提供邻居搜索，`src/environment/` 提供海流与庇护场，`src/rendering/` 负责 Three.js 和相机，`src/ui/` 负责观测台。`public/` 是运行时资产，`assets_src/` 是资产源与自动化，`scripts/` 是实验和验收，`tests/` 是 Vitest，`test-artifacts/` 是带版本风险的原始证据。
+生产入口为 `index.html → src/main.ts`。`src/simulation/` 拥有模拟，`src/spatial/` 提供邻居搜索，`src/environment/` 提供海流与庇护场，`src/rendering/` 负责 Three.js 和相机，`src/ui/` 负责观测台，`preview/` 存放独立资产、礁石和动画预览页及其总览。`public/` 是运行时资产，`assets_src/` 是资产源与自动化，`scripts/` 是实验和验收，`tests/` 是 Vitest，`test-artifacts/` 是带版本风险的原始证据。
 
 完整目录导航不需要每次读取；处理具体模块时按 `AGENTS.md` 的路由打开文件即可。
 

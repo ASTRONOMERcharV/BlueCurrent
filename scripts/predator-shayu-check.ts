@@ -80,7 +80,7 @@ try {
     console.log('stage: preview');
     const page = await browser.newPage({ viewport: { width: 1000, height: 640 }, deviceScaleFactor: 1 });
     watch(page);
-    await page.goto(`http://127.0.0.1:${port}/predator-preview.html?mode=hero&predator=shayu`, {
+    await page.goto(`http://127.0.0.1:${port}/preview/predator-preview.html?mode=hero&predator=shayu`, {
       waitUntil: 'networkidle',
     });
     await page.waitForFunction(
@@ -106,7 +106,7 @@ try {
     await page.screenshot({ path: `${artifacts}/predator-shayu-hero.png`, timeout: 60000 });
     console.log('stage: hero done');
 
-    await page.goto(`http://127.0.0.1:${port}/predator-preview.html?mode=close&predator=shayu`, {
+    await page.goto(`http://127.0.0.1:${port}/preview/predator-preview.html?mode=close&predator=shayu`, {
       waitUntil: 'networkidle',
     });
     await page.waitForFunction(
@@ -123,7 +123,7 @@ try {
     console.log('stage: chase');
     const chase = await browser.newPage({ viewport: { width: 720, height: 480 }, deviceScaleFactor: 1 });
     watch(chase);
-    await chase.goto(`http://127.0.0.1:${port}/predator-preview.html?mode=chase&predator=shayu`, {
+    await chase.goto(`http://127.0.0.1:${port}/preview/predator-preview.html?mode=chase&predator=shayu`, {
       waitUntil: 'networkidle',
     });
     await chase.waitForFunction(

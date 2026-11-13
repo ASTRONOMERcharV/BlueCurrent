@@ -1,0 +1,36 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <meta name="theme-color" content="#061d25" />
+    <meta name="description" content="Blue Current — six Blender coral base assets, instanced and varied at runtime." />
+    <title>Blue Current — Coral Asset Preview</title>
+    <link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 32 32'%3E%3Cpath fill='%23d9b38c' d='M16 2v8M16 8c-5 0-9 4-9 9v9m9-9c5 0 9-4 9-9V5m-9 12v11' stroke='%23d9b38c' stroke-width='3' fill='none'/%3E%3C/svg%3E" />
+    <link rel="stylesheet" href="./shared.css" />
+  </head>
+  <body class="preview-shell preview-coral">
+    <div id="preview-viewport"></div>
+    <aside id="hud">
+      <h1>Coral set — Blender assets</h1>
+      <p class="subtitle">
+        Six base colonies, instanced with randomised scale, yaw and tilt. One
+        1024² atlas serves all six materials.
+      </p>
+      <nav>
+        <a href="/">Main scene</a>
+        <a href="/preview/index.html">All previews</a>
+        <a href="/preview/fish-preview.html">Fish</a>
+        <a href="/preview/predator-preview.html">Predator</a>
+        <a href="/preview/coral-preview.html" aria-current="true">Coral</a>
+      </nav>
+      <dl id="stats"><dt>status</dt><dd>loading</dd></dl>
+      <p class="hint">
+        Drag to orbit · scroll to zoom. Assets: branching, table, tube sponge,
+        sea fan, brain coral, anemone.
+      </p>
+    </aside>
+    <div id="preview-loading">Loading coral assets…</div>
+    <script type="module" src="/src/preview/coral-preview.ts"></script>
+  </body>
+</html>

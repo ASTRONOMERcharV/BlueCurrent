@@ -90,7 +90,7 @@ try {
   preview.on('console', (message) => {
     if (message.type() === 'error') errors.push(`console: ${message.text()}`);
   });
-  await preview.goto('http://127.0.0.1:5176/fish-preview.html?mode=hero', { waitUntil: 'networkidle' });
+  await preview.goto('http://127.0.0.1:5176/preview/fish-preview.html?mode=hero', { waitUntil: 'networkidle' });
   await preview.waitForFunction(
     () => (window as unknown as { __fishPreview?: PreviewApi }).__fishPreview?.ready === true,
     { timeout: 120000 },

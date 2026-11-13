@@ -32,7 +32,7 @@ Three.js 为右手、Y-up；生物资产的局部 forward 是 +Z，而相机世�
 
 School 航向来自活体主鱼速度之和；一致性不足时降低信任并保持最近有效方向。P95 拟合使用预分配数组和周期更新，抗单鱼离群，但 1.4 上限意味着扩散群仍可能有一部分出框。
 
-Predator 只有状态和目标存活均有效时才使用 target displacement。目标丢失、死亡或进入 patrol/search 后仍走同一阻尼管线，不另写跳变分支。
+Predator 只有状态和目标存活均有效时才使用 target displacement。目标丢失、死亡或进入 patrol/search 后仍走同一阻尼管线，不另写跳变分支。2026-11-12 起 `pursuit` 可在 15% 距离优势下直接重选另一条存活鱼（`attack` 不换目标），相机必须连续跟随新 targetIndex，不能把直接切换当作丢失目标。
 
 `controls.target` 最终可保存用于 HUD 的 `overlayTarget`，而 `lookTarget/dampedTarget` 是实际观察目标。诊断同时输出两者，不能混用。上向量优先采用与世界 up 一致的安全投影，接近垂直奇异点时使用稳定参考系。
 
@@ -46,9 +46,7 @@ Predator 只有状态和目标存活均有效时才使用 target displacement。
 
 ## 当前证据限制
 
-`camera-regression-final` 是 **B1 Hero + 旧 D** 混合版本，不能作为完整 B1+C 验收；当前还缺浏览器 index→index、B1 后 School/Predator 截图和硬件长时轨迹。
-
-具体可见率、净空、目标切换和截图版本只在 `../validation/visual-baseline.md` 维护，CPU 数学基准只在 `../validation/performance.md` 维护，功能状态由 `../CURRENT_STATE.md` 维护。本文件不复制这些易变数字。
+WP3 已提供当前 B1+C 六时间点、三机位、浏览器目标轨迹与 UI 证据；WP4 已补硬件 180 s School 稳定性和 30 分钟 Overview 观察（0 错误，固定 Overview 位置漂移 0 m），用户已签核硬件画面/交互；`camera-regression-final` 仅作历史对照。2026-11-12 FSM direct-retarget 后浏览器已捕获 4 次 direct index→index（5.08/12.42/12.78/30.38 s）；post-FSM WP3/WP4 已在 `2026-11-12T14-30-00Z` 上重跑，School 构图按 D016 保留 fit 上限 1.4。具体可见率、净空、目标切换和截图版本只在 `../validation/visual-baseline.md` 维护，CPU 数学基准只在 `../validation/performance.md` 维护，功能状态由 `../CURRENT_STATE.md` 维护。本文件不复制这些易变数字。
 
 ## 测试与复现
 

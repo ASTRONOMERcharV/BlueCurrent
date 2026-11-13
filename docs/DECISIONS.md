@@ -82,6 +82,60 @@
 
 **状态：接受。** 生产默认由 `main.ts` 显式选择 full，形成 48 个 `CoralScatter` 实例；构造器自身默认 temperate 为 12。它们与礁石表面 Epibiont 使用不同放置、种子、计数和层级规则。不得用一套实例数代替另一套，也不得为调 D 装饰覆盖而误改全局 CoralScatter。
 
+## D014 — Integration 帧率优化留到 Phase F
+
+**状态：接受（2026-11-12，用户决定）。** WP4 在 Intel Iris Xe 记录 40.66 FPS 短测（P95 66.20 ms）和 30 分钟中位 63.6 FPS（min 16.9 FPS、P95 frame 145.5 ms）。用户决定不把 60 FPS 作为 Integration Gate 门槛，帧率优化、压力矩阵和 1000/2000 目标留到 Phase F。
+
+后果：Integration 只记录实测与限制，不声称满帧；不得为帧率验收降低默认鱼数、资产或画质；Phase F 仍需真实 GPU 分项、压力测试和明确优化目标。
+
+## D015 — Predator 允许 pursuit 中 direct index→index 重选
+
+**状态：接受（2026-11-12，用户决定修改 FSM）。** 旧 FSM 只在 `patrol/search` 获取目标，所有切换都经过 `null`。新行为在 `pursuit` 的 0.35 s retarget 窗口内，若另一条存活鱼的距离小于当前目标距离 × `predatorRetargetAdvantage`（默认 0.85），且当前目标在 attack radius 外，则直接替换 `targetIndex` 并重置 `stateTime`；`attack` 阶段不换目标。
+
+后果：direct index→index 成为受支持路径；captures、存活数和 checksum 改变，旧 WP0 源码锁及 WP1–WP4 证据均失效。新 WP0 run `2026-11-12T14-30-00Z` 已建立，WP1–WP4 待在该锁上重跑。阈值和增加的捕获率仍需视觉与产品确认。证据见 `validation/fsm-retarget.md` 与 `test-artifacts/fsm-retarget/2026-11-12T14-05-00Z/summary.md`。
+
+## D016 — School 构图保留 fit 上限 1.4
+
+**状态：接受（2026-11-13，用户决定）。** post-FSM WP3 六个时间点的 School 可见率为 0.8517/0.9355/0.9254/0.9375/0.9718/0.8528，t17/t63 低于 90%。精确透视重投影探针显示 t17/t63 要达到 90% 需要 fit≈1.8；把 `SCHOOL_FIT_MAX_SCALE` 提到 1.8 可得到 0.916/0.982/1.000/0.972/0.976/0.998，但相机整体后移抬高 12–29%、主体明显变小。用户选择保留 1.4，优先主体尺寸与近距离构图。
+
+后果：t17/t63 约 0.85 的可见率是已接受的构图结果，不再作为回归失败；也不把“超过 95%”自动判为满足 90–95% 目标。今后若要提高上限或改 side/up 偏移，必须重新做同版、同种子、同时间点、同视口的六点对比并单独决策。试验测量与前后对比见 `test-artifacts/integration-abc/2026-11-12T14-30-00Z/optimization-composition/summary.md`（`test-artifacts/` 被 Git 忽略）。
+
+## D017 — D 双柱通道保持封闭
+
+**状态：接受（2026-11-13，用户决定）。** B1 D 双柱几何间隙约 0.31 m，当前 margin 下 0 鱼通过；ReefProxy 0 穿透、0 深穿透、0 假避障、0 卡鱼。用户选择保持封闭，不改柱体、margin 或代理。
+
+后果：D 通道封闭是当前已验证的刻意设计；若将来要允许通行，必须作为独立变更，局部标定 margin/代理并重跑 WP1/WP2 的覆盖、穿透与通道证据。
+
+## D018 — Hero 不加低前 shelf
+
+**状态：接受（2026-11-13，用户决定）。** B1 高度比 1.1721、面积比 1.1677、Hero 横向中心 56.54% 已达 Experiment B 数值目标。用户决定不在 Gate 阶段新增低前 shelf。
+
+后果：Hero 自身轮廓面积比 baseline 少 5.5% 作为已知差异保留；视觉打磨留到 Phase F，届时需重拍层级证据。
+
+## D019 — 默认碰撞保持 Sphere
+
+**状态：接受（2026-11-13，用户决定）。** `reefProxy` 已作为 opt-in 通过覆盖、穿透、假避障、卡鱼与双跑确定性验收。用户决定 Gate 内不切换默认碰撞。
+
+后果：默认仍为 `sphere`；切换默认会改变所有用户的碰撞行为与 checksum，必须作为独立变更并重跑全部碰撞证据后才可考虑。
+
+## D020 — B 基座力与 Proxy 成本留到 Phase F
+
+**状态：接受（2026-11-13，用户决定）。** 实验 A 记录的 B 基座避障力偏强与代理 CPU 查询成本不在 Gate 内标定。
+
+后果：与 D014 一致，性能与参数标定留到 Phase F；Gate 内不改相关模拟参数。
+
+## D021 — 1000/2000 与多捕食者不作为 Gate 目标
+
+**状态：接受（2026-11-13，用户决定）。** 1000/2000 鱼压力矩阵与多捕食者场景只作为 Phase F 的性能场景，不是 Gate 硬验收目标，也不进入当前生态需求。
+
+后果：Gate 只对当前富默认 500+100+1 负责；扩展性结论必须在 Phase F 用压力矩阵单独建立。
+
+## D022 — 接受 Predator retarget 0.85 阈值
+
+**状态：接受（2026-11-13，用户决定）。** D015 的 `predatorRetargetAdvantage=0.85` 与 0.35 s 窗口继续生效；300 s CPU captures 从 18 增至 25、浏览器 0–30 s 4 次 direct / 0–60 s 11 次 direct 视为可接受。
+
+后果：阈值不再作为 Gate 未决项；若后续生态观感或捕获率成为问题，再作为独立变更调整阈值/冷却并重跑受影响的 WP1/WP3/WP4。
+
 ## 未决事项的所有者
 
 当前未决清单只在 `CURRENT_STATE.md` 第 5 节维护，本文件不复制一份可能不同的列表。某项由 Integration Gate 或用户明确决定后，在这里新增 ADR，并更新当前状态、受影响子系统文档和回归证据。

@@ -119,7 +119,7 @@ npx tsx scripts/reef-sample-game-capture.ts --mode=off --coral=temperate
 npx tsx scripts/reef-sample-game-capture.ts --mode=sample --coral=temperate
 ```
 
-独立预览：`reef-sample-preview.html`（`npm run dev` 后访问 `/reef-sample-preview.html`）。
+独立预览：`preview/reef-sample-preview.html`（`npm run dev` 后访问 `/preview/reef-sample-preview.html`）。
 
 ## 8. 证据清单
 

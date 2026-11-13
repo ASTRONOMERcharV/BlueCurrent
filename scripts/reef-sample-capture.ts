@@ -69,7 +69,7 @@ try {
     if (message.type() === 'error') errors.push(`console: ${message.text()}`);
   });
 
-  await page.goto('http://127.0.0.1:5183/reef-sample-preview.html', { waitUntil: 'domcontentloaded' });
+  await page.goto('http://127.0.0.1:5183/preview/reef-sample-preview.html', { waitUntil: 'domcontentloaded' });
   await page.waitForFunction(
     () => (window as unknown as { __reefSamplePreview?: PreviewApi }).__reefSamplePreview?.ready === true,
     { timeout: 120000 },

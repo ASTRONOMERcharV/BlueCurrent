@@ -79,7 +79,7 @@ try {
     if (message.type() === 'error') errors.push(`console: ${message.text()}`);
   });
 
-  await page.goto('http://127.0.0.1:5179/kelp-preview.html', { waitUntil: 'networkidle' });
+  await page.goto('http://127.0.0.1:5179/preview/kelp-preview.html', { waitUntil: 'networkidle' });
   console.log('stage: kelp preview loaded');
   await page.waitForFunction(
     () => (window as unknown as { __kelpPreview?: KelpPreviewApi }).__kelpPreview?.ready === true,

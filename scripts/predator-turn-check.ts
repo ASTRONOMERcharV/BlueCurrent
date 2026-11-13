@@ -30,7 +30,7 @@ try {
   });
   // sin(t * 0.55) peaks here: the same strong-turn pose before/after edits.
   await page.goto(
-    `http://127.0.0.1:${port}/predator-preview.html?mode=hero&predator=${variant}&poseTime=2.856${inspectionView}`,
+    `http://127.0.0.1:${port}/preview/predator-preview.html?mode=hero&predator=${variant}&poseTime=2.856${inspectionView}`,
     { waitUntil: 'networkidle' },
   );
   await page.waitForFunction(

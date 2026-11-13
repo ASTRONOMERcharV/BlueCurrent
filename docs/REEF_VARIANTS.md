@@ -77,7 +77,7 @@ python3 assets_src/scripts/compose_reef_variant_textures.py
 python3 scripts/compose_reef_variant_sheet.py
 ```
 
-独立预览：`npm run dev` 后访问 `/reef-variants-preview.html`。  
+独立预览：`npm run dev` 后访问 `/preview/reef-variants-preview.html`。  
 工作室画廊捕获：`npm run capture:reef-variants:gallery`。
 
 游戏内捕获（新尺度下 5 块礁石在 SwiftShader 里很吃填充率，建议分开捕获并降低分辨率）：

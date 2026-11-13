@@ -1,0 +1,117 @@
+/* Shared shell for the rock, reef sample and reef variant studio pages. */
+:root {
+  color-scheme: dark;
+}
+
+* {
+  box-sizing: border-box;
+}
+
+html,
+body {
+  margin: 0;
+  height: 100%;
+  background: #051f26;
+  overflow: hidden;
+}
+
+body {
+  font-family: ui-sans-serif, system-ui, -apple-system, "Segoe UI", sans-serif;
+  color: #d7f3ec;
+}
+
+#app {
+  position: fixed;
+  inset: 0;
+}
+
+#hud {
+  position: fixed;
+  top: 18px;
+  left: 18px;
+  padding: 14px 18px;
+  max-width: 360px;
+  background: rgba(4, 26, 32, 0.72);
+  border: 1px solid rgba(120, 200, 186, 0.28);
+  border-radius: 10px;
+  font-size: 12px;
+  line-height: 1.55;
+  backdrop-filter: blur(6px);
+}
+
+#hud h1 {
+  margin: 0 0 6px;
+  font-size: 16px;
+  font-weight: 600;
+  letter-spacing: 0.02em;
+}
+
+#hud .muted {
+  color: #7fb3aa;
+}
+
+#hud ul {
+  margin: 8px 0 0;
+  padding: 0;
+  list-style: none;
+}
+
+#hud li {
+  display: flex;
+  justify-content: space-between;
+  gap: 12px;
+}
+
+#hud code {
+  color: #9fe0d3;
+}
+
+#legend {
+  position: fixed;
+  bottom: 16px;
+  left: 18px;
+  padding: 10px 14px;
+  max-width: 520px;
+  background: rgba(4, 26, 32, 0.66);
+  border: 1px solid rgba(120, 200, 186, 0.2);
+  border-radius: 10px;
+  font-size: 11px;
+  line-height: 1.5;
+  color: #9fc8c0;
+}
+
+#loading {
+  position: fixed;
+  inset: 0;
+  display: grid;
+  place-items: center;
+  font-size: 14px;
+  color: #9fe0d3;
+  background: #051f26;
+  transition: opacity 0.25s ease;
+}
+
+#loading.hidden {
+  opacity: 0;
+  pointer-events: none;
+}
+
+#loading.error {
+  color: #ffb4a2;
+}
+
+body.preview-reef-sample #hud {
+  max-width: 390px;
+}
+
+body.preview-reef-variants #hud {
+  max-width: 430px;
+}
+
+body.preview-reef-variants #hud li {
+  gap: 16px;
+}
+
+body.preview-reef-variants #legend {
+  max-width: 620px;
+}

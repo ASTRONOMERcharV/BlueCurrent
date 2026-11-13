@@ -78,7 +78,7 @@ function setNav(): void {
     <a href="?mode=school&fish=${fish}&count=${requestedCount}" ${mode === 'school' ? 'aria-current="true"' : ''}>School</a>
     <a href="?mode=school&fish=${fish}&count=${requestedCount}&close=1" ${closeup ? 'aria-current="true"' : ''}>Close-up</a>
     <a href="?mode=${mode}&fish=${otherFish}&count=${requestedCount}">Use ${otherFish}</a>
-    <a href="/coral-preview.html">Coral</a>
+    <a href="/preview/coral-preview.html">Coral</a>
   `;
 }
 

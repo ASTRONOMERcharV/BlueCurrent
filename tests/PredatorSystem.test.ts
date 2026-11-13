@@ -27,6 +27,17 @@ function makeFlock(x: number, y: number, z: number): FlockData {
   return flock;
 }
 
+function makeFlockWithPositions(positions: Array<[number, number, number]>): FlockData {
+  const flock = new FlockData(4);
+  flock.count = positions.length;
+  flock.aliveCount = positions.length;
+  positions.forEach((position, index) => {
+    flock.alive[index] = 1;
+    flock.positions.set(position, index * 3);
+  });
+  return flock;
+}
+
 describe('predator search after a capture', () => {
   it('continues forward instead of steering back at its own position', () => {
     const predator = makePredator();
@@ -125,5 +136,45 @@ describe('predator search after a capture', () => {
     const budget = 2 * config.predatorMaxAcceleration * (1 / 60) + 1e-3;
     expect(maxStepDrop).toBeLessThanOrEqual(budget);
     expect(previousSpeed).toBeLessThan(4);
+  });
+});
+
+describe('predator target switching', () => {
+  it('switches directly to a clearly closer live target without passing through null', () => {
+    const predator = makePredator();
+    predator.position.set([0, 10, 0]);
+    predator.velocity.set([0, 0, 3]);
+    predator.state = 'pursuit';
+    predator.targetIndex = 0;
+    const flock = makeFlockWithPositions([[0, 10, 12], [0, 10, 8]]);
+    const seen: number[] = [];
+
+    for (let index = 0; index < 120; index += 1) {
+      predator.update(1 / 60, flock);
+      seen.push(predator.targetIndex);
+      if (predator.targetIndex === 1) break;
+    }
+
+    expect(seen).toContain(0);
+    expect(seen).toContain(1);
+    expect(seen).not.toContain(-1);
+    expect(predator.state).toBe('pursuit');
+    expect(predator.captures).toBe(0);
+  });
+
+  it('keeps the current target when the candidate is only marginally closer', () => {
+    const predator = makePredator();
+    predator.position.set([0, 10, 0]);
+    predator.velocity.set([0, 0, 3]);
+    predator.state = 'pursuit';
+    predator.targetIndex = 0;
+    const flock = makeFlockWithPositions([[0, 10, 12], [0, 10, 11.8]]);
+
+    for (let index = 0; index < 60; index += 1) {
+      predator.update(1 / 60, flock);
+    }
+
+    expect(predator.targetIndex).toBe(0);
+    expect(predator.state).toBe('pursuit');
   });
 });

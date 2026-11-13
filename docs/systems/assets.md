@@ -46,7 +46,7 @@
 
 `fishCount` 在场景 apply 后处理并触发 reset，可能丢失预热；这不是资产加载错误，修改场景组装时应专门验证。
 
-`reef-sample-preview.html` 与 `reef-variants-preview.html` 存在于根目录，但当前 `vite.config.ts` 未列入生产 input。捕获脚本若使用它们，需明确是 dev 路径还是补充构建配置，不能声称 `npm run build` 已产物化。
+`preview/reef-sample-preview.html` 与 `preview/reef-variants-preview.html` 已和其余资产预览、`preview/index.html` 总览页一起列入 `vite.config.ts` 的生产多页 input。独立预览入口统一为 `/preview/<name>.html`；根目录只保留主应用 `index.html`。
 
 ## 验证入口
 

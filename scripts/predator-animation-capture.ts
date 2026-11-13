@@ -102,7 +102,7 @@ try {
   page.on('console', (message) => {
     if (message.type() === 'error') errors.push(`console: ${message.text()}`);
   });
-  await page.goto(`${baseUrl}predator-animation-preview.html?t=2.5&view=side&hud=0`, {
+  await page.goto(`${baseUrl}preview/predator-animation-preview.html?t=2.5&view=side&hud=0`, {
     waitUntil: 'networkidle',
   });
   await page.waitForFunction(

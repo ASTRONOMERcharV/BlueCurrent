@@ -102,11 +102,41 @@ export class PredatorSystem {
 
     if (this.retargetTimer <= 0) {
       this.retargetTimer = 0.35;
-      if ((this.state === 'patrol' || this.state === 'search') && this.detectCooldown <= 0) {
+      if (this.detectCooldown <= 0) {
         const target = this.findNearest(flock, detectionRadius);
         if (target >= 0) {
-          this.targetIndex = target;
-          this.transition('pursuit');
+          if (this.state === 'patrol' || this.state === 'search') {
+            this.targetIndex = target;
+            this.transition('pursuit');
+          } else if (
+            this.state === 'pursuit'
+            && target !== this.targetIndex
+            && this.targetIndex >= 0
+            && this.targetIndex < flock.count
+            && flock.alive[this.targetIndex] === 1
+          ) {
+            const currentOffset = this.targetIndex * 3;
+            const currentDistance = Math.hypot(
+              flock.positions[currentOffset] - this.position[0],
+              flock.positions[currentOffset + 1] - this.position[1],
+              flock.positions[currentOffset + 2] - this.position[2],
+            );
+            const candidateOffset = target * 3;
+            const candidateDistance = Math.hypot(
+              flock.positions[candidateOffset] - this.position[0],
+              flock.positions[candidateOffset + 1] - this.position[1],
+              flock.positions[candidateOffset + 2] - this.position[2],
+            );
+            // Keep the sticky target unless another live fish is clearly closer;
+            // this allows direct index-to-index switches without thrashing.
+            if (
+              currentDistance > this.config.predatorAttackRadius
+              && candidateDistance < currentDistance * this.config.predatorRetargetAdvantage
+            ) {
+              this.targetIndex = target;
+              this.stateTime = 0;
+            }
+          }
         }
       }
     }

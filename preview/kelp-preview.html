@@ -1,0 +1,39 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <meta name="theme-color" content="#061d25" />
+    <meta name="description" content="Blue Current — two Blender kelp assets with GPU vertex sway." />
+    <title>Blue Current — Kelp Asset Preview</title>
+    <link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 32 32'%3E%3Cpath d='M16 30V8m0 10c-5-1-7-5-7-9m7 15c5-1 7-5 7-9' stroke='%239fe0d6' stroke-width='3' fill='none'/%3E%3C/svg%3E" />
+    <link rel="stylesheet" href="./shared.css" />
+  </head>
+  <body class="preview-shell preview-kelp">
+    <div id="preview-viewport"></div>
+    <aside id="hud">
+      <h1>Kelp set — Blender assets</h1>
+      <p class="subtitle">
+        Two base plants, instanced with per-instance phase, frequency and
+        amplitude. All motion is a vertex shader; no bones and no baked
+        animation. dx = A(y)·sin(ωt + ky + φ).
+      </p>
+      <nav>
+        <a href="/">Main scene</a>
+        <a href="/preview/index.html">All previews</a>
+        <a href="/preview/fish-preview.html">Fish</a>
+        <a href="/preview/predator-preview.html">Predator</a>
+        <a href="/preview/coral-preview.html">Coral</a>
+        <a href="/preview/kelp-preview.html" aria-current="true">Kelp</a>
+      </nav>
+      <dl id="stats"><dt>status</dt><dd>loading</dd></dl>
+      <p class="hint">
+        Drag to orbit · scroll to zoom. Left: kelp_a dense curled clump
+        (3.55 m). Right: kelp_b broad-leaf fan (2.8 m). Each clump has its own
+        phase.
+      </p>
+    </aside>
+    <div id="preview-loading">Loading kelp assets…</div>
+    <script type="module" src="/src/preview/kelp-preview.ts"></script>
+  </body>
+</html>

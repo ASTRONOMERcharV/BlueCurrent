@@ -1,0 +1,23 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Blue Current — Hero reef sample</title>
+    <link rel="stylesheet" href="./studio.css" />
+  </head>
+  <body class="preview-reef-sample">
+    <div id="app"></div>
+    <div id="hud">
+      <h1>Hero reef sample</h1>
+      <div class="muted">1 composed reef · near/mid/far LOD · epibiont clusters</div>
+      <ul id="stats"></ul>
+    </div>
+    <div id="legend">
+      Studio preview: no water absorption or caustics, so surface zones read at source value.
+      Drag to orbit, scroll to zoom. The in-game sample is behind <code>?reef=sample</code>.
+    </div>
+    <div id="loading">Loading reef sample…</div>
+    <script type="module" src="/src/preview/reef-sample-preview.ts"></script>
+  </body>
+</html>

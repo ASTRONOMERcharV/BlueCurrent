@@ -19,7 +19,7 @@
 | `src/rendering/FishAsset.ts` | GLTFLoader 加载、primitive 合并、契约校验 |
 | `src/rendering/FishRenderer.ts` | `aTailWeight` Shader、实例化、颜色与受惊响应 |
 | `src/rendering/UnderwaterEnvironment.ts` | 水下 PMREM 环境贴图 |
-| `fish-preview.html` + `src/preview/fish-preview.ts` | 独立测试场景（Hero / 真实群体 / 近景） |
+| `preview/fish-preview.html` + `src/preview/fish-preview.ts` | 独立测试场景（Hero / 真实群体 / 近景） |
 | `scripts/fish-glb-smoke.ts` | 浏览器集成烟雾测试 |
 | `scripts/fish-perf.ts` | 帧时间对比脚本（SwiftShader 或本机 GPU） |
 | `docs/asset-previews/` | Blender 与浏览器预览截图 |
@@ -104,9 +104,9 @@ http://localhost:5173/
 # 主场景，启用 Blender GLB
 http://localhost:5173/?fish=blender
 # 独立资产测试场景
-http://localhost:5173/fish-preview.html?mode=hero
-http://localhost:5173/fish-preview.html?mode=school&count=500
-http://localhost:5173/fish-preview.html?mode=school&count=150&close=1
+http://localhost:5173/preview/fish-preview.html?mode=hero
+http://localhost:5173/preview/fish-preview.html?mode=school&count=500
+http://localhost:5173/preview/fish-preview.html?mode=school&count=150&close=1
 ```
 
 加载路径：
@@ -127,7 +127,7 @@ http://localhost:5173/fish-preview.html?mode=school&count=150&close=1
 
 ```bash
 npm test                 # 16 项算法测试
-npm run build            # tsc + vite build（含 fish-preview.html 入口）
+npm run build            # tsc + vite build（含 preview/fish-preview.html 入口）
 npm run smoke            # 原有主场景/移动端烟雾测试
 npm run smoke:fish       # GLB 鱼集成、资产契约和浏览器错误检查
 npm run perf:fish -- --mode=procedural --counts=500,1000,2000
@@ -232,7 +232,7 @@ npm run perf:fish -- --mode=blender --counts=500,1000,2000 --gpu
 | `assets_src/scripts/verify_predator_rig.py` | 纯 Python GLB 结构验收（skin/joints/权重和/尾端权重/胸鳍/材质/长度） |
 | `src/rendering/PredatorRigAsset.ts` | GLTFLoader 加载 SkinnedMesh、骨骼名/层级/权重契约校验、派生动画 bindings |
 | `src/rendering/PredatorAnimationController.ts` | 行波、频率、转弯、俯仰、侧倾、胸鳍、攻击包络的程序化骨骼动画 |
-| `predator-animation-preview.html` + `src/preview/predator-animation-preview.ts` | 独立游泳测试场景（Side / Top / Front / Quarter，骨骼开关，固定时间） |
+| `preview/predator-animation-preview.html` + `src/preview/predator-animation-preview.ts` | 独立游泳测试场景（Side / Top / Front / Quarter，骨骼开关，固定时间） |
 | `scripts/predator-animation-smoke.ts` | 动画验收（巡游/左右转/升降/冲刺/恢复、相位连续、NaN） |
 | `scripts/predator-animation-main-smoke.ts` | 主场景 rigged 默认路径集成验收 |
 | `scripts/predator-animation-capture.ts` | 固定帧截图（Side/Top/Front/Quarter/Skeleton） |
@@ -254,7 +254,7 @@ npm run perf:fish -- --mode=blender --counts=500,1000,2000 --gpu
 | `assets_src/scripts/verify_predator_glb.py` | 纯 Python GLB 结构验收（4 primitive / 4 材质 / 3 贴图） |
 | `src/rendering/PredatorAsset.ts` | GLTFLoader 加载、primitive 合并、4 材质契约校验 |
 | `src/rendering/PredatorRenderer.ts` | 四材质共享尾摆 Shader、C 形弯曲、转弯倾斜、加速/减速响应、攻击自发光 |
-| `predator-preview.html` + `src/preview/predator-preview.ts` | 独立测试场景（Hero / Close-up / Chase），Hero 自动演示 turn/thrust/bank |
+| `preview/predator-preview.html` + `src/preview/predator-preview.ts` | 独立测试场景（Hero / Close-up / Chase），Hero 自动演示 turn/thrust/bank |
 | `scripts/predator-glb-smoke.ts` | 浏览器集成烟雾测试（默认 GLB、资产统计、Chase、组合 GLB、bank/thrust/turn） |
 | `tests/PredatorAnimation.test.ts` | 转弯倾斜方向/钳制与 C 形弯曲输入的单元测试 |
 
@@ -281,9 +281,9 @@ npm run dev
 # http://localhost:5173/?predator=shayu          回退静态 shayu
 # http://localhost:5173/?predator=v2             切换回 v2 大白鲨
 # http://localhost:5173/?predator=procedural     显式回退程序化捕食者
-# http://localhost:5173/predator-preview.html?mode=hero
-# http://localhost:5173/predator-preview.html?mode=close
-# http://localhost:5173/predator-preview.html?mode=chase
+# http://localhost:5173/preview/predator-preview.html?mode=hero
+# http://localhost:5173/preview/predator-preview.html?mode=close
+# http://localhost:5173/preview/predator-preview.html?mode=chase
 ```
 
 建模脚本的坐标约定与 School Fish 相同：Blender 中头朝 −Y、尾朝 +Y，导出后 +Z 朝前。尾权重公式为 `1.0 − smoothstep(−1.95, 1.30, z)`，与运行时 Shader 的回退公式一致。构建脚本会先把当前 Blender 场景复制到 `_scene_before_predator.blend`（`copy=True`），再清空场景；不会把其他资产源文件（如 `rocks.blend`）另存覆盖。
@@ -390,7 +390,7 @@ npm run smoke:predator:shayu  # Hero / Close / Chase / Main 专项
 - `npm run smoke:predator` PASS：主场景 `predatorTurn 0.127 / predatorTailTurn 0.139`，组合 GLB 0 错误。
 - `npm run smoke:predator:shayu` PASS：Hero / Close / Chase / Main。
 - 对照图：`test-artifacts/predator-turn-before.png`、`predator-turn-after.png`、`predator-turn-top-before.png`、`predator-turn-top-after.png`。
-- 复现姿态：`/predator-preview.html?mode=hero&predator=shayu&poseTime=2.856&view=top`。
+- 复现姿态：`/preview/predator-preview.html?mode=hero&predator=shayu&poseTime=2.856&view=top`。
 
 **限制**：顶点 Shader 视觉近似，不改变模拟物理、碰撞或捕获；不是骨骼/IK；程序化回退仍使用尾节点；shayu 无骨骼，不能做分段脊椎或下颌动画。
 
@@ -417,7 +417,7 @@ npm run smoke:predator:shayu  # Hero / Close / Chase / Main 专项
 | `assets_src/scripts/render_coral_previews.py` | EEVEE 资产预览渲染 |
 | `assets_src/scripts/verify_coral_glbs.py` | 纯 Python GLB 结构验收 |
 | `src/rendering/CoralAsset.ts` | 加载、契约校验、共享图集材质 |
-| `src/preview/coral-preview.ts` + `coral-preview.html` | 独立实例化预览页 |
+| `src/preview/coral-preview.ts` + `preview/coral-preview.html` | 独立实例化预览页 |
 | `scripts/coral-glb-smoke.ts` + `npm run smoke:coral` | 浏览器烟雾测试 |
 | `docs/asset-previews/coral_*.png` | 六株单体图 + 合影 |
 
@@ -434,7 +434,7 @@ python3 assets_src/scripts/verify_coral_glbs.py
 
 npm run smoke:coral
 npm run dev
-# http://localhost:5173/coral-preview.html
+# http://localhost:5173/preview/coral-preview.html
 ```
 
 `build_corals.py` 会清空当前场景（不保存预览灯光）、重建 6 株珊瑚、写入图集 UV、保存 `corals.blend`，再逐个选中导出 GLB。GLB 有意不嵌入贴图；运行时由 `CoralAsset.ts` 加载一次共享图集。
@@ -463,7 +463,7 @@ npm run dev
 
 1. `loadCoralAssets()` 并行加载 6 个 GLB，`loadCoralAtlas()` 加载共享图集（必须 `flipY = false`）。
 2. 每种珊瑚一个 `InstancedMesh`，共享同一个 `MeshStandardMaterial`；按礁丛中心随机缩放、yaw、±0.05 rad 倾斜与 `instanceColor` 明度变化。
-3. 当前只在 `coral-preview.html` 接入；主场景仍使用程序化珊瑚。后续在主场景接入时保持独立 flag、失败回退，并补做硬件 GPU 的 draw call/FPS/P95 采样。
+3. 当前只在 `preview/coral-preview.html` 接入；主场景仍使用程序化珊瑚。后续在主场景接入时保持独立 flag、失败回退，并补做硬件 GPU 的 draw call/FPS/P95 采样。
 4. 若要做近景特写，优先升级到 2048 图集或按类型拆分贴图，再考虑 LOD。
 
 ### 8.5 已知限制
@@ -496,7 +496,7 @@ npm run dev
 | `src/rendering/RockAsset.ts` | 13 GLB + 共享图集加载、契约校验、双材质 |
 | `src/rendering/RockScatter.ts` | 每类型一个 InstancedMesh、实例色与变换 |
 | `src/rendering/rockPlacement.ts` | 确定性摆放（礁石锚定、沙丘/中岩/碎石散布） |
-| `rocks-preview.html` + `src/preview/rocks-preview.ts` | 13 资产独立预览页（阵容 / `?focus=` 近景） |
+| `preview/rocks-preview.html` + `src/preview/rocks-preview.ts` | 13 资产独立预览页（阵容 / `?focus=` 近景） |
 | `scripts/rock-glb-smoke.ts` + `npm run smoke:rocks` | 主场景浏览器验收 |
 | `scripts/rocks-preview-smoke.ts` + `npm run smoke:rocks-preview` | 独立预览页浏览器验收 |
 | `docs/asset-previews/rock_*.png` | 13 张单体图 + `rock_lineup.png` |
@@ -566,7 +566,7 @@ npm run smoke:rocks-preview
 | `src/rendering/KelpAsset.ts` | GLB 加载、契约校验、属性重命名、运行时材质 |
 | `src/rendering/kelpPlacement.ts` | 固定种子 49 株确定性布局 |
 | `src/rendering/KelpScatter.ts` | 每资产 1 个 `InstancedMesh` + 顶点摆动 Shader + 实例属性 |
-| `kelp-preview.html` / `src/preview/kelp-preview.ts` | 独立实例化预览页 + `window.__kelpPreview` 诊断 |
+| `preview/kelp-preview.html` / `src/preview/kelp-preview.ts` | 独立实例化预览页 + `window.__kelpPreview` 诊断 |
 | `scripts/kelp-glb-smoke.ts` | `npm run smoke:kelp` 浏览器验收 |
 
 ### 10.2 复现流程
@@ -583,7 +583,7 @@ npm run smoke:kelp
 npm run dev
 # http://localhost:5173/?kelp=1
 # http://localhost:5173/?kelp=1&glbRocks=2
-# http://localhost:5173/kelp-preview.html
+# http://localhost:5173/preview/kelp-preview.html
 ```
 
 ### 10.3 实测结果
@@ -631,7 +631,7 @@ npm run dev
 | `src/rendering/SeaweedAsset.ts` | 加载、属性重命名、贴图材质与契约校验 |
 | `src/rendering/seaweedPlacement.ts` | 固定种子 6 株英雄实例布局 |
 | `src/rendering/SeaweedScatter.ts` | 单 `InstancedMesh` + 顶点摆动 + 实例相位/频率/振幅 |
-| `seaweed-preview.html` / `src/preview/seaweed-preview.ts` | 独立预览页 + `window.__seaweedPreview` 诊断 |
+| `preview/seaweed-preview.html` / `src/preview/seaweed-preview.ts` | 独立预览页 + `window.__seaweedPreview` 诊断 |
 | `scripts/seaweed-glb-smoke.ts` / `seaweed-main-smoke.ts` / `seaweed-combo-smoke.ts` | 预览、主场景、全环境组合三项烟雾测试 |
 
 ### 11.2 复现流程
@@ -648,7 +648,7 @@ npm run smoke:seaweed:combo
 
 # 主场景 / 独立预览
 # http://localhost:5173/?seaweed=1
-# http://localhost:5173/seaweed-preview.html
+# http://localhost:5173/preview/seaweed-preview.html
 ```
 
 ### 11.3 实测结果
@@ -720,7 +720,7 @@ bmesh.ops.remove_doubles(bm, verts=bm.verts[:], dist=1e-5)
 
 - v1.0（2026-11-08）：School Fish 首次交付；记录生成、建模、导出、集成、验收、性能数据和人工精修路径。
 - v1.1（2026-11-08）：新增 Predator（礁鲨）交付；记录 4344 三角形、5.2016 总长、2048² 贴图、`_TAILWEIGHT` 尾摆 Shader、攻击自发光、`?predator=blender` 与 `smoke:predator` 验收。用户验收后修正第一背鳍、第二背鳍与臀鳍根部，使其沿身体表面曲线嵌入（bbox max y 更新为 +1.2406）。
-- v1.2（2026-11-09）：新增珊瑚资产集交付；6 个基地模、共享 1024² 图集、`CoralAsset.ts`、`coral-preview.html`、`verify_coral_glbs.py`、`npm run smoke:coral`；记录实测三角形/尺寸/draw call 与已知限制。主场景暂未接入。
+- v1.2（2026-11-09）：新增珊瑚资产集交付；6 个基地模、共享 1024² 图集、`CoralAsset.ts`、`preview/coral-preview.html`、`verify_coral_glbs.py`、`npm run smoke:coral`；记录实测三角形/尺寸/draw call 与已知限制。主场景暂未接入。
 - v1.3（2026-11-09）：新增岩石与海底地形交付（Phase R）；13 个资产、7,869 三角形、392 KB GLB、3 × 2048² 图集；`RockAsset.ts` / `RockScatter.ts` / `rockPlacement.ts`；`?glbRocks=2` 替换主礁石并散布 54 个装饰实例；`verify_rocks_glb.py` 与 `smoke:rocks` 验收；记录 AO 烘焙隔离、UV V 轴翻转、EdgeSplit 与法线强度等实现要点。
 - v1.4（2026-11-09）：Predator 升级为 v2 大白鲨交付；5990 三角形、5.2778 总长、4 材质 / 4 primitive、35 颗牙、下颚 + U 形口腔、反荫蔽贴图、`_TAILWEIGHT` 尾摆 + C 形弯曲 + 转弯倾斜 + 加速/减速响应；默认启用 GLB、`?predator=procedural` 回退；用户反馈后收小嘴部与第一背鳍；新增 `tests/PredatorAnimation.test.ts` 与 Chase 截图验收。
 - v1.5（2026-11-09）：新增海藻资产集交付（Phase C）；`kelp_a` 184 / `kelp_b` 168 三角形，底部原点、双面单材质、`_SWAYWEIGHT` + `_BLADEPHASE` 顶点摆动；`KelpAsset.ts` / `KelpScatter.ts` / `kelpPlacement.ts`；`?kelp=1` 主场景 49 株、8,648 三角形；`verify_kelp_glbs.py`、`smoke:kelp` 与 `tests/KelpPlacement.test.ts` 验收；按用户参考图重做密集宽叶、深折、卷曲与分叉叶尖。

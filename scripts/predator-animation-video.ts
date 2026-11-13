@@ -38,7 +38,7 @@ try {
   });
   const page = await context.newPage();
   page.setDefaultTimeout(180000);
-  await page.goto(`${baseUrl}predator-animation-preview.html?view=quarter&hud=0`, {
+  await page.goto(`${baseUrl}preview/predator-animation-preview.html?view=quarter&hud=0`, {
     waitUntil: 'networkidle',
   });
   await page.waitForFunction(

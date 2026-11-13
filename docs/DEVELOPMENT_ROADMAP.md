@@ -1,7 +1,7 @@
 # Blue Current Development Roadmap
 
 > 采纳日期：2026-11-12  
-> 当前阶段：**A/B/C Integration Gate（待执行）**  
+> 当前阶段：**A/B/C Integration Gate：通过（带限制，2026-11-13）**；WP0–WP4 已在新锁重跑，Isolation/Determinism 与持续闪烁观察已补齐；判定见 `../test-artifacts/integration-abc/2026-11-13T06-33-00Z/gate-verdict.md`  
 > 后续阶段：D → E → F → G。除整合验收所需的修复外，暂停新增礁石、珊瑚和生物品种。
 
 本文件是后续开发与优先级的总入口。A、B、C 的单项报告只证明各自实验结果，不证明三者组合后已经通过验收。Phase D–G 目前均为计划，不得写成已交付能力。
@@ -14,7 +14,7 @@ P0 的目标整合版本是富默认场景：500 条主鱼、100 条小丑鱼、
 
 | 阶段 | 目标 | 当前状态 | 进入条件 |
 | --- | --- | --- | --- |
-| A/B/C Integration Gate | 证明碰撞、B1 礁石、相机和 UI 组合正确 | **P0，待执行** | 现在 |
+| A/B/C Integration Gate | 证明碰撞、B1 礁石、相机和 UI 组合正确 | **P0，通过（带限制，2026-11-13）；Phase D 可启动** | 已完成 |
 | D — Environment Look Development | 统一水体、材质、植被与光照，建立视觉基线 | 未启动 | Integration Gate 通过并保存基线 |
 | E — Ecosystem Behavior | 提升游动、群体动态、捕食事件和局部环境交互 | 未启动 | D 视觉基线稳定 |
 | F — Performance & Validation | 真实 GPU、CPU/GPU 分项、压力测试和优化 | 未启动 | A–E 主要功能稳定 |
@@ -32,32 +32,44 @@ P0 的目标整合版本是富默认场景：500 条主鱼、100 条小丑鱼、
 
 固定时间点沿用 17 / 43 / 44.15 / 52 / 60 / 63 s。Sphere 保留历史 checksum 对照；B1 的 ReefProxy 必须在当前同版场景重新采样并两次运行比对，不能复用实验 A 旧代理的 checksum。CPU 重负载测试、SwiftShader 捕获和烘焙必须串行执行。
 
+**WP0 执行记录（2026-11-12）：** 旧版本与参数 manifest 位于 `test-artifacts/integration-abc/2026-11-12T08-22-20Z/`，含源码/资产/文档 SHA-256、源码归档、URL/种子/视口/renderer 基线和失效规则。WP0 未运行测试、构建或截图；WP1 开始前先重验哈希，任一文件变化必须新建 run。**2026-11-12 Predator FSM 修改后该源码锁失效，旧锁只作历史证据；当前源码的新锁位于 `test-artifacts/integration-abc/2026-11-12T14-30-00Z/manifest.json`。**
+
+**WP1 执行记录（2026-11-12）：** 证据位于同一 run 的 `wp1/summary.json` 与 `wp1/summary.md`。Vitest 39/39 文件、302/302 tests；独立 tsc 通过；生产构建 100 modules、11 个 HTML 入口、128 个 dist 文件；Sphere 回归 `deterministic=true` 且与上一版一致；Sphere/ReefProxy 各双跑，`rerunMatches=[true,true]`，10/10 checksum 与 `experiment-b.json` 基线一致；富默认 smoke 与生产 dist 探针 `browserErrors=[]`。碰撞脚本使用内置 5 个时间点（17/43/52/60/63），44.15 s 由 WP3 相机回归覆盖。WP1 不提供视觉三机位、UI 状态、Debug 画面或硬件 renderer。
+
+**WP2 执行记录（2026-11-12）：** 证据位于同一 run 的 `wp2/summary.json` 与 `wp2/summary.md`。五礁覆盖与既有 B1 基线逐位一致（B 5.20%/0.387 m、C 0.50%/0.118 m、Hero 0.18%/0.234 m、D 13.78%/0.596 m、E 0.91%/0.119 m）；Sphere/ReefProxy 再次双跑 `rerunMatches=[true,true]`、两模式 `deterministic=true`，10/10 checksum 与基线一致；ReefProxy 在 17/43/52/60/63 s 均 0 穿透、0 深穿透、0 假避障、0 卡鱼，四条通道均有非零计数；D 双柱保持 0.31 m 几何间隙、0 鱼通过；B1 Overview（1920×1080）Hero/D 高度比 1.172、面积比 1.168、Hero 横向中心 56.54%，均达目标。新增当前 ReefProxy Debug 9 张、俯视/斜视通道 2 张、B1 Overview/近景 4 张，均无浏览器错误。Debug/俯视是诊断降级场景，层级捕获使用 Vite dev server 与默认 Sphere；全部为 SwiftShader 软件证据，用户已签核 WP4 硬件画面/交互，但 Experiment B 人工审美签核仍待构图评审。
+
+**WP3 执行记录（2026-11-12，旧源码）：** 证据位于同一 run 的 `wp3/summary.json` 与 `wp3/summary.md`。相机单元测试 41/41；当前 encounter 六时间点 School 可见率 0.904/0.972/0.988/0.996/0.986/0.940，`invariants=0`、`browserErrors=0`；18 次模式切换最低净空 1.879 m；浏览器目标轨迹 7 次切换、12 次状态变化，覆盖 index→null、null→新 index、真实死亡目标（51.32 s，captures=2）和 attack→patrol/search；三机位、六时间点、Console 开/关、800×560 与 390×844 移动抽屉均截图归档，UI 状态不改变模拟 checksum。WP3 未观察到直接 index→index；旧 FSM 的 300 s 探针确认当时不可直接切换；2026-11-12 已修改 FSM 并捕获 4 次 direct（见下方 FSM 记录）。School 构图已按 D016 决定保留 fit 上限 1.4；`accept:observatory` 全套在 checks/mobile 阶段超时，未产生 results JSON，不计为通过。
+
+**WP4 执行记录（2026-11-12）：** 证据位于同一 run 的 `wp4/summary.json` 与 `wp4/summary.md`。实际 renderer 为 Intel Iris Xe D3D11（headed Chrome，非 SwiftShader）；`accept:gpu` rich-default 短测 120 帧、40.66 FPS、P95 66.20 ms、1 dropped step、61 draw calls；180 s School 相机 189.8 s、412 采样，最低净空 1.100 m、最大角变化 0.0815、最低可见率 0.565、0 finite/净空/浏览器错误；30 分钟 Overview 1813.8 s、644 采样，相机位置漂移 0 m、姿态漂移约 1.7e-6°、最低可见率 0.966、0 finite/净空/浏览器错误，FPS 首/末十分位中位 53.1/54.9。起止截图非空白；用户已于 2026-11-12 签核通过硬件画面与交互。持续闪烁仍未 instrument；帧率优化已于 2026-11-12 决定留到 Phase F（D014）。无 GPU timestamp，不能声称稳定 60 FPS 或 Gate 通过。
+
+**FSM direct-retarget 变更记录（2026-11-12）：** 用户决定修改 Predator FSM（D015）。`pursuit` 中每 0.35 s 检查，若另一条存活鱼至少近 15% 且当前目标在 attack radius 外，直接替换目标并重置 `stateTime`；attack 不换目标。Predator 定向测试 5/5、全量 Vitest 304/304、tsc 与生产构建通过；`sim-regression` `deterministic=true`，但 17/43/52/60/63 s checksum 全部变化（43–63 s alive 496 vs 498）。300 s CPU 探针 139 次切换、42 direct；浏览器 0–30 s 捕获 4 次 direct（5.08/12.42/12.78/30.38 s），0 错误。证据见 `test-artifacts/fsm-retarget/2026-11-12T14-05-00Z/summary.md` 与 `docs/validation/fsm-retarget.md`。该变更使旧 WP0 锁与 WP1–WP4 证据失效，必须先新建 WP0 run 再重跑受影响项。
+
 ### 2.2 组合验收矩阵
 
-下表全部是**待执行的整合验收**，不是对现有单项结果的重新盖章。
+下表除已标注完成项外，其余是**待执行的整合验收**，不是对现有单项结果的重新盖章。**2026-11-12 FSM direct-retarget 后，下表 WP1–WP4 的旧状态均基于 pre-FSM 源码，不得复用；需在新 WP0 run 重跑。**
 
 | 项目 | 通过标准与检查重点 | 证据 | 状态 |
 | --- | --- | --- | --- |
-| Build / Regression | 当前全量 Vitest、`tsc --noEmit`、生产构建通过；记录实际测试数，无浏览器脚本错误 | 日志、测试摘要 | 待执行 |
-| Collision Proxy | GLB 与代理版本、五个逻辑 ID 和世界变换一致；无深穿透、无卡鱼，ReefProxy 无假避障；外露残差处于已接受 margin 内，并以 debug 视图检查明显穿模和空气墙 | 碰撞 JSON、逐礁指标、代理/GLB 对照截图 | 待执行 |
-| Reef Hierarchy | Overview 中 Hero 主导性明确；复核 B1 高度比 1.15–1.25、面积比 >1、Hero 横向中心 53–58%，同时进行真实画面人工确认 | Overview、Hero/D 近景、轮廓指标 | 待执行 |
-| Reef Passage | B–C、C–Hero、Hero–D、B–Hero 等主要水道无意外堵塞；通道计数与空间观察一致 | 通道计数、俯视/自由机位、异常记录 | 待执行 |
-| School Camera | 航向稳定、无翻转和跳变；记录六个时间点的可见率、fit、留白和主体尺寸，确认 90–95% 目标与构图取舍 | 六时间点截图、逐帧诊断、轨迹数据 | 待执行 |
-| Predator Camera | 垂直追逐不翻转；索引到索引、索引到 null、死亡目标和 pursuit→patrol 切换均连续；浏览器补获真实索引切换样本 | 垂直/目标切换轨迹、视频或帧序列 | 待执行 |
-| Overview | 礁石、鱼群和 UI 层级协调，主体不被 HUD 遮挡；Console 打开和关闭均检查 | 两种 Console 状态的实际截图 | 待执行 |
-| Responsive | 桌面 Console 开/关、窄视口和移动抽屉正常；相机与模拟无异常，Console 不改变模拟 | 桌面/窄屏/移动截图与检查结果 | 待执行 |
-| Isolation / Determinism | Observation/Laboratory、三机位与相机更新只读模拟；同种子重跑一致，Sphere 历史路径无意外变化，B1 ReefProxy 新 checksum 可复现 | 双跑 checksum、模式对照数据 | 待执行 |
-| Runtime / Visual Sign-off | 记录实际 renderer；软件渲染只用于正确性证据，本机 GPU 用于视觉和交互确认。补实验 C 缺少的硬件 180 s 稳定性，并完成 30 分钟本机长时观察；无持续闪烁、相机漂移或错误累积，完整性能分析仍归 F | 运行记录、实际截图、长时观察日志 | 待执行 |
+| Build / Regression | 当前全量 Vitest、`tsc --noEmit`、生产构建通过；记录实际测试数，无浏览器脚本错误 | `wp1/summary.md`、Vitest/build/tsc/regression 日志 | **已通过（WP1，2026-11-12；post-FSM 新锁 304/304）** |
+| Collision Proxy | GLB 与代理版本、五个逻辑 ID 和世界变换一致；无深穿透、无卡鱼，ReefProxy 无假避障；外露残差处于已接受 margin 内，并以 debug 视图检查明显穿模和空气墙 | 碰撞 JSON、逐礁指标、代理/GLB 对照截图 | **已通过（WP2，2026-11-12；post-FSM 新锁 107/107；SwiftShader 软件证据）** |
+| Reef Hierarchy | Overview 中 Hero 主导性明确；复核 B1 高度比 1.15–1.25、面积比 >1、Hero 横向中心 53–58%，同时进行真实画面人工确认 | Overview、Hero/D 近景、轮廓指标 | **数值与软件画面通过（WP2）；人工审美签核待构图评审** |
+| Reef Passage | B–C、C–Hero、Hero–D、B–Hero 等主要水道无意外堵塞；通道计数与空间观察一致 | 通道计数、俯视/自由机位、异常记录 | **已通过（WP2，2026-11-12）；D 双柱间隙仍为未决设计** |
+| School Camera | 航向稳定、无翻转和跳变；记录六个时间点的可见率、fit、留白和主体尺寸，确认 90–95% 目标与构图取舍 | 六时间点截图、逐帧诊断、轨迹数据 | **证据已采集（WP3）；已按 D016 保留 fit 上限 1.4、接受 t17/t63 约 0.85 可见率** |
+| Predator Camera | 垂直追逐不翻转；索引到索引、索引到 null、死亡目标和 pursuit→patrol 切换均连续；浏览器补获真实索引切换样本 | 垂直/目标切换轨迹、视频或帧序列 | **已通过（WP3 post-FSM：0–30 s 4 次 direct、0–60 s 11 次 direct，0 错误）** |
+| Overview | 礁石、鱼群和 UI 层级协调，主体不被 HUD 遮挡；Console 打开和关闭均检查 | 两种 Console 状态的实际截图 | **已通过（WP3，软件证据）** |
+| Responsive | 桌面 Console 开/关、窄视口和移动抽屉正常；相机与模拟无异常，Console 不改变模拟 | 桌面/窄屏/移动截图与检查结果 | **已通过（WP3，软件证据）** |
+| Isolation / Determinism | Observation/Laboratory、三机位与相机更新只读模拟；同种子重跑一致，Sphere 历史路径无意外变化，B1 ReefProxy 新 checksum 可复现 | 双跑 checksum、模式对照数据 | **已通过（2026-11-13）：7 种 view/camera 组合同一 checksum `52ed2ff65445d74e46b0051b`；证据 `2026-11-13T06-33-00Z/isolation/isolation-results.json`** |
+| Runtime / Visual Sign-off | 记录实际 renderer；软件渲染只用于正确性证据，本机 GPU 用于视觉和交互确认。补实验 C 缺少的硬件 180 s 稳定性，并完成 30 分钟本机长时观察；无持续闪烁、相机漂移或错误累积，完整性能分析仍归 F | 运行记录、实际截图、长时观察日志 | **WP4 完成（19/19，post-FSM 新锁）；用户 2026-11-13 签核硬件画面/交互；持续闪烁观察待确认；帧率优化留到 Phase F（D014）** |
 
 ### 2.3 已知的整合决策点
 
 | 决策点 | 当前事实 | 整合时的处理 |
 | --- | --- | --- |
-| D 双柱间隙 | B1 间隙约 0.31 m，当前 margin 下 0 鱼通过 | 明确它是刻意封闭还是应可通行。若要通行，只做局部 margin/代理标定并重跑覆盖与通道回归，不直接缩小柱体 |
-| School 可见率上界 | 实验 C 有 4/6 固定点高于 95%，来自 P95 留白与 1.4 拟合上限的取舍 | 结合主体尺寸和留白作明确验收决定；不把“超过 95%”自动写成满足 90–95% 目标 |
-| 浏览器目标索引切换 | 连续轨迹已有 371→null，索引到索引主要由单元测试覆盖 | 补真实浏览器样本，不能用单元测试代替该缺口 |
-| Hero 低前 shelf | Hero 相对 D 已有主导性，但自身轮廓面积比 baseline 少 5.5% | 只有整合构图仍未通过时才调整；不预先继续加模型 |
-| B 基座避障力与代理成本 | 实验 A 记录 B 基座力偏强、代理 CPU 查询增加 | 结合 B1 当前数据判断是否需标定；性能优化留到 F，不在验收前无测量改写 |
+| D 双柱间隙 | 已决定（D017）：保持封闭。B1 间隙约 0.31 m，当前 margin 下 0 鱼通过 | 不改柱体、margin 或代理；若要通行，必须作为独立变更并重跑覆盖与通道回归 |
+| School 可见率上界 | 已决定（D016）：保留 fit 上限 1.4。post-FSM 六点为 0.8517/0.9355/0.9254/0.9375/0.9718/0.8528；上限 1.8 的候选可到 0.916/0.982/1.000/0.972/0.976/0.998，但相机后移抬高、主体明显变小 | t17/t63 约 0.85 是已接受结果，不再作为回归失败；今后改上限或 side/up 必须重做同版六点对比并单独决策 |
+| 浏览器目标索引切换 | 已按 D015 修改 FSM 并完成 post-FSM 重跑：浏览器 0–30 s 4 次 direct、0–60 s 11 次 direct；D022 接受 0.85 阈值与 captures 18→25 | 阈值不再作为 Gate 未决项；若观感或捕获率出问题，再作为独立变更调整 |
+| Hero 低前 shelf | 已决定（D018）：不加低前 shelf。Hero 相对 D 已有主导性，自身轮廓面积比 baseline 少 5.5% 作为已知差异保留 | 视觉打磨留到 Phase F，届时重拍层级证据 |
+| B 基座避障力与代理成本 | 已决定（D020）：留到 Phase F。实验 A 记录 B 基座力偏强、代理 CPU 查询增加 | Gate 内不标定、不改模拟；与 D014 的帧率/压力矩阵一起处理 |
 
 ### 2.4 验收材料与稳定基线
 
@@ -71,7 +83,9 @@ P0 的目标整合版本是富默认场景：500 条主鱼、100 条小丑鱼、
 | `camera-results.json` | 可见率、垂直追逐、目标切换、净空和轨迹诊断 |
 | `results.json` / `summary.md` | 环境、版本、参数、通过/失败项、已知限制和原始证据索引 |
 
-全部 P0 项通过后，才建立 `reef-camera-integration-v1` 稳定基线。当前项目目录没有 Git 元数据；若验收时仍未建立版本库，应先保存不可混淆的验收 manifest、源码快照和证据归档，不能把文档中出现的标签名声称为已经创建的 Git tag。
+WP3 已输出 `overview.png` / `school.png` / `predator.png`、`camera-results.json`、`integration-contact-sheet.png`、UI 响应式截图和 `summary.md`；`collision-results.json` 由 WP1/WP2 的碰撞证据提供。WP4 已补真实硬件运行记录与 180 s/30 分钟观察，用户已签核硬件画面/交互；2026-11-12 FSM direct-retarget 后浏览器已捕获 4 次 direct index→index，但旧 WP0 锁与上述结果均基于 pre-FSM 源码，需在新 WP0 `2026-11-12T14-30-00Z` 上重跑。
+
+P0 已通过（带限制，2026-11-13），`reef-camera-integration-v1` annotated tag 在收尾提交上创建。证据目录 `test-artifacts/` 被 Git 忽略，tag 不包含证据本体；判定见 `../test-artifacts/integration-abc/2026-11-13T06-33-00Z/gate-verdict.md`。
 
 **Gate 规则：** 任一 P0 项失败，修复后重跑该项及受影响回归；在矩阵通过、材料归档和基线建立前，不启动 Phase D 的实现。
 

@@ -1,0 +1,40 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <meta name="theme-color" content="#061d25" />
+    <meta name="description" content="Blue Current — textured detail seaweed with per-leaf GPU sway." />
+    <title>Blue Current — Detail Seaweed Preview</title>
+    <link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 32 32'%3E%3Cpath d='M16 30V8m0 10c-5-1-7-5-7-9m7 15c5-1 7-5 7-9' stroke='%239fe0d6' stroke-width='3' fill='none'/%3E%3C/svg%3E" />
+    <link rel="stylesheet" href="./shared.css" />
+  </head>
+  <body class="preview-shell preview-seaweed">
+    <div id="preview-viewport"></div>
+    <aside id="hud">
+      <h1>Detail seaweed — textured clump</h1>
+      <p class="subtitle">
+        One 13.8k-triangle clump with three 2048² PBR maps, instanced five
+        times. 302 connected leaf components carry per-leaf phases; the rock,
+        roots and starfish base stay fixed. dx = A(y)·sin(ωt + ky + φ).
+      </p>
+      <nav>
+        <a href="/">Main scene</a>
+        <a href="/preview/index.html">All previews</a>
+        <a href="/preview/fish-preview.html">Fish</a>
+        <a href="/preview/predator-preview.html">Predator</a>
+        <a href="/preview/coral-preview.html">Coral</a>
+        <a href="/preview/kelp-preview.html">Kelp</a>
+        <a href="/preview/seaweed-preview.html" aria-current="true">Seaweed</a>
+      </nav>
+      <dl id="stats"><dt>status</dt><dd>loading</dd></dl>
+      <p class="hint">
+        Drag to orbit · scroll to zoom. The clump is 1.2 m tall and is scaled
+        ~2× here. Leaves sway from their own attached base; the rock base does
+        not move.
+      </p>
+    </aside>
+    <div id="preview-loading">Loading detail seaweed…</div>
+    <script type="module" src="/src/preview/seaweed-preview.ts"></script>
+  </body>
+</html>

@@ -54,7 +54,7 @@ try {
     if (message.type() === 'error') errors.push(`console: ${message.text()}`);
   });
 
-  await page.goto('http://127.0.0.1:5176/rocks-preview.html', { waitUntil: 'domcontentloaded' });
+  await page.goto('http://127.0.0.1:5176/preview/rocks-preview.html', { waitUntil: 'domcontentloaded' });
   await shoot(page, `${artifacts}/rocks-preview-lineup.png`);
   const lineup = await page.evaluate(
     () => (window as unknown as { __rocksPreview: PreviewApi }).__rocksPreview.getDiagnostics(),
@@ -63,7 +63,7 @@ try {
   assert(lineup.triangles === 7869, `Expected 7869 triangles, received ${lineup.triangles}.`);
   assert(lineup.drawCalls >= 13, `Expected at least 13 draw calls, received ${lineup.drawCalls}.`);
 
-  await page.goto('http://127.0.0.1:5176/rocks-preview.html?focus=reef_large_a', {
+  await page.goto('http://127.0.0.1:5176/preview/rocks-preview.html?focus=reef_large_a', {
     waitUntil: 'domcontentloaded',
   });
   await shoot(page, `${artifacts}/rocks-preview-focus.png`);

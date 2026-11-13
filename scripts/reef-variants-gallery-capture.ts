@@ -96,7 +96,7 @@ try {
     if (message.text().startsWith('Reef ')) console.log(message.text());
   });
 
-  await page.goto('http://127.0.0.1:5185/reef-variants-preview.html', {
+  await page.goto('http://127.0.0.1:5185/preview/reef-variants-preview.html', {
     waitUntil: 'domcontentloaded',
     timeout: 120000,
   });

@@ -183,7 +183,7 @@ Metallic-Roughness PBR，供 `MeshStandardMaterial` / glTF 使用：
    - `instancePhase` / `instanceSpeed` 实例属性；
    - 顶点 Shader 尾摆 + bank 旋转。
 4. 加载后保留 glTF 材质参数（贴图、doubleSided、roughness），设置 `flatShading = false`；不得每帧重建材质或几何体。GLTFLoader 的多 primitive 会被合并为带 groups 的单个几何体，InstancedMesh 用 2 个材质绘制，全体鱼共享 2 个 draw call。
-5. 所有资产先进入独立测试场景 `fish-preview.html`，通过视觉和性能检查后才在主场景启用。当前主场景默认 `/` 即为 Blender 鱼；`?fish=procedural` 为回退入口。
+5. 所有资产先进入独立测试场景 `preview/fish-preview.html`，通过视觉和性能检查后才在主场景启用。当前主场景默认 `/` 即为 Blender 鱼；`?fish=procedural` 为回退入口。
 6. 主场景与测试场景都必须保留程序化几何回退；任何校验失败不得白屏。
 7. 为满足 PBR 镜面响应，`SceneManager` 新增程序化水下 PMREM 环境贴图（`UnderwaterEnvironment.ts`），环境强度 0.55；该贴图同时影响鱼、礁石和珊瑚。
 
@@ -398,7 +398,7 @@ tailWeight = 1.0 − smoothstep(−1.95, 1.30, z_local)
 5. **加速/减速**：用速度差分 / 参考加速度（9）得到平滑 `uThrust ∈ [−1, 1]`，驱动摆尾幅度与频率；捕食追击加速时摆动更宽，转入搜索减速时收窄。
 6. **转弯 C 形弯曲**：yaw rate 归一化为 `uTurn ∈ [−1, 1]`，在顶点 Shader 中沿身体中线加入正弦权重弯曲。
 7. 攻击状态的可视化仍为 **自发光脉冲**：`emissive = 0xff5a24`；v2 的 `emissiveIntensity` 0–0.55，shayu（3 材质）为 0–0.30，避免浅色贴图整体变橙；不对贴图整体染色。程序化回退保留原有橙色 lerp。
-8. 独立预览页 `predator-preview.html` 提供 Hero / Close-up / Chase 三种模式；Hero 转台自动演示 turn/thrust/bank，Chase 使用真实 `SimulationWorld`、`PredatorSystem` 和 `SceneManager`。
+8. 独立预览页 `preview/predator-preview.html` 提供 Hero / Close-up / Chase 三种模式；Hero 转台自动演示 turn/thrust/bank，Chase 使用真实 `SimulationWorld`、`PredatorSystem` 和 `SceneManager`。
 9. 所有资产必须在独立预览页通过视觉和性能检查后，才在主场景启用。
 
 ### 11.8 性能预算与验收
@@ -520,7 +520,7 @@ tailWeight = 1.0 − smoothstep(−1.95, 1.30, z_local)
 
 接入方式：默认 `/` 加载 rigged GLB（`predatorRigged: true`）；`?predator=shayu` / `?predator=blender` 回到静态 shayu，`?predator=v2` 切 v2，`?predator=procedural` 回退程序化。rigged 路径不叠加 11.10 的 swim shader，避免顶点位移被蒙皮两次。
 
-测试场景：`predator-animation-preview.html`（Side / Top / Front / Quarter，骨骼开关，固定时间 `?t=`，`?hud=0` 干净截图）；脚本 `npm run smoke:predator-animation`、`npm run smoke:predator-animation:main`、`npm run capture:predator-animation`、`npm run video:predator-animation`。
+测试场景：`preview/predator-animation-preview.html`（Side / Top / Front / Quarter，骨骼开关，固定时间 `?t=`，`?hud=0` 干净截图）；脚本 `npm run smoke:predator-animation`、`npm run smoke:predator-animation:main`、`npm run capture:predator-animation`、`npm run video:predator-animation`。
 
 验证（沙箱 SwiftShader）：`verify_predator_rig.py` PASS；`PredatorAnimationController.test.ts` 11/11；`PredatorAnimation.test.ts` 7/7；全套 Vitest `--isolate=false --maxWorkers=2` 24 文件 / 167 测试 PASS；`vite build` PASS；动画 smoke 与主场景 smoke 0 浏览器错误。截图与 `sequence.webm` 位于 `test-artifacts/predator-animation/`。
 
@@ -542,7 +542,7 @@ tailWeight = 1.0 − smoothstep(−1.95, 1.30, z_local)
 | 动画观测 | smoke 主场景捕获 `predatorBank ≈ −0.125 rad`、`predatorThrust ≈ 0.60`、`predatorTurn ≈ 0.33`，均在 [−1, 1] / [−0.6, 0.6] 范围内 |
 | 资产烟雾测试 | `npm run smoke:predator` 通过，0 浏览器错误；生成 `predator-asset-hero.png` 与 `predator-chase.png` |
 | 主场景回归 | `npm test`（26/26，含 PredatorAnimation 3 项）、`npm run build`、`npm run smoke`、`npm run smoke:fish`、`npm run smoke:glb` 通过（沙箱 SwiftShader） |
-| 预览页 | `predator-preview.html?mode=hero` / `?mode=close` / `?mode=chase` 均可用；Hero 自动演示转台、C 形弯曲与倾斜 |
+| 预览页 | `preview/predator-preview.html?mode=hero` / `?mode=close` / `?mode=chase` 均可用；Hero 自动演示转台、C 形弯曲与倾斜 |
 | 用户反馈修正 | 2026-11-09：收小嘴部（下颚缩短至 z 1.700–2.220、宽度收窄、张口改为楔形），第一背鳍峰高 0.88 → 0.56、根部弦长 1.30 → 1.07 |
 
 ## 13. 珊瑚资产集（Coral set v1，2026-11-09）
@@ -744,7 +744,7 @@ hi-poly 源三角形：大型 7,680、中型 1,280–2,560、碎石 320、沙丘
 - `src/rendering/RockAsset.ts`：加载 13 个 GLB + 图集；校验三角形预算、`min.y`、高度误差 ≤ 10%、动画为 0；失败抛错由 `Environment` 回退。
 - `src/rendering/RockScatter.ts`：每种资产一个 `InstancedMesh`，共 13 个 draw call；`frustumCulled = false`；`instanceColor` 提供 3 种岩石色 / 2 种沙丘色。
 - `Environment.loadGlbRockSet()`：替换 5 块程序化主礁石；大型/中型/碎石加入 `reefGroup`（随 `Reef obstacles` 开关隐藏），沙丘加入场景根（始终可见）。
-- 独立预览页 `rocks-preview.html`：13 个资产按 4 行摆放，HUD 显示名称/三角形/高度；`?focus=<name>` 进入单体近景；暴露 `window.__rocksPreview` 供烟雾测试。
+- 独立预览页 `preview/rocks-preview.html`：13 个资产按 4 行摆放，HUD 显示名称/三角形/高度；`?focus=<name>` 进入单体近景；暴露 `window.__rocksPreview` 供烟雾测试。
 - 诊断：`getDiagnostics()` 新增 `glbRockMode`（`off`/`legacy`/`set`）、`glbRockInstances`、`glbRockTriangles`。
 - Flag：`?glbRocks=2`；`?glbRocks=1` 保留旧的单一 `reef_rock_a.glb` 试验。
 
@@ -815,7 +815,7 @@ dz = 0.38 * uKelpAmplitude * instanceAmplitude * w * cos(phase * 0.81 + 1.7)
 - `src/rendering/kelpPlacement.ts`：固定种子生成 91 株（48 `kelp_a` + 43 `kelp_b`；2026-11-10 调整实例缩放后重新洗牌），按左右海藻林带与前景/中景/背景分层散布，并避开中央游泳走廊；`y = floorHeightAt(x, z) - 0.05`。
 - `src/rendering/KelpScatter.ts`：每种资产 1 个 `InstancedMesh`（共 2 个 draw call），每实例写相位/频率/振幅与近白色调色，`frustumCulled = false`。
 - 主场景默认启用；`?kelp=0` 关闭。加载或校验失败时保留无海藻的海床并输出 warning，页面不白屏。与完整岩石集/珊瑚/细节海菜默认组合。
-- 独立预览：`kelp-preview.html`；浏览器烟雾测试：`npm run smoke:kelp`。
+- 独立预览：`preview/kelp-preview.html`；浏览器烟雾测试：`npm run smoke:kelp`。
 
 ### 15.5 验收（2026-11-09，沙箱 SwiftShader）
 
@@ -869,7 +869,7 @@ dz = 0.15 * 0.35 * instanceAmplitude * w * cos(phase * 0.83 + 1.2)
 - `src/rendering/seaweedPlacement.ts`：固定种子生成 6 株：3 株位于前三个礁石核心的相机朝向侧，3 株散布在半径 6–15 m 的开阔沙地；基底下沉 0.04 m。
 - `src/rendering/SeaweedScatter.ts`：单资产 1 个 `InstancedMesh`（1 draw call），实例缩放 1.70–2.05（世界高约 2.04–2.46 m），近白 `instanceColor` 只做轻微明度变化。
 - 主场景默认启用（6 株），`?seaweed=0` 关闭；默认与 48 株完整珊瑚、91 株低模海藻、完整岩石集组合。`?coral=temperate` 可降为 12 株温带珊瑚。
-- 独立预览：`seaweed-preview.html`；烟雾测试：`npm run smoke:seaweed`、`npm run smoke:seaweed:main`、`npm run smoke:seaweed:combo`。
+- 独立预览：`preview/seaweed-preview.html`；烟雾测试：`npm run smoke:seaweed`、`npm run smoke:seaweed:main`、`npm run smoke:seaweed:combo`。
 
 ### 16.5 验收（2026-11-09，沙箱 SwiftShader）
 
@@ -955,7 +955,7 @@ dz = 0.15 * 0.35 * instanceAmplitude * w * cos(phase * 0.83 + 1.2)
 - v1.0（2026-11-08）：建立 School Fish 资产规格；确认 +Z 前向、1.650 总长、`_TAILWEIGHT` 契约、PBR 贴图与集成 flag；取代 v0.1 中"≤300 三角形、单材质、无贴图、flatShading"的鱼条款。旧条款保留于 `BLENDER_ASSET_CONTRACT.md` 仅作历史记录，不再作为验收标准。
 - v1.1（2026-11-08）：交付 School Fish；修正为无顶点色（颜色画入 BaseColor）、GLTFLoader 属性小写后的 `aTailWeight` 规范名、24 段环向、实际 1448 三角形与 866 KB GLB；补充水下 PMREM 环境贴图与实测数据。
 - v1.2（2026-11-08）：新增 Predator（礁鲨）规格与交付实测；4344 三角形、5.2016 总长、2 材质、2048² 贴图、`_TAILWEIGHT` 尾摆 Shader；`?predator=blender` 接入；攻击状态改为自发光脉冲。用户验收后修正第一背鳍、第二背鳍与臀鳍根部，使其沿身体表面曲线嵌入（bbox max y 更新为 +1.2406）。
-- v1.3（2026-11-09）：新增珊瑚资产集规格与交付实测；6 个基地模（枝状、桌面、管状海绵、扇状、脑珊瑚、海葵），单株 1.5k–3.2k 三角形、底部原点、单材质、无内嵌贴图；1024² 共享图集；`CoralAsset.ts` 加载校验、`coral-preview.html` 实例化预览、`verify_coral_glbs.py` 与 `smoke:coral` 验收。主场景暂未接入。
+- v1.3（2026-11-09）：新增珊瑚资产集规格与交付实测；6 个基地模（枝状、桌面、管状海绵、扇状、脑珊瑚、海葵），单株 1.5k–3.2k 三角形、底部原点、单材质、无内嵌贴图；1024² 共享图集；`CoralAsset.ts` 加载校验、`preview/coral-preview.html` 实例化预览、`verify_coral_glbs.py` 与 `smoke:coral` 验收。主场景暂未接入。
 - v1.4（2026-11-09）：新增岩石与海底地形资产集规格与交付实测；13 个资产（3 大礁石 / 4 中岩石 / 4 碎石 / 2 沙丘），icosphere 多块位移 + Decimate + EdgeSplit，Cycles 烘焙切线法线 / AO，2048² 共享图集；`RockAsset.ts` / `RockScatter.ts` / `rockPlacement.ts` 确定性摆放；`?glbRocks=2` 替换主礁石并散布 54 个装饰实例；`verify_rocks_glb.py` 与 `smoke:rocks` 验收，主场景 0 错误。
 - v1.5（2026-11-09）：Predator v2 大白鲨交付；5990 三角形、5.2778 总长、4 材质（body / eye / teeth / mouth）、35 颗牙、下颚 + U 形口腔、2048² 反荫蔽贴图、`_TAILWEIGHT` 尾摆 + C 形弯曲 + 转弯倾斜 + 加速/减速响应；GLB 默认启用、`?predator=procedural` 回退；用户反馈后收小嘴部与第一背鳍（背鳍峰高 0.88→0.56），新增 `tests/PredatorAnimation.test.ts` 与 `predator-chase.png` 验收截图。
 - v1.6（2026-11-09）：新增海藻资产集（Phase C）规格与交付实测；`kelp_a` 184 三角形 / `kelp_b` 168 三角形，底部原点、双面单材质、`_SWAYWEIGHT` + `_BLADEPHASE` 顶点摆动；`KelpAsset.ts` / `KelpScatter.ts` / `kelpPlacement.ts`；`?kelp=1` 主场景接入 49 株（26 + 23）、8,648 三角形；`verify_kelp_glbs.py` 与 `smoke:kelp` 验收。形态按用户提供的海藻参考图重做：12/10 片宽叶、深折、叶缘波动、部分分叉叶尖。
