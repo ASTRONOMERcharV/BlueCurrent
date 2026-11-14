@@ -1,6 +1,6 @@
 # Validation — Performance
 
-> 当前性能结论核实：2026-11-15。本文区分历史硬件、软件和 CPU 数据；2026-11-14 Phase F F1 已用真实 `EXT_disjoint_timer_query_webgl2` 测到 GPU EMA 并完成四档压力矩阵（1 捕食者代理）。干净复测（暂停动态壁纸、关闭用户 Chrome）中 standard telemetry-off 3/3 达到 D028 的 60 FPS 目标；2026-11-15 关闭 Chrome/DeepSeek 重试后 extreme 两种模式可重复、pressure telemetry-on 可重复，pressure telemetry-off 仍有 cadence decay。
+> 当前性能结论核实：2026-11-15。本文区分历史硬件、软件和 CPU 数据；2026-11-14 Phase F F1 已用真实 `EXT_disjoint_timer_query_webgl2` 测到 GPU EMA 并完成四档压力矩阵（1 捕食者代理）。干净复测（暂停动态壁纸、关闭用户 Chrome）中 standard telemetry-off 3/3 达到 D028 的 60 FPS 目标；2026-11-15 关闭 Chrome/DeepSeek 重试后 extreme 两种模式可重复、pressure telemetry-on 可重复，pressure telemetry-off 仍有 cadence decay（180 s cooldown 重跑改善但未消除）。
 
 ## 指标定义
 
@@ -181,10 +181,11 @@ telemetry-on 分项中位（ms）：
 - 与第一次干净尝试相比，pressure 从 5.2/26.9/5.3 FPS 提升到 33.2/21.6/12.9 FPS，extreme 从 3.8/3.1/3.1 到 4.0/3.8/3.9；关闭后台应用显著降低了噪声。
 - telemetry-on 分项中位（ms）：pressure boidsMain 13.23、boidsClown 1.82、obstacle 1.29、fish 1.86、env 1.53、draw 1.59；extreme boidsMain 23.86、boidsClown 2.72、obstacle 2.50、fish 3.40、env 1.34、draw 1.68。`boidsMain` 仍是主瓶颈。
 - pressure telemetry-off 的 cadence decay 仍需独立的热/节奏控制（更长 cooldown 或分段冷却）才能签核；3/5 捕食者仍缺。
+- pressure telemetry-off 再用 180 s cooldown 重跑一次：FPS 36.1/27.7/20.2、P50 24.2/30.2/36.5 ms、sim 12.4/12.6/13.7 ms、render 4.5/4.6/5.5 ms；FPS spread 1.79、P50 spread 1.51。更长冷却降低了 decay（90 s 时为 P50 30.2/30.4/66.8），但没有消除，sim 与 render 仍随 repeat 缓慢上升；pressure telemetry-off 仍不作为签核基线。
 
 ### Phase F 仍缺
 
-- pressure/extreme 已在 2026-11-15 关闭 Chrome/DeepSeek 后重试：extreme 两种模式可重复，pressure telemetry-on 可重复，pressure telemetry-off 仍有 cadence decay；pressure telemetry-off 签核基线与 3/5 捕食者仍缺。
+- pressure/extreme 已在 2026-11-15 关闭 Chrome/DeepSeek 后重试：extreme 两种模式可重复，pressure telemetry-on 可重复，pressure telemetry-off 仍有 cadence decay（180 s cooldown 重跑改善但未消除）；pressure telemetry-off 签核基线与 3/5 捕食者仍缺。
 - pressure/extreme 的 3/5 捕食者完整矩阵未测，只有 1 捕食者代理（D027）。
 - GPU 内存只有 `renderer.info.memory` 的资源计数，没有字节级 GPU memory counter；`performance.memory` 是 JS heap，不能当 GPU 内存。
 - 本轮没有优化代码，也没有优化前后同版对照；D028 目标已签核并在 standard 档验证，优化项另开工作包。
