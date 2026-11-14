@@ -8,9 +8,15 @@ describe('generateSeaweedLayout', () => {
     expect(generateSeaweedLayout(REEF_OBSTACLES)).toEqual(generateSeaweedLayout(REEF_OBSTACLES));
   });
 
-  it('places six detail clumps', () => {
+  it('places fourteen clumps across six cluster sites', () => {
     const layout = generateSeaweedLayout(REEF_OBSTACLES);
-    expect(layout).toHaveLength(6);
+    expect(layout).toHaveLength(14);
+    const clusters = new Set(layout.map((placement) => placement.cluster));
+    expect(clusters.size).toBe(6);
+    for (let cluster = 0; cluster < 6; cluster += 1) {
+      expect(layout.filter((placement) => placement.cluster === cluster).length)
+        .toBeGreaterThanOrEqual(2);
+    }
   });
 
   it('plants every rock base on the procedural floor', () => {
@@ -27,6 +33,26 @@ describe('generateSeaweedLayout', () => {
           placement.z - obstacle.center[2],
         );
         expect(distance).toBeGreaterThanOrEqual(obstacle.radius * 1.33);
+      }
+    }
+  });
+
+  it('keeps random open-sand clumps out of the central swim corridor', () => {
+    for (const placement of generateSeaweedLayout(REEF_OBSTACLES)) {
+      if (placement.cluster < 3) continue;
+      expect(Math.abs(placement.x) < 7 && placement.z < 16).toBe(false);
+    }
+  });
+
+  it('keeps plant centres at least 0.7 m apart', () => {
+    const layout = generateSeaweedLayout(REEF_OBSTACLES);
+    for (let first = 0; first < layout.length; first += 1) {
+      for (let second = first + 1; second < layout.length; second += 1) {
+        const distance = Math.hypot(
+          layout[first].x - layout[second].x,
+          layout[first].z - layout[second].z,
+        );
+        expect(distance).toBeGreaterThanOrEqual(0.7);
       }
     }
   });

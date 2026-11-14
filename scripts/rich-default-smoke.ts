@@ -100,7 +100,7 @@ try {
   assert(lengthRatio > 1.5 && lengthRatio < 2.2,
     `School/clownfish length ratio ${lengthRatio.toFixed(2)}:1 outside the 1.5–2.2 target.`);
   assert(initial.coralInstances === 48, `Expected the 48-colony coral tier, received ${initial.coralInstances}.`);
-  assert(initial.seaweedInstances === 6, `Expected 6 detail seaweed clumps, received ${initial.seaweedInstances}.`);
+  assert(initial.seaweedInstances === 14, `Expected 14 detail seaweed clumps, received ${initial.seaweedInstances}.`);
   assert(initial.lightingMode === 'full', `Expected full lighting, received ${initial.lightingMode}.`);
   assert(initial.drawCalls > 0, 'Renderer reported zero draw calls.');
   assert(initial.renderTriangles > 500000,

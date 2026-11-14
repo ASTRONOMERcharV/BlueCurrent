@@ -88,7 +88,10 @@ export function applyScenario(
 ): ScenarioDefinition {
   const scenario = getScenario(id);
   const defaults = createDefaultConfig();
-  const { bounds, maxFishCount, fixedDelta, maxSubSteps, obstacleShapeMode } = world.config;
+  const {
+    bounds, maxFishCount, fixedDelta, maxSubSteps, obstacleShapeMode,
+    schoolDynamicsEnabled,
+  } = world.config;
   Object.assign(world.config, defaults, scenario.config, overrides, {
     bounds,
     maxFishCount,
@@ -97,6 +100,9 @@ export function applyScenario(
     // The collider mode is an explicit experiment setting; a scenario reset
     // must not silently fall back to spheres or vice versa.
     obstacleShapeMode,
+    // E2's same-version A/B switch is a run-level experiment setting; scenario
+    // changes must not silently re-enable the new terms.
+    schoolDynamicsEnabled,
     seed: scenario.seed,
   });
   world.setSearchMode('grid');

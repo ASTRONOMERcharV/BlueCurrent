@@ -1,6 +1,6 @@
 # Validation — Test Guide
 
-> 核实日期：2026-11-12。当前通过状态读 `../CURRENT_STATE.md`；本文只维护运行方法、证据规则和环境注意事项。
+> 核实日期：2026-11-14。当前通过状态读 `../CURRENT_STATE.md`；本文只维护运行方法、证据规则和环境注意事项。
 
 ## 核心命令
 
@@ -10,14 +10,15 @@ npm run test:watch      # 开发时监听
 npx tsc --noEmit        # 独立类型检查
 npm run build           # tsc --noEmit && vite build
 npm run sim:regression  # 固定种子模拟回归
+npm run sim:regression -- --school-dynamics=legacy --habitat=legacy  # E2/E4 回滚对照
 npm run smoke           # 基础 Playwright 桌面/移动 smoke
 npm run smoke:rich      # 富默认场景
 npm run accept:observatory
 ```
 
-测试文件集中在 `tests/*.test.ts`。Vitest 配置排除依赖、`**/dist/**` 和 `.task-locks` 回滚副本；没有显式排除所有 `dist-*`，新增构建目录时不要在其中放测试副本。备份测试文件必须改名为 `.test.ts.bak` 等非 `.test.ts` 后缀；`test-artifacts/` 下的 `.test.ts` 备份会被收集并因相对导入失败。静态声明数与 `it.each` 展开后的运行数不同，报告以实际 runner summary 为准。
+测试文件集中在 `tests/*.test.ts`。Vitest 配置排除依赖、`**/dist/**`、`.claude/**` 嵌套 worktree 与 `.task-locks` 回滚副本；没有显式排除所有 `dist-*`，新增构建目录时不要在其中放测试副本。备份测试文件必须改名为 `.test.ts.bak` 等非 `.test.ts` 后缀；`test-artifacts/` 下的 `.test.ts` 备份会被收集并因相对导入失败。静态声明数与 `it.each` 展开后的运行数不同，报告以实际 runner summary 为准。
 
-局部修改优先运行相关测试，再跑全量。不要用“之前 302/302”替代当前改动后的运行；原始日志应写入新的证据路径，并记录命令、开始时间、版本和失败项。
+局部修改优先运行相关测试，再跑全量。不要用“之前 365/365”替代当前改动后的运行；原始日志应写入新的证据路径，并记录命令、开始时间、版本和失败项。
 
 ## 专项脚本
 
@@ -33,7 +34,9 @@ npm run accept:observatory
 | Predator 目标轨迹 | `npx tsx scripts/camera-target-switch.ts --out=<name>`；同样只需传目录名。固定 34.5–38.5 s；更长的死亡/重新捕获窗口使用 `wp3/tools/camera-target-switch-long.ts`。 |
 | Predator FSM direct retarget | `npx tsx test-artifacts/fsm-retarget/2026-11-12T14-05-00Z/tools/target-index-probe.ts --seconds=300`；浏览器样本用同目录 `tools/browser-target-switch.ts --start=0 --seconds=30 --port=5217`。 | CPU 300 s：139 次切换、42 direct；浏览器 0–30 s：4 direct、0 错误。当前 FSM 允许 pursuit 直接重选；旧 `gate-target-index` 为 pre-FSM 对照。 |
 | 相机 CPU 数学 | `npx tsx scripts/camera-benchmark.ts` |
-| Observatory UI acceptance | `npm run accept:observatory -- --stage=<desktop|scenarios|checks|mobile|all>`；当前脚本桌面断言仍期待 12 珊瑚，而默认是 48。WP3 使用 `wp3/tools/observatory-acceptance.win.ts` 修补副本；全套 checks/mobile 超时，无 results JSON，详见 `wp3/summary.md`。 |
+| Observatory UI acceptance | `npm run accept:observatory -- --stage=<desktop|scenarios|checks|mobile|all>`；当前脚本已改为与 48 珊瑚默认场景一致，并在全珊瑚页前释放主页面 GL 上下文；2026-11-14 全套 `all` 通过（`passed=true`、`browserErrors=[]`）。旧 WP3 修补副本与超时记录只作历史。 |
+| E2 结构捕获 | `npx tsx scripts/school-structure-capture.ts --mode=dynamic|legacy --out=<dir> --seconds=70 --step=30`；固定世界机位，输出事件帧、五时间点固定帧与结构 JSON。`--channel=chrome --headed=1 --software=0` 切换硬件。`--out` 可传完整 `test-artifacts/...` 或相对目录名。 |
+| E4 栖息/沙尘捕获 | `npx tsx scripts/e4-capture.ts --kind=habitat|sediment --mode=<anemone|legacy|on|off> --out=<dir>`；habitat 用 reef-0 海葵机位，sediment 用 school 下方低机位并推进 90 个 1/30 s tick。硬件同上。 |
 | 硬件 GPU | `npm run accept:gpu -- --channel=chrome`，详见 `performance.md`。 |
 | 硬件 180 s / 30 分钟 | WP4 使用 `test-artifacts/integration-abc/2026-11-12T08-22-20Z/wp4/tools/hardware-monitor-180s.mjs`、`hardware-monitor-30min.mjs`；headed Chrome、`channel=chrome`、拒绝 SwiftShader，输出 `hardware-180s.json` / `hardware-30min.json`。30 分钟分析用 `summarize-30min.mjs`。 |
 

@@ -91,7 +91,8 @@ export type WaterDebugLayer =
   | 'marineParticles'
   | 'lightShafts'
   | 'caustics'
-  | 'surfaceLight';
+  | 'surfaceLight'
+  | 'sediment';
 
 export type MediumDebugLayer = 'sceneFog' | 'waterAttenuation' | 'volumetricScattering';
 export type LocalWaterDebugLayer = Exclude<WaterDebugLayer, MediumDebugLayer>;
@@ -110,6 +111,7 @@ export function createWaterDebugState(): WaterDebugState {
     lightShafts: true,
     caustics: true,
     surfaceLight: true,
+    sediment: true,
     postProcessing: null,
   };
 }

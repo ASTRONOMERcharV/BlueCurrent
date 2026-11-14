@@ -15,8 +15,8 @@ P0 的目标整合版本是富默认场景：500 条主鱼、100 条小丑鱼、
 | 阶段 | 目标 | 当前状态 | 进入条件 |
 | --- | --- | --- | --- |
 | A/B/C Integration Gate | 证明碰撞、B1 礁石、相机和 UI 组合正确 | **P0，通过（带限制，2026-11-13）；Phase D 可启动** | 已完成 |
-| D — Environment Look Development | 统一水体、材质、植被与光照，建立视觉基线 | 未启动 | Integration Gate 通过并保存基线 |
-| E — Ecosystem Behavior | 提升游动、群体动态、捕食事件和局部环境交互 | 未启动 | D 视觉基线稳定 |
+| D — Environment Look Development | 统一水体、材质、植被与光照，建立视觉基线 | 两轮完成（2026-11-13） | Integration Gate 通过并保存基线 |
+| E — Ecosystem Behavior | 提升游动、群体动态、捕食事件和局部环境交互 | 两轮完成（E1+E3 / E2+E4，2026-11-14） | D 视觉基线稳定 |
 | F — Performance & Validation | 真实 GPU、CPU/GPU 分项、压力测试和优化 | 未启动 | A–E 主要功能稳定 |
 | G — Release & Presentation | 完整观察流程、演示、文档和发布 | 未启动 | F 验收完成，展示内容稳定 |
 
@@ -83,15 +83,15 @@ P0 的目标整合版本是富默认场景：500 条主鱼、100 条小丑鱼、
 | `camera-results.json` | 可见率、垂直追逐、目标切换、净空和轨迹诊断 |
 | `results.json` / `summary.md` | 环境、版本、参数、通过/失败项、已知限制和原始证据索引 |
 
-WP3 已输出 `overview.png` / `school.png` / `predator.png`、`camera-results.json`、`integration-contact-sheet.png`、UI 响应式截图和 `summary.md`；`collision-results.json` 由 WP1/WP2 的碰撞证据提供。WP4 已补真实硬件运行记录与 180 s/30 分钟观察，用户已签核硬件画面/交互；2026-11-12 FSM direct-retarget 后浏览器已捕获 4 次 direct index→index，但旧 WP0 锁与上述结果均基于 pre-FSM 源码，需在新 WP0 `2026-11-12T14-30-00Z` 上重跑。
+WP3 已输出 `overview.png` / `school.png` / `predator.png`、`camera-results.json`、`integration-contact-sheet.png`、UI 响应式截图和 `summary.md`；`collision-results.json` 由 WP1/WP2 的碰撞证据提供。WP4 已补真实硬件运行记录与 180 s/30 分钟观察，用户已签核硬件画面/交互；2026-11-12 FSM direct-retarget 后浏览器已捕获 4 次 direct index→index；上述 WP1–WP4 均已在 post-FSM 锁 `2026-11-12T14-30-00Z` 重跑完成。
 
 P0 已通过（带限制，2026-11-13），`reef-camera-integration-v1` annotated tag 在收尾提交上创建。证据目录 `test-artifacts/` 被 Git 忽略，tag 不包含证据本体；判定见 `../test-artifacts/integration-abc/2026-11-13T06-33-00Z/gate-verdict.md`。
 
-**Gate 规则：** 任一 P0 项失败，修复后重跑该项及受影响回归；在矩阵通过、材料归档和基线建立前，不启动 Phase D 的实现。
+**Gate 规则（历史，Gate 已于 2026-11-13 关闭）：** 任一 P0 项失败，修复后重跑该项及受影响回归；在矩阵通过、材料归档和基线建立前，不启动 Phase D 的实现。
 
 ## 3. Phase D — Environment Look Development
 
-**状态：未启动，等待 Integration Gate。** 目标是让现有场景形成可信的近、中、远水下层次，而不是把所有物体统一染成相同蓝色或依靠不断加雾制造氛围。
+**状态：两轮完成（2026-11-13）。** 第一轮 D4 全局光照与 D1 水体（D023），第二轮 D2 海床程序化材质与 D3 海草受流摆动/成簇分布（D024）；两轮均完成 10 机位 × base/fog/final 同版对照、全量回归与 Intel Iris Xe 硬件视觉签核（`test-artifacts/phase-d/2026-11-13t12-16-00z/`）。D2 剩余碎石/附着细节未做，是否补做由后续确认。目标是让现有场景形成可信的近、中、远水下层次，而不是把所有物体统一染成相同蓝色或依靠不断加雾制造氛围。
 
 | 模块 | 工作范围 | 验收重点 |
 | --- | --- | --- |
@@ -100,7 +100,7 @@ P0 已通过（带限制，2026-11-13），`reef-camera-integration-v1` annotate
 | D3 海草动画与分布 | 高度相关弯曲、株间/叶间相位差、轻微方向变化、尺寸密度变化和统一水流响应；优先顶点动画 | 运动协调但不同步，无根部滑移，不为每株引入重型独立物理 |
 | D4 光照与色彩统一 | 统一色彩管理、曝光、环境光、主光、体积光、焦散和远景衰减 | 不靠单独打亮 Hero 制造主角感；视觉层级来自局部受光、轮廓与材质 |
 
-**第一轮只做三项：** D1 水体 Shader、D2 的海床材质部分、D4 的全局光照。首轮固定视觉基线后，再处理 D3 海草和 D2 的剩余礁石接触/附着细节，避免所有视觉变量同时变化。
+**轮次划分：** 第一轮 D1 水体 + D4 全局光照；第二轮 D2 海床材质 + D3 海草动画与分布。两轮均已定稿（D023、D024）。每轮只变一组视觉变量并保留独立 before/after 目录；D2 的碎石/附着细节若继续，须作为独立轮次评审。
 
 技术上必须深化现有 `UnderwaterMedium`、`UnderwaterLightingConfig` 和既有焦散/颗粒/植被路径，不新增第二条水体或雾合成链。水体保持线性空间、tonemapping 前合成，`?lighting=base` 必须真正关闭水体介质与局部效果。D 阶段原则上只改呈现；相机与固定种子模拟 checksum 不应因视觉调整而变化。
 
@@ -108,7 +108,7 @@ P0 已通过（带限制，2026-11-13），`reef-camera-integration-v1` annotate
 
 ## 4. Phase E — Ecosystem Behavior
 
-**状态：未启动，等待 D 视觉基线。** 目标是把现有群体算法提升为可观察的生态行为，不用脚本化结果替代真实模拟。
+**状态：两轮完成（2026-11-14，D025/D026）。** 第一轮 E1 在渲染层深化主鱼俯仰平滑/限幅与转弯弯曲，E3 把真实 FSM/捕获映射为只读事件流与 `predator-watch` 单行，两者只改呈现，固定种子 checksum 不变。第二轮 E2 用一致度加权对齐、密度自适应分离、群体流地形预判、阈值门控惊扰传播与恐惧缩放边缘逃逸产生可复现的 split/merge 结构，并新增 30 步结构遥测与 `predator-watch` school 行；E4 把小丑鱼软栖息中心迁到最近海葵 `anemone-b` 上方（环形死区、无传送/硬约束），并用真实近底位置/速度与共享海流驱动确定性沙尘/悬浮颗粒。E2/E4 是有意的行为改动，建立新 checksum 基线，并提供 `?schoolDynamics=legacy`、`?habitat=legacy`、`?sediment=0` 同版回滚/对照。目标是把现有群体算法提升为可观察的生态行为，不用脚本化结果替代真实模拟。D2 剩余碎石/附着细节仍未做，未阻塞本轮入口。
 
 | 模块 | 工作范围 | 验收重点 |
 | --- | --- | --- |
@@ -121,7 +121,7 @@ E1 应深化现有主鱼 `_TAILWEIGHT` 顶点动画、转弯倾斜和 shayu 的 
 
 E3 是对现有 Patrol / Pursuit / Attack / Search 和真实捕获规则的表现深化，不要求为重命名而重写状态机。E4 优先把已有 100 条小丑鱼与海葵区域的关系做清晰，不扩大资产范围。
 
-**E 交付物：** 主鱼与鲨鱼游动对照、鱼群分裂/重聚轨迹、完整捕食事件记录、小丑鱼栖息观察和环境交互证据；固定 60 Hz、双缓冲、网格等价性和固定种子回归必须保持。
+**E 交付物：** 主鱼与鲨鱼游动对照、鱼群分裂/重聚轨迹、完整捕食事件记录、小丑鱼栖息观察和环境交互证据；固定 60 Hz、双缓冲、网格等价性和固定种子回归必须保持。第一轮（E1+E3）已交付 12 对同版鱼体运动对照、慢动作片段、70 s 真实捕食事件记录与 UI 证据，见 `../test-artifacts/phase-e/2026-11-14t00-13-00z/summary.md`。第二轮（E2+E4）已交付 70 s dynamic/legacy 结构事件与固定机位对照、3600 步压力与确定性、`predator-watch` school 行桌面/窄屏证据、calm 900 步栖息指标、沙尘 on/off 同机位对照与 checksum 不变证明，以及 Intel Iris Xe 硬件签核，见 `../test-artifacts/phase-e/2026-11-14t08-31-46z/summary.md`。两轮均完成软件评审与硬件签核。
 
 ## 5. Phase F — Performance & Validation
 
@@ -189,4 +189,4 @@ E3 是对现有 Patrol / Pursuit / Attack / Search 和真实捕获规则的表�
 5. 每个阶段完成后更新对应 docs 报告、本文件状态和项目活记忆的指针；阶段细节只留在仓库 docs，不新增重复的阶段记忆。
 6. 当前目录无 Git 元数据时先备份再修改。捕获、测试和烘焙串行执行，保留原始数据、失败项和剩余限制。
 
-一个阶段只有在其交付物、回归、实际证据和已知限制全部记录后才算完成。下一阶段的推荐入口始终是：**先完成 Integration Gate，再启动 Phase D 第一轮的水体、海床和全局光照三项工作。**
+一个阶段只有在其交付物、回归、实际证据和已知限制全部记录后才算完成。Gate 已关闭，Phase D 两轮、Phase E 两轮均已完成并签核；下一入口是 **Phase F — Performance & Validation**，并需确认 D2 剩余碎石/附着细节是否补做。

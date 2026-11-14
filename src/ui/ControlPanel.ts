@@ -250,12 +250,14 @@ export class ControlPanel {
 
   syncWaterDebug(state: WaterDebugState): void {
     let enabledCount = 0;
+    let total = 0;
     document.querySelectorAll<HTMLInputElement>('[data-water-debug]').forEach((input) => {
       const layer = input.dataset.waterDebug as WaterDebugLayer;
       input.checked = state[layer];
+      total += 1;
       if (state[layer]) enabledCount += 1;
     });
-    byId<HTMLOutputElement>('water-debug-count').value = `${enabledCount} / 7`;
+    byId<HTMLOutputElement>('water-debug-count').value = `${enabledCount} / ${total}`;
   }
 
   syncCollisionDebug(state: CollisionDebugVisibility): void {

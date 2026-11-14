@@ -49,7 +49,7 @@ mkdirSync(artifacts, { recursive: true });
 
 const server = await createServer({
   root: projectRoot,
-  cacheDir: '/tmp/blue-current-vite-seaweed',
+  cacheDir: `${projectRoot}.tmp/blue-current-vite-seaweed`,
   server: { host: '127.0.0.1', port: 5180, strictPort: true },
 });
 await server.listen();

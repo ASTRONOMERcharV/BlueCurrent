@@ -6,7 +6,7 @@ interface ComboDiagnostics {
   ready: boolean;
   glbRockMode: 'off' | 'legacy' | 'set';
   kelpModel: 'off' | 'blender';
-  coralModel: 'off' | 'blender';
+  coralModel: 'off' | 'temperate' | 'full';
   seaweedModel: 'off' | 'blender';
   seaweedInstances: number;
   seaweedTriangles: number;
@@ -25,7 +25,7 @@ function assert(condition: unknown, message: string): asserts condition {
 const projectRoot = fileURLToPath(new URL('../', import.meta.url));
 const server = await createServer({
   root: projectRoot,
-  cacheDir: '/tmp/blue-current-vite-seaweed-combo',
+  cacheDir: `${projectRoot}.tmp/blue-current-vite-seaweed-combo`,
   server: { host: '127.0.0.1', port: 5183, strictPort: true },
 });
 await server.listen();
@@ -50,15 +50,15 @@ try {
       if (!api || !api.ready) return false;
       const d = api.getDiagnostics();
       return d.ready && d.glbRockMode === 'set' && d.kelpModel === 'blender'
-        && d.coralModel === 'blender' && d.seaweedModel === 'blender';
+        && d.coralModel === 'full' && d.seaweedModel === 'blender';
     },
     { timeout: 150000 },
   );
   const diagnostics = await page.evaluate(
     () => (window as unknown as { __blueCurrent: MainApi }).__blueCurrent.getDiagnostics(),
   );
-  assert(diagnostics.seaweedInstances === 6, `Expected 6 seaweed instances, received ${diagnostics.seaweedInstances}.`);
-  assert(diagnostics.seaweedTriangles === 13_792 * 6, `Unexpected seaweed triangle count ${diagnostics.seaweedTriangles}.`);
+  assert(diagnostics.seaweedInstances === 14, `Expected 14 seaweed instances, received ${diagnostics.seaweedInstances}.`);
+  assert(diagnostics.seaweedTriangles === 13_792 * 14, `Unexpected seaweed triangle count ${diagnostics.seaweedTriangles}.`);
   assert(errors.length === 0, `Browser errors:\n${errors.join('\n')}`);
   console.log(JSON.stringify({ passed: true, diagnostics, browserErrors: errors }, null, 2));
 } finally {

@@ -1,4 +1,6 @@
 import type { SimulationWorld } from '../simulation/SimulationWorld';
+import type { PredationEvent } from './PredationEventTracker';
+import type { SchoolStructureState } from './SchoolStructureTracker';
 import { PerformanceGraph } from './PerformanceGraph';
 
 export interface FrameReadings {
@@ -42,7 +44,12 @@ export class StatisticsPanel {
     if (this.toastTimer) clearTimeout(this.toastTimer);
   }
 
-  update(world: SimulationWorld, readings: FrameReadings): void {
+  update(
+    world: SimulationWorld,
+    readings: FrameReadings,
+    predationEvent: PredationEvent | null = null,
+    schoolStructure: SchoolStructureState | null = null,
+  ): void {
     const { metrics, predator, config } = world;
     const { fps, renderMs, p95FrameMs } = readings;
     const predatorState = config.predatorEnabled
@@ -65,6 +72,15 @@ export class StatisticsPanel {
     byId('metric-predator').textContent = predatorState;
     byId('metric-ecology-predator').textContent = predatorState;
     byId('predator-watch-state').textContent = config.predatorEnabled ? predatorState : 'Inactive';
+    byId('predator-watch-event').textContent = !config.predatorEnabled
+      ? 'Inactive'
+      : predationEvent
+        ? `T+${predationEvent.simulationTime.toFixed(1)}s · ${predationEvent.message}`
+        : 'Listening';
+    byId('predator-watch-school').textContent = schoolStructure
+      ? `School ${schoolStructure.schools} · median ${schoolStructure.medianSchoolSize}`
+        + `${schoolStructure.lastEvent ? ` · ${schoolStructure.lastEvent.kind}` : ''}`
+      : 'Listening';
     byId('predator-watch').classList.toggle('standby', !config.predatorEnabled);
     byId('metric-render').textContent = measured(renderMs, ' ms');
     byId('metric-p95').textContent = measured(p95FrameMs, ' ms');

@@ -2,7 +2,7 @@ import { existsSync, mkdirSync, readFileSync, writeFileSync } from 'node:fs';
 import { readFile, stat } from 'node:fs/promises';
 import { createServer as createHttpServer } from 'node:http';
 import { tmpdir } from 'node:os';
-import { extname, join, normalize, resolve as resolvePath } from 'node:path';
+import { extname, join, normalize, resolve as resolvePath, sep } from 'node:path';
 import { fileURLToPath } from 'node:url';
 import { chromium } from 'playwright';
 import { createServer } from 'vite';
@@ -140,6 +140,7 @@ const maskPoseFilter = argument('mask-poses', 'all')
 const serveDist = argument('serve-dist', '');
 const waitUntil = serveDist ? 'domcontentloaded' : 'networkidle';
 const channel = argument('channel', '');
+const headed = argument('headed', '0') === '1';
 const softwareRendering = argument('software', channel ? '0' : '1') === '1';
 const rendererNote = softwareRendering
   ? 'SwiftShader software rendering; screenshots only, not hardware performance data.'
@@ -235,7 +236,7 @@ const MIME_TYPES: Record<string, string> = {
  * run that cannot finish inside one shell call.
  */
 async function startStaticServer(root: string, listenPort: number) {
-  const rootPrefix = `${normalize(root)}/`;
+  const rootPrefix = `${normalize(root)}${sep}`;
   const server = createHttpServer(async (request, response) => {
     try {
       const requested = decodeURIComponent((request.url ?? '/').split('?')[0]);
@@ -291,13 +292,15 @@ if (serveDist) {
 }
 
 const browser = await chromium.launch({
-  headless: true,
+  headless: !headed,
   channel: channel || undefined,
   args: softwareRendering
     ? ['--no-sandbox', '--use-angle=swiftshader', '--enable-unsafe-swiftshader']
     : ['--no-sandbox'],
 });
-if (!softwareRendering) stage(`hardware browser channel ${channel || 'bundled chromium'}`);
+if (!softwareRendering) stage(`hardware browser channel ${channel || 'bundled chromium'}${headed ? ' (headed)' : ''}`);
+
+let gpuInfo: { vendor: string; renderer: string } | null = null;
 
 const environmentCss = `
   .masthead,
@@ -350,8 +353,23 @@ async function captureMode(mode: Mode): Promise<Record<string, unknown>> {
   await page.goto(`http://127.0.0.1:${port}/?${query}`, { waitUntil });
   await page.waitForFunction(() => (
     window as unknown as { __blueCurrent?: DebugApi }
-  ).__blueCurrent?.ready === true);
+  ).__blueCurrent?.ready === true, undefined, { polling: 250 }).catch((error) => {
+    console.error('READY TIMEOUT', query, JSON.stringify(errors.slice(0, 10)));
+    throw error;
+  });
   stage(`[${mode}] app ready`);
+
+  gpuInfo ??= await page.evaluate(() => {
+    const canvas = document.querySelector('canvas');
+    const gl = (canvas?.getContext('webgl2') ?? canvas?.getContext('webgl')) as WebGLRenderingContext | null;
+    if (!gl) return null;
+    const extension = gl.getExtension('WEBGL_debug_renderer_info');
+    return {
+      vendor: String(extension ? gl.getParameter(extension.UNMASKED_VENDOR_WEBGL) : gl.getParameter(gl.VENDOR)),
+      renderer: String(extension ? gl.getParameter(extension.UNMASKED_RENDERER_WEBGL) : gl.getParameter(gl.RENDERER)),
+    };
+  });
+  if (gpuInfo) stage(`[${mode}] webgl renderer ${gpuInfo.renderer}`);
 
   await page.addStyleTag({ content: environmentCss });
   await page.waitForTimeout(600);
@@ -455,6 +473,7 @@ async function captureMode(mode: Mode): Promise<Record<string, unknown>> {
       })),
       capturedPoses: mergedEntries.map((entry) => entry.pose),
       renderer: rendererNote,
+      rendererInfo: gpuInfo,
       lightingDiagnostics: lighting,
       rockDiagnostics,
       simulationSnapshot,

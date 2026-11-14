@@ -11,6 +11,7 @@ import { describe, expect, it } from 'vitest';
 import { CORAL_SPECS } from '../src/rendering/CoralAsset';
 import type { CoralAsset } from '../src/rendering/CoralAsset';
 import { CoralScatter, TEMPERATE_CORAL_NAMES } from '../src/rendering/CoralScatter';
+import { anemoneAnchorForReef } from '../src/environment/AnemoneHabitat';
 import { REEF_OBSTACLES } from '../src/simulation/ObstacleSystem';
 
 function mockAssets(): CoralAsset[] {
@@ -124,6 +125,26 @@ describe('main-scene coral composition', () => {
     // group-level constraint across all six species, not a forced equal size.
     expect(reefTotals[2]).toBeGreaterThan(reefTotals[1] * 1.4);
     expect(reefTotals[2]).toBeGreaterThan(reefTotals[4] * 1.3);
+  });
+
+  it('places the full-tier reef anemones on the E4 habitat anchors', () => {
+    const scatter = new CoralScatter(
+      mockAssets(),
+      new MeshStandardMaterial(),
+      REEF_OBSTACLES,
+      { mode: 'full' },
+    );
+    const anemone = scatter.group.children.find(
+      (child) => child.name === 'main_anemone',
+    ) as InstancedMesh;
+    expect(anemone).toBeInstanceOf(InstancedMesh);
+    for (let index = 0; index < REEF_OBSTACLES.length; index += 1) {
+      const { position } = instanceTransform(anemone, index);
+      const anchor = anemoneAnchorForReef(REEF_OBSTACLES[index], index);
+      expect(position.x).toBeCloseTo(anchor.x, 5);
+      expect(position.z).toBeCloseTo(anchor.z, 5);
+      expect(position.y).toBeCloseTo(anchor.y, 5);
+    }
   });
 
   it('rejects a temperate composition without both required species', () => {

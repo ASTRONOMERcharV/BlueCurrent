@@ -13,23 +13,23 @@ index.html → src/main.ts ── assets and SceneManager assembly
                  ▼
         SimulationWorld
         ├─ main FlockData + BoidSystem
-        ├─ clownfish FlockData + BoidSystem
+        ├─ clownfish FlockData + BoidSystem (soft anemone habitat)
         ├─ ObstacleSystem + optional ReefProxySet
         ├─ KelpRefugeField + shared kelpLayout
         ├─ one PredatorSystem
         ├─ FixedStepScheduler
-        └─ real metrics / obstacle metrics
+        └─ real metrics / obstacle metrics / structure snapshot
                  │ read-only state + interpolation alpha
                  ▼
            SceneManager
         ├─ Fish / Predator renderers
-        ├─ Environment and asset scatter
+        ├─ Environment and asset scatter (+ SedimentField/Plume)
         ├─ CameraController
         ├─ UnderwaterMedium / lighting
         └─ debug visualizers → one WebGL render
                  │
                  ▼
-        StatisticsPanel / ControlPanel / captures
+        StatisticsPanel / ControlPanel / trackers / captures
 ```
 
 依赖方向是“生产入口组装 → 模拟拥有事实 → 呈现读取事实”。渲染层可以调用显式 actions 改配置或重置世界，但不在每帧更新中直接写鱼的位置、速度、存活集合或捕食者决策。
@@ -60,17 +60,18 @@ simulation time/step counters → 30-step detailed metrics → timing
 | 鱼群与捕食者 | `SimulationWorld`、`BoidSystem`、`PredatorSystem` | 邻居、环境力、障碍 → 双缓冲状态、真实捕获与指标 | `systems/simulation.md` |
 | 邻居搜索 | `UniformGrid3D`、`BruteForceSearch` | FlockData + radius → 相同精确邻居集合 | `systems/simulation.md` |
 | 礁石碰撞 | `ObstacleSystem`、`ReefCollisionProxy` | 位置/速度/config → 预测力、安全投影、LOS | `systems/collision.md` |
-| 软生态环境 | `KelpRefugeField`、`OceanCurrentField`、`HabitatZoneSystem` | 共享布局、海流、位置 → 遮蔽、覆盖、视觉运动 | `systems/simulation.md` |
+| 软生态环境 | `KelpRefugeField`、`OceanCurrentField`、`HabitatZoneSystem`、`AnemoneHabitat` | 共享布局、海流、位置 → 遮蔽、覆盖、视觉运动、海葵锚点 | `systems/simulation.md` |
+| 近底沙尘 | `SedimentField`、`SedimentPlume` | 只读鱼位置/速度 + 海流 + 海床 → 确定性粒子、单 Points draw | `systems/simulation.md`、`systems/rendering.md` |
 | 场景渲染 | `SceneManager`、`Environment`、各类 Renderer/Scatter | 只读模拟、visualTime、资产 → Three.js 场景 | `systems/rendering.md` |
 | 相机 | `CameraController`、`cameraStability` | 中心、速度、目标、视口 → 稳定位姿与诊断 | `systems/camera.md` |
 | 资产与放置 | `*Asset.ts`、`ReefSample`、placement/scatter | GLB 契约、种子、地形 → 实例、LOD、世界变换 | `systems/assets.md` |
-| UI 与诊断 | `ControlPanel`、`StatisticsPanel`、`window.__blueCurrent` | actions、真实 metrics → DOM、debug、验收快照 | `systems/rendering.md`、`validation/test-guide.md` |
+| UI 与诊断 | `ControlPanel`、`StatisticsPanel`、`PredationEventTracker`、`SchoolStructureTracker`、`window.__blueCurrent` | actions、真实 metrics → DOM、debug、验收快照 | `systems/rendering.md`、`validation/test-guide.md` |
 
 ## 4. 模拟内部边界
 
 `FlockData` 使用连续类型化数组保存位置、速度、previous/next 状态、存活、相位和变体。一个固定步内读取当前缓冲并写 next，完成后统一 swap；外部代码不得假设 next 已是当前状态，也不得在步中修改数组。
 
-主鱼与小丑鱼拥有独立配置和 `BoidSystem`，共享捕食者、障碍和海带场。捕食者只接收主鱼群用于捕获，小丑鱼可产生威胁响应但不被捕获。`Scenarios` 用固定种子、配置和预热构造可复现初始状态。
+主鱼与小丑鱼拥有独立配置和 `BoidSystem`，共享捕食者、障碍和海带场。捕食者只接收主鱼群用于捕获，小丑鱼可产生威胁响应但不被捕获。E2 的新转向项只在主鱼/小丑鱼的 `BoidSystem` 内读邻居和配置；结构快照由 `SimulationWorld` 每 30 步产生，tracker 只读。E4 的小丑鱼栖息锚点来自 `AnemoneHabitat`，以软力替换旧 home，不是硬约束。`Scenarios` 用固定种子、配置和预热构造可复现初始状态。
 
 Uniform Grid 的 `cellStart/cellCounts/cellItems` 是连续单元存储；27 单元只产生候选，之后仍做精确距离筛选。网格保存构造时的 bounds 引用，替换整个 bounds 对象会造成失配。
 

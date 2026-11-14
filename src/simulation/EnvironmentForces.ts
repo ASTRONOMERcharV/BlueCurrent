@@ -7,6 +7,7 @@ export function addBoundaryForce(
   z: number,
   config: SimulationConfig,
   output: Float32Array,
+  fearLevel = 0,
 ): void {
   output[0] = 0;
   output[1] = 0;
@@ -33,8 +34,13 @@ export function addBoundaryForce(
       * (lowerWeight * lowerWeight - upperWeight * upperWeight);
   }
 
+  // A frightened fish slides along the edge instead of stacking into it. The
+  // inward/outward component stays untouched; only the tangential share grows.
+  const edgeBoost = config.schoolDynamicsEnabled
+    ? 1 + Math.max(0, config.edgeEscapeBoost) * clamp(fearLevel, 0, 1)
+    : 1;
   const tangent = config.maxAcceleration * config.boundaryWeight
-    * Math.max(0, config.boundaryTangentialWeight);
+    * Math.max(0, config.boundaryTangentialWeight) * edgeBoost;
   output[0] += tangent * (lowerZ * lowerZ - upperZ * upperZ);
   output[2] += tangent * (upperX * upperX - lowerX * lowerX);
 }

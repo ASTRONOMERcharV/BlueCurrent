@@ -10,6 +10,7 @@ import type { ObstacleSystem } from './ObstacleSystem';
 import { addBoundaryForce, constrainToBounds } from './EnvironmentForces';
 import type { PredatorSystem } from './PredatorSystem';
 import type { ReefObstacleMetrics } from './ReefObstacleMetrics';
+import type { PhaseEmaRecorder } from './PerformanceTelemetry';
 
 /** Read-only diagnostics for one fish; these values never feed back into steering. */
 export interface BoidDebugSample {
@@ -31,6 +32,52 @@ export function densityAwareCohesionScale(
   const densityScale = config.cohesionDensityTarget
     / Math.max(config.cohesionDensityTarget, alignmentNeighbors);
   return clamp(densityScale, config.cohesionDensityMinScale, 1);
+}
+
+/**
+ * Alignment weight by heading agreement: same direction keeps full weight,
+ * perpendicular halves it, opposite reaches zero. Never alters the plain
+ * alignment target when the E2 blend is zero.
+ */
+export function alignmentAgreementWeight(dot: number): number {
+  return 0.5 + 0.5 * clamp(dot, -1, 1);
+}
+
+/** Extra separation in crowded pockets; 1 below the density target. */
+export function densityAwareSeparationScale(
+  alignmentNeighbors: number,
+  config: Pick<
+    SimulationConfig,
+    'schoolDynamicsEnabled' | 'separationDensityBoost' | 'cohesionDensityTarget'
+  >,
+): number {
+  if (
+    !config.schoolDynamicsEnabled
+    || config.separationDensityBoost <= 0
+    || config.cohesionDensityTarget <= 0
+  ) {
+    return 1;
+  }
+  const crowding = alignmentNeighbors / config.cohesionDensityTarget - 1;
+  return Math.min(1.75, 1 + config.separationDensityBoost * clamp(crowding, 0, 1.5));
+}
+
+/** One-hop alarm propagation with a noise floor; legacy keeps the plain hop. */
+export function propagatedFear(
+  neighborFear: number,
+  config: Pick<
+    SimulationConfig,
+    'schoolDynamicsEnabled' | 'startlePropagationThreshold' | 'fearPropagation'
+  >,
+): number {
+  if (
+    config.schoolDynamicsEnabled
+    && config.startlePropagationThreshold > 0
+    && neighborFear < config.startlePropagationThreshold
+  ) {
+    return 0;
+  }
+  return neighborFear * config.fearPropagation;
 }
 
 /** All neighbor rules are shared by both search implementations. */
@@ -70,6 +117,7 @@ export class BoidSystem {
     private readonly obstacles: ObstacleSystem,
     private readonly kelpRefuge?: KelpRefugeField,
     private readonly metrics?: ReefObstacleMetrics,
+    private readonly performanceTelemetry?: PhaseEmaRecorder,
   ) {
     this.grid = new UniformGrid3D(config, flock.capacity);
     this.bruteForce = new BruteForceSearch();
@@ -112,7 +160,9 @@ export class BoidSystem {
     let shelterSeeking = 0;
     const kelp = this.kelpRefuge;
     const kelpActive = kelp !== undefined && kelp.enabled;
-    const measureObstacleQueries = this.metrics?.enabled === true;
+    const measureObstacleQueries = this.metrics?.enabled === true
+      || this.performanceTelemetry?.enabled === true;
+    let obstacleQueryMs = 0;
     const neighbors = this.neighbors;
     this.debugSample.index = -1;
     this.debugSample.neighborCount = 0;
@@ -144,6 +194,12 @@ export class BoidSystem {
       let alignmentCount = 0;
       let cohesionCount = 0;
       let neighborFear = 0;
+      let agreementWeight = 0;
+      let agreementX = 0;
+      let agreementY = 0;
+      let agreementZ = 0;
+      const weightedAlignment = config.schoolDynamicsEnabled
+        && config.alignmentAgreementBlend > 0;
 
       for (let n = 0; n < neighborCount; n += 1) {
         const other = neighbors[n];
@@ -175,6 +231,21 @@ export class BoidSystem {
           alignmentZ += velocities[otherOffset + 2];
           alignmentCount += 1;
           totalAlignmentNeighbors += 1;
+          if (weightedAlignment) {
+            const otherX = velocities[otherOffset];
+            const otherY = velocities[otherOffset + 1];
+            const otherZ = velocities[otherOffset + 2];
+            const otherSpeed = Math.sqrt(otherX * otherX + otherY * otherY + otherZ * otherZ);
+            const denominator = speed * otherSpeed;
+            const dot = denominator > 1e-9
+              ? (vx * otherX + vy * otherY + vz * otherZ) / denominator
+              : 1;
+            const weight = alignmentAgreementWeight(dot);
+            agreementWeight += weight;
+            agreementX += otherX * weight;
+            agreementY += otherY * weight;
+            agreementZ += otherZ * weight;
+          }
         }
         if (distanceSquared <= cohesionRadiusSquared) {
           cohesionX += positions[otherOffset];
@@ -185,9 +256,22 @@ export class BoidSystem {
       }
 
       if (alignmentCount > 0) {
-        alignmentX = alignmentX / alignmentCount - vx;
-        alignmentY = alignmentY / alignmentCount - vy;
-        alignmentZ = alignmentZ / alignmentCount - vz;
+        const plainX = alignmentX / alignmentCount - vx;
+        const plainY = alignmentY / alignmentCount - vy;
+        const plainZ = alignmentZ / alignmentCount - vz;
+        if (weightedAlignment && agreementWeight > 0) {
+          const blend = clamp(config.alignmentAgreementBlend, 0, 1);
+          const weightedX = agreementX / agreementWeight - vx;
+          const weightedY = agreementY / agreementWeight - vy;
+          const weightedZ = agreementZ / agreementWeight - vz;
+          alignmentX = plainX * (1 - blend) + weightedX * blend;
+          alignmentY = plainY * (1 - blend) + weightedY * blend;
+          alignmentZ = plainZ * (1 - blend) + weightedZ * blend;
+        } else {
+          alignmentX = plainX;
+          alignmentY = plainY;
+          alignmentZ = plainZ;
+        }
       }
       if (cohesionCount > 0) {
         cohesionX = cohesionX / cohesionCount - px;
@@ -195,9 +279,10 @@ export class BoidSystem {
         cohesionZ = cohesionZ / cohesionCount - pz;
       }
 
-      const separationForceX = config.separationWeight * separationX;
-      const separationForceY = config.separationWeight * separationY;
-      const separationForceZ = config.separationWeight * separationZ;
+      const separationScale = densityAwareSeparationScale(alignmentCount, config);
+      const separationForceX = config.separationWeight * separationScale * separationX;
+      const separationForceY = config.separationWeight * separationScale * separationY;
+      const separationForceZ = config.separationWeight * separationScale * separationZ;
       const alignmentForceX = config.alignmentWeight * alignmentX;
       const alignmentForceY = config.alignmentWeight * alignmentY;
       const alignmentForceZ = config.alignmentWeight * alignmentZ;
@@ -234,7 +319,7 @@ export class BoidSystem {
         );
         const threatRadius = config.evasionRadius
           + Math.max(0, closingSpeed) * config.evasionPredictionTime;
-        const propagated = neighborFear * config.fearPropagation;
+        const propagated = propagatedFear(neighborFear, config);
         if (distance < threatRadius) {
           directFear = Math.max(0, Math.min(1, 1 - distance / threatRadius));
           const reefBlocked = this.obstacles.blocksSegment(
@@ -307,38 +392,88 @@ export class BoidSystem {
       nextFear[i] = fearLevel;
 
       const avoidanceQueryStart = measureObstacleQueries ? performance.now() : 0;
-      this.obstacles.computeAvoidance(px, py, pz, vx, vy, vz, config, this.obstacleForce);
+      let obstacleVelocityX = vx;
+      let obstacleVelocityY = vy;
+      let obstacleVelocityZ = vz;
+      if (config.schoolDynamicsEnabled && config.obstacleAnticipationBlend > 0) {
+        obstacleVelocityX = vx + alignmentX * config.obstacleAnticipationBlend;
+        obstacleVelocityY = vy + alignmentY * config.obstacleAnticipationBlend;
+        obstacleVelocityZ = vz + alignmentZ * config.obstacleAnticipationBlend;
+      }
+      this.obstacles.computeAvoidance(
+        px, py, pz,
+        obstacleVelocityX, obstacleVelocityY, obstacleVelocityZ,
+        config, this.obstacleForce,
+      );
       ax += this.obstacleForce[0];
       ay += this.obstacleForce[1];
       az += this.obstacleForce[2];
       if (measureObstacleQueries) {
-        this.metrics!.addQueryTime(performance.now() - avoidanceQueryStart);
+        const queryMs = performance.now() - avoidanceQueryStart;
+        if (this.metrics?.enabled) this.metrics.addQueryTime(queryMs);
+        obstacleQueryMs += queryMs;
       }
-      addBoundaryForce(px, py, pz, config, this.boundaryForce);
+      addBoundaryForce(
+        px, py, pz, config, this.boundaryForce,
+        config.schoolDynamicsEnabled ? fearLevel : 0,
+      );
       ax += this.boundaryForce[0];
       ay += this.boundaryForce[1];
       az += this.boundaryForce[2];
 
       // The reef-dwelling second school keeps a soft habitat anchor. It is a
-      // real steering force with a smooth ramp, never a hard teleport.
-      const homeCenter = config.homeCenter;
-      const homeWeight = config.homeWeight ?? 0;
-      if (homeCenter && homeWeight > 0) {
-        const homeX = homeCenter[0] - px;
-        const homeY = homeCenter[1] - py;
-        const homeZ = homeCenter[2] - pz;
-        const homeDistance = Math.sqrt(
-          homeX * homeX + homeY * homeY + homeZ * homeZ,
+      // real steering force with a smooth ramp, never a hard teleport. Phase E4
+      // replaces the point home with an annular anemone habitat when present.
+      const habitatCenter = config.habitatCenter;
+      const habitatAttractWeight = config.habitatAttractWeight ?? 0;
+      if (habitatCenter && habitatAttractWeight > 0) {
+        const habitatX = habitatCenter[0] - px;
+        const habitatY = habitatCenter[1] - py;
+        const habitatZ = habitatCenter[2] - pz;
+        const habitatDistance = Math.sqrt(
+          habitatX * habitatX + habitatY * habitatY + habitatZ * habitatZ,
         );
-        const homeRadius = Math.max(0.1, config.homeRadius ?? 3);
-        if (homeDistance > homeRadius) {
-          const t = Math.min(1, (homeDistance - homeRadius) / homeRadius);
+        const attractRadius = Math.max(0.2, config.habitatAttractRadius ?? 3.4);
+        const coreRadius = clamp(config.habitatCoreRadius ?? 1.1, 0.05, attractRadius * 0.9);
+        const fearScale = 1 - 0.5 * clamp(fearLevel, 0, 1);
+        if (habitatDistance > attractRadius && habitatDistance > 1e-6) {
+          const t = Math.min(1, (habitatDistance - attractRadius) / Math.max(1, attractRadius));
           const smooth = t * t * (3 - 2 * t);
-          const force = config.maxAcceleration * homeWeight * smooth;
-          const inverse = 1 / homeDistance;
-          ax += homeX * inverse * force;
-          ay += homeY * inverse * force;
-          az += homeZ * inverse * force;
+          const force = config.maxAcceleration * habitatAttractWeight * smooth * fearScale;
+          const inverse = 1 / habitatDistance;
+          ax += habitatX * inverse * force;
+          ay += habitatY * inverse * force;
+          az += habitatZ * inverse * force;
+        } else if (habitatDistance < coreRadius && habitatDistance > 1e-6) {
+          const t = 1 - habitatDistance / coreRadius;
+          const smooth = t * t * (3 - 2 * t);
+          const force = config.maxAcceleration
+            * (config.habitatRepelWeight ?? 0.7) * smooth * fearScale;
+          const inverse = -1 / habitatDistance;
+          ax += habitatX * inverse * force;
+          ay += habitatY * inverse * force;
+          az += habitatZ * inverse * force;
+        }
+      } else {
+        const homeCenter = config.homeCenter;
+        const homeWeight = config.homeWeight ?? 0;
+        if (homeCenter && homeWeight > 0) {
+          const homeX = homeCenter[0] - px;
+          const homeY = homeCenter[1] - py;
+          const homeZ = homeCenter[2] - pz;
+          const homeDistance = Math.sqrt(
+            homeX * homeX + homeY * homeY + homeZ * homeZ,
+          );
+          const homeRadius = Math.max(0.1, config.homeRadius ?? 3);
+          if (homeDistance > homeRadius) {
+            const t = Math.min(1, (homeDistance - homeRadius) / homeRadius);
+            const smooth = t * t * (3 - 2 * t);
+            const force = config.maxAcceleration * homeWeight * smooth;
+            const inverse = 1 / homeDistance;
+            ax += homeX * inverse * force;
+            ay += homeY * inverse * force;
+            az += homeZ * inverse * force;
+          }
         }
       }
 
@@ -412,7 +547,9 @@ export class BoidSystem {
       const constrainQueryStart = measureObstacleQueries ? performance.now() : 0;
       this.obstacles.constrain(nextPositions, nextVelocities, offset, config, 0.28);
       if (measureObstacleQueries) {
-        this.metrics!.addQueryTime(performance.now() - constrainQueryStart);
+        const queryMs = performance.now() - constrainQueryStart;
+        if (this.metrics?.enabled) this.metrics.addQueryTime(queryMs);
+        obstacleQueryMs += queryMs;
       }
       constrainToBounds(nextPositions, nextVelocities, offset, config, 0.08);
 
@@ -439,5 +576,8 @@ export class BoidSystem {
     this.threatenedCount = threatened;
     this.shelteredCount = sheltered;
     this.shelterSeekingCount = shelterSeeking;
+    if (this.performanceTelemetry?.enabled) {
+      this.performanceTelemetry.addPhaseMs('obstacleQuery', obstacleQueryMs);
+    }
   }
 }

@@ -136,6 +136,28 @@
 
 后果：阈值不再作为 Gate 未决项；若后续生态观感或捕获率成为问题，再作为独立变更调整阈值/冷却并重跑受影响的 WP1/WP3/WP4。
 
-## 未决事项的所有者
+## D023 — Phase D 第一轮 D4/D1 定稿并保持当前风格
+
+**状态：接受（2026-11-13，用户决定）。** 第一轮只做 D4 全局光照与 D1 水体，保持现有低饱和青蓝风格。D4 定稿 `environmentIntensity 0.75`、`sun.intensity 2.10`、`hemisphere.intensity 0.82`、`hemisphere.groundColor 0x2a6570`、`materials.floorColor 0x456c74`；D1 定稿 `scatteringStrength 0.80`、`attenuationRgb [1.24,0.99,0.74]`、`surfaceScatterStrength 0.24`、`scatterColorDistance 34`。用户先后通过 D4、D1 两个评审检查点，并于同日签核 Intel Iris Xe 硬件画面。
+
+**后果：** 礁石近景 P50 提升 10.8–14.0%、宽景 3.5–4.0%，俯视海床 +20.9%，D1 岩石对比度 +0.7–3.6%，背景水色与色相基本不变；这些数值不是后续轮次的自动目标，D2/D3 必须独立评审。D2 海床材质、D3 海草动画与剩余礁石接触细节留到下一轮，开工前需确认范围与验收指标。证据见 `test-artifacts/phase-d/2026-11-13t10-45-43z/summary.md`（Git 忽略）。
+
+## D024 — Phase D 第二轮 D2/D3 定稿
+
+**状态：接受（2026-11-13，用户决定）。** 第二轮完成 D2 海床程序化材质与 D3 海草动画/分布。D2 用顶点色宏斑 + 片元世界空间噪声（无贴图、无新 draw call，55 m 外归零），海床亮度分布 +2.1…+8.3、P50 漂移 ≤1.77/255、俯视海床色相约 −4.5°；D3 把海草从 6 株扩到 6 簇 14 株，并与海带共用 `OceanCurrentField` 方向+速度摆动（根部固定、相位逐株/逐叶不同），三角形增加 110,336（+8.7%）、draw calls 不变。用户先后通过软件评审与 Intel Iris Xe 硬件签核。
+
+**后果：** 海草逐帧采样 14 株（约 840 次/秒）与 +110k 三角形进入富默认场景；帧时间影响留到 Phase F 评估，如硬件帧时间明显恶化可回退到 12 株或旧摆动。D2 剩余碎石/附着细节未做，是否补做与是否进入 Phase E 需单独确认。证据见 `test-artifacts/phase-d/2026-11-13t12-16-00z/summary.md`（Git 忽略）。
+
+## D025 — Phase E 第一轮 E1/E3 定稿
+
+**状态：接受（2026-11-14，用户决定）。** Phase E 第一轮只做 E1 鱼体运动与 E3 捕食事件呈现，保持呈现/只读遥测边界。E1 在渲染层用逐实例指数趋近 + 速率限制 + 0.9 rad 俯仰限幅，并由模拟 bank 派生 `instanceTurn` 叠加尾波弯曲；E3 用 `PredationEventTracker` 从真实快照派生事件，`capture` 只按 `captureSerial` 增量产生，UI 在 `predator-watch` 单行显示最新事件。`?fishMotion=legacy` 保留 E1 前呈现的同版对照通道。用户先后通过软件评审与 Intel Iris Xe 硬件视觉签核。
+
+**后果：** 默认场景急变俯仰限制在 51.6°（0.900 rad），legacy 对照仍为 80.7–86.9°（1.408–1.517 rad），均值几乎不变；转弯帧可见身体弯曲（max|turn| 0.259–0.264，legacy 为 0）。固定种子 checksum 不变（`535bf8835258bcf1b2e9e696`），事件流不改变 FSM/目标/捕获，也不强制生态结果。E2 鱼群动态结构与 E4 环境/生物交互未做；D2 剩余碎石/附着细节仍未做，下一轮范围需用户确认。证据见 `test-artifacts/phase-e/2026-11-14t00-13-00z/summary.md`（Git 忽略）。
+
+## D026 — Phase E 第二轮 E2/E4 定稿
+
+**状态：接受（2026-11-14，用户决定并签核硬件画面）。** Phase E 第二轮完成 E2 鱼群动态结构与 E4 环境/生物交互，目标是由局部规则产生可复现的结构变化，并让环境互动读取真实位置/速度/海流。E2 加入一致度加权对齐（`alignmentAgreementBlend 0.35`）、密度自适应分离（`separationDensityBoost 0.4`，上限 1.75）、群体流地形预判（`obstacleAnticipationBlend 0.35`）、阈值门控惊扰传播（`startlePropagationThreshold 0.02`）与恐惧缩放边缘逃逸（`edgeEscapeBoost 0.6`）；结构遥测每 30 步由并查集产生 schools/median/largest/polarization/startle/edge pressure，`SchoolStructureTracker` 从真实分量变化派生 split/merge/subgroup 事件并在 `predator-watch` 第二行显示。E4 用 `AnemoneHabitat` 单点拥有海葵放置公式，把小丑鱼软栖息中心迁到最近海葵 `anemone-b` 上方（3.4 m 吸引 / 1.1 m 核心 / 中间死区，恐惧可压制，无传送或硬约束）；`SedimentField` 由真实近底位置、速度与共享 `OceanCurrentField` 驱动 320 粒池，`SedimentPlume` 用单个 `Points` draw 呈现，不写任何模拟状态。
+
+**后果：** 建立新 checksum 基线：encounter 17/43/52/60/63 s dynamic 为 `8a4ebd8073cc884fa5621e60`、`69d993ea1f7a467566b1e394`、`251d7c0f66ffc470ef667eab`、`937cdfef29cd2a9c2b21ac48`、`42e406513e0b960cd0c4c5e5`；旧 `535bf8835258bcf1b2e9e696` 只由 `?schoolDynamics=legacy` + `?habitat=legacy` 逐位复现。E2 只改主鱼群（`fishChecksum` 在 E4 前后完全相同），E4 只改小丑鱼段；`?sediment=0` 与开启时模拟 checksum 完全相同，沙尘只增加 1 个 draw call。3600 步压力无 NaN/越界且两次运行一致；Sphere/ReefProxy 五时间点 ReefProxy 0 穿入、Sphere 仅一次 −0.018 m 瞬态（旧基线同类 −0.062 m）。49 文件 365 tests、tsc、构建、rich smoke、observatory 与 `accept:gpu` 通过；Intel Iris Xe 硬件画面已签核，证据见 `test-artifacts/phase-e/2026-11-14t08-31-46z/summary.md`（Git 忽略）。回滚通道 `?schoolDynamics=legacy`、`?habitat=legacy`、`?sediment=0` 保留。SwiftShader 不是性能结论；沙尘使用 8 m 距离衰减影响高度（字面近底阈值不可达）；D2 剩余碎石/附着细节仍未做。
 
 当前未决清单只在 `CURRENT_STATE.md` 第 5 节维护，本文件不复制一份可能不同的列表。某项由 Integration Gate 或用户明确决定后，在这里新增 ADR，并更新当前状态、受影响子系统文档和回归证据。

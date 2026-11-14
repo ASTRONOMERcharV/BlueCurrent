@@ -71,6 +71,7 @@ npm run build       # TypeScript 类型检查 + 生产构建
 npm run preview     # 预览 dist/
 npm test            # Vitest 算法测试
 npm run smoke       # Playwright 桌面/移动浏览器验收
+npm run smoke:demo  # 90 s Demo Mode 的 16:9、技术网格与时间线验收
 npm run accept:observatory  # 观测台双模式/三场景/相机/移动抽屉/真实数据验收
 npm run smoke:glb   # GLB 礁石浏览器验收（?glbRocks=1）
 npm run benchmark   # 暴力搜索 / Uniform Grid 性能实验
@@ -101,6 +102,23 @@ npm run quality:capture -- --scenario=calm --view=console  # 真实浏览器截�
 ```
 
 生产文件位于 `dist/`。请通过 HTTP 服务器访问，不要直接双击 `index.html` 使用 `file://`。实际全部命令以 `package.json` 为准。
+
+## Demo Mode
+
+90 秒演示时间线只控制固定种子场景、相机、Observation/Laboratory、搜索模式和 UI 显隐；鱼群、捕食目标与捕食状态仍由 `SimulationWorld` 更新。
+
+```text
+/?demo=cinematic
+```
+
+该入口会隐藏浏览器页面内的控制台和指标 UI，使 3D 画布填满 16:9 录制区域。53–70 秒自动展示 Uniform Grid、Brute Force 与网格返回。调试接口提供 `getDemoState()`、`restartDemo()`、`stopDemo()` 和仅用于预检的 `seekDemo(seconds)`。
+
+视频方案与拍摄交付：
+
+- [项目审查](docs/demo-video/project-audit.md)
+- [90 秒分镜](docs/demo-video/storyboard.md)
+- [镜头清单](docs/demo-video/shot-list.md)
+- [录制检查表](docs/demo-video/capture-checklist.md)
 
 视觉质量 V1 的鱼群行为、温带海藻森林布局、A/B CPU 性能、截图和待办项见 [docs/VISUAL_QUALITY_V1.md](docs/VISUAL_QUALITY_V1.md)。
 

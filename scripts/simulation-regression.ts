@@ -1,4 +1,5 @@
 import { existsSync, mkdirSync, readFileSync, writeFileSync } from 'node:fs';
+import { dirname } from 'node:path';
 import { SimulationWorld } from '../src/simulation/SimulationWorld';
 import { applyScenario } from '../src/simulation/Scenarios';
 
@@ -13,7 +14,11 @@ import { applyScenario } from '../src/simulation/Scenarios';
  */
 
 const times = [17, 43, 52, 60, 63];
-const output = 'test-artifacts/world-continuity-p1/simulation-headless.json';
+const output = process.argv.find((value) => value.startsWith('--out='))
+  ?.slice('--out='.length)
+  ?? 'test-artifacts/world-continuity-p1/simulation-headless.json';
+const legacy = process.argv.includes('--school-dynamics=legacy');
+const legacyHabitat = process.argv.includes('--habitat=legacy');
 
 function checksumFloats(hash: number, values: Float32Array): number {
   const view = new DataView(values.buffer, values.byteOffset, values.byteLength);
@@ -70,6 +75,8 @@ function snapshot(world: SimulationWorld): Record<string, unknown> {
 
 function runOnce(): Record<string, Record<string, unknown>> {
   const world = new SimulationWorld();
+  if (legacy) world.setSchoolDynamicsEnabled(false);
+  if (legacyHabitat) world.setClownfishHabitatMode('legacy');
   applyScenario(world, 'encounter');
   const states: Record<string, Record<string, unknown>> = {};
   for (const time of times) {
@@ -82,7 +89,7 @@ function runOnce(): Record<string, Record<string, unknown>> {
 
 const first = runOnce();
 const second = runOnce();
-mkdirSync('test-artifacts/world-continuity-p1', { recursive: true });
+mkdirSync(dirname(output), { recursive: true });
 writeFileSync(output, `${JSON.stringify({
   scenario: 'encounter',
   times,

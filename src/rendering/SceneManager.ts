@@ -50,6 +50,8 @@ import type { UnderwaterLightingMode } from './lighting/UnderwaterLightingConfig
 import { auditMaterialColorSpaces } from './lighting/MaterialColorSpace';
 import type { RockDiagnosticsReport } from './lighting/RockDiagnostics';
 import type { ReefWorldTransform } from '../simulation/ReefCollisionProxy';
+import { PhaseEmaRecorder, type PhaseEmaSnapshot } from '../simulation/PerformanceTelemetry';
+import { GpuTimer, type GpuTimerSnapshot } from './GpuTimer';
 
 /**
  * Camera layer reserved for the rock-mask pass. Nothing else in the project
@@ -69,12 +71,24 @@ export interface SceneManagerOptions {
   readonly waterOpticsModel?: WaterOpticsModel;
   readonly clownfishAsset?: FishAsset;
   readonly terrainMode?: 'continuous' | 'legacy';
+  /** Same-version E1 comparison path; `legacy` disables pitch smoothing and turn bend. */
+  readonly fishMotionMode?: 'smooth' | 'legacy';
+}
+
+export interface RendererPerformanceStats {
+  readonly memory: { readonly geometries: number; readonly textures: number } | null;
+  readonly programs: number | null;
+  readonly gpuTimer: GpuTimerSnapshot;
 }
 
 export class SceneManager {
   readonly scene = new Scene();
   readonly camera = new PerspectiveCamera(48, 1, 0.1, 400);
   readonly renderer: WebGLRenderer;
+  readonly renderPerformance = new PhaseEmaRecorder({
+    exclusivePhases: ['fish', 'clownfish', 'predator', 'debug', 'camera', 'environment', 'draw'],
+  });
+  private readonly gpuTimer: GpuTimer;
   readonly cameraController: CameraController;
   readonly environment: Environment;
   readonly fish: FishRenderer;
@@ -110,6 +124,7 @@ export class SceneManager {
   ) {
     installUnderwaterMedium();
     this.renderer = new WebGLRenderer({ antialias: true, powerPreference: 'high-performance' });
+    this.gpuTimer = new GpuTimer(this.renderer);
     this.renderer.setPixelRatio(Math.min(window.devicePixelRatio, 1.75));
     this.renderer.outputColorSpace = SRGBColorSpace;
     this.renderer.toneMapping = ACESFilmicToneMapping;
@@ -139,14 +154,17 @@ export class SceneManager {
       options.lightingMode ?? 'full',
       options.terrainMode ?? 'continuous',
     );
-    this.fish = new FishRenderer(this.scene, world.flock, fishAsset);
+    const fishMotionOptions = options.fishMotionMode
+      ? { motionMode: options.fishMotionMode }
+      : {};
+    this.fish = new FishRenderer(this.scene, world.flock, fishAsset, fishMotionOptions);
     this.fishAssetInfo = fishAsset?.stats ?? null;
     this.clownfish = options.clownfishAsset
       ? new FishRenderer(
         this.scene,
         world.clownfishFlock,
         options.clownfishAsset,
-        CLOWNFISH_RENDER_OPTIONS,
+        { ...CLOWNFISH_RENDER_OPTIONS, ...fishMotionOptions },
       )
       : null;
     this.clownfishAssetInfo = options.clownfishAsset?.stats ?? null;
@@ -502,6 +520,37 @@ export class SceneManager {
     return loaded;
   }
 
+  /** Phase F render-side diagnostics; disabled by default. */
+  setPerformanceTelemetryEnabled(enabled: boolean): void {
+    this.renderPerformance.setEnabled(enabled);
+    this.gpuTimer.setEnabled(enabled);
+  }
+
+  resetRenderPerformanceCounters(): void {
+    this.renderPerformance.reset();
+    this.gpuTimer.reset();
+  }
+
+  getRenderPerformanceSnapshot(): PhaseEmaSnapshot {
+    return this.renderPerformance.snapshot();
+  }
+
+  /**
+   * Real renderer memory/program counts and a GPU timer-query capability probe.
+   * Time is never inferred: `frameMs` stays null until a disjoint query is
+   * actually implemented and validated.
+   */
+  getRendererStats(): RendererPerformanceStats {
+    const memory = this.renderer.info.memory;
+    return {
+      memory: memory
+        ? { geometries: memory.geometries, textures: memory.textures }
+        : null,
+      programs: this.renderer.info.programs?.length ?? null,
+      gpuTimer: this.gpuTimer.snapshot(),
+    };
+  }
+
   update(
     world: SimulationWorld,
     alpha: number,
@@ -510,18 +559,25 @@ export class SceneManager {
     visualDelta = frameDelta,
     predatorDelta = visualDelta,
   ): void {
+    const timings = this.renderPerformance;
+    timings.beginStep();
     this.environment.setObstaclesVisible(world.config.obstaclesEnabled);
     this.fish.update(alpha, time, world.config.maxSpeed);
+    timings.recordPhase('fish');
     this.clownfish?.update(alpha, time, world.clownfishConfig.maxSpeed);
+    timings.recordPhase('clownfish');
     // predatorDelta is the simulated time actually stepped (steps * fixedDelta),
     // so the swim controller integrates in lockstep with the trajectory even
     // when the frame delta and the simulation step count disagree.
     this.predator.update(alpha, predatorDelta, world.config.predatorEnabled);
+    timings.recordPhase('predator');
     this.grid.update(world.boids.grid);
     this.debug.update(world, alpha);
     this.collisionDebug.setMargin(world.config.obstacleMargin);
     this.collisionDebug.update(world, alpha);
+    timings.recordPhase('debug');
     this.cameraController.update(world, frameDelta, alpha);
+    timings.recordPhase('camera');
     this.environment.update(
       time,
       frameDelta,
@@ -529,10 +585,16 @@ export class SceneManager {
       this.cameraController.controls.target,
       visualDelta,
     );
+    this.environment.updateSediment(world, visualDelta, time);
     if (this.environment.consumeShadowMapDirty()) {
       this.renderer.shadowMap.needsUpdate = true;
     }
+    timings.recordPhase('environment');
+    this.gpuTimer.begin();
     this.renderer.render(this.scene, this.camera);
+    this.gpuTimer.end();
+    timings.recordPhase('draw');
+    timings.endStep();
   }
 
   /**
@@ -541,6 +603,19 @@ export class SceneManager {
    */
   updateCamera(world: SimulationWorld, delta: number, alpha = 1): void {
     this.cameraController.update(world, delta, alpha);
+  }
+
+  /** Deterministic visual-clock step for the sediment capture path. */
+  advanceSediment(world: SimulationWorld, delta: number, time: number): void {
+    this.environment.updateSediment(world, delta, time);
+  }
+
+  resetSediment(): void {
+    this.environment.resetSediment();
+  }
+
+  getSedimentDiagnostics(): ReturnType<Environment['getSedimentDiagnostics']> {
+    return this.environment.getSedimentDiagnostics();
   }
 
   /**

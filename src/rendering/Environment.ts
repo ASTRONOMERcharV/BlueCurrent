@@ -53,9 +53,14 @@ import { createReefVortices, OceanCurrentField } from '../environment/OceanCurre
 import { UnderwaterLighting } from './UnderwaterLighting';
 import { applyCaustics } from './Caustics';
 import { causticOptionsFor } from './lighting/CausticOptions';
+import { applySeabedDetail } from './SeabedDetail';
+import { SEABED_DETAIL_OPTIONS } from './lighting/SeabedDetailOptions';
 import { createLegacySeabedGeometry, createSeabedGeometry } from './terrain';
 import { createTerrainDecor, generateTerrainDecor } from './terrainDecor';
 import { MarineSnow } from './MarineSnow';
+import { SedimentField } from '../environment/SedimentField';
+import { SedimentPlume } from './SedimentPlume';
+import type { SimulationWorld } from '../simulation/SimulationWorld';
 import { UNDERWATER_LIGHTING_CONFIG, UNDERWATER_SUN_DIRECTION } from './lighting/UnderwaterLightingConfig';
 import type { UnderwaterLightingMode } from './lighting/UnderwaterLightingConfig';
 import { createLightShaftGroup } from './lighting/LightShafts';
@@ -123,6 +128,7 @@ export class Environment {
     lightShafts: true,
     caustics: true,
     surfaceLight: true,
+    sediment: true,
   };
   private shadowsDirty = true;
   private obstaclesVisible = true;
@@ -133,6 +139,8 @@ export class Environment {
   private readonly reefGroup = new Group();
   private readonly lighting: UnderwaterLighting;
   private readonly marineSnow: MarineSnow;
+  private readonly sediment: SedimentField;
+  private readonly sedimentPlume: SedimentPlume;
   private readonly boundsHelper: Box3Helper;
   private readonly floorGrid: GridHelper;
   private readonly surface: Mesh;
@@ -218,6 +226,9 @@ export class Environment {
       { time: this.waterTime, strength: this.causticStrength },
       causticOptionsFor('floor'),
     );
+    // D2 procedural grain only exists on the continuous vertex-coloured seabed;
+    // the legacy A/B plane keeps its original flat material.
+    if (!legacyTerrain) applySeabedDetail(floorMaterial, SEABED_DETAIL_OPTIONS);
     const floor = new Mesh(floorGeometry, floorMaterial);
     floor.name = 'staticSeabed';
     floor.receiveShadow = true;
@@ -384,6 +395,8 @@ export class Environment {
     // Marine snow and micro-bubbles are advected by the same current field as
     // the kelp, so the particle layer never drifts independently of the water.
     this.marineSnow = new MarineSnow(scene, this.currentField);
+    this.sediment = new SedimentField();
+    this.sedimentPlume = new SedimentPlume(scene, this.sediment.capacity);
 
     this.surface = new Mesh(new PlaneGeometry(400, 400), new MeshBasicMaterial({
       color: UNDERWATER_LIGHTING_CONFIG.water.surfaceColor,
@@ -839,6 +852,7 @@ export class Environment {
   private applyEffectVisibility(): void {
     const visible = this.waterEffects && this._lightingMode === 'full';
     this.marineSnow.setVisible(visible && this.waterLayers.marineParticles);
+    this.sedimentPlume.setVisible(visible && this.waterLayers.sediment);
     this.surface.visible = visible && this.waterLayers.surfaceLight;
     this.lightShafts.visible = visible && this.waterLayers.lightShafts;
     this.causticStrength.value = visible && this.waterLayers.caustics
@@ -1107,9 +1121,10 @@ export class Environment {
   }
 
   /**
-   * Load the user-supplied detail seaweed clump and place six hero instances.
-   * Textures stay embedded in the GLB; sway is GPU-side from `_SWAYWEIGHT` and
-   * the 302 per-leaf `_BLADEPHASE` values.
+   * Load the user-supplied detail seaweed clump and place the clustered hero
+   * instances. Textures stay embedded in the GLB; sway is GPU-side from
+   * `_SWAYWEIGHT`, the 302 per-leaf `_BLADEPHASE` values and the shared
+   * `OceanCurrentField` direction/speed.
    */
   async loadGlbSeaweed(): Promise<boolean> {
     if (this.glbSeaweedModeState === 'blender') return true;
@@ -1117,7 +1132,7 @@ export class Environment {
     try {
       asset = await loadSeaweedAsset();
       const layout = generateSeaweedLayout(this.obstacleDefinitions);
-      const scatter = new SeaweedScatter(asset, layout);
+      const scatter = new SeaweedScatter(asset, layout, this.currentField);
       this.scene.add(scatter.group);
 
       this.seaweedAsset = asset;
@@ -1147,6 +1162,45 @@ export class Environment {
     this.kelpScatter?.update(time);
     this.seaweedScatter?.update(time);
     for (const sample of this.reefSamples) sample.update(camera);
+  }
+
+  /**
+   * Presentation-only sediment. Reads live fish and the shared current; never
+   * writes simulation. Hidden when local water effects are off.
+   */
+  updateSediment(world: SimulationWorld, delta: number, time: number): void {
+    const visible = this.waterEffects
+      && this._lightingMode === 'full'
+      && this.waterLayers.sediment;
+    if (!visible) {
+      this.sedimentPlume.setVisible(false);
+      return;
+    }
+    this.sedimentPlume.setVisible(true);
+    this.sediment.update(
+      delta,
+      time,
+      world.flock,
+      (x, y, z, sampleTime, out) => this.currentField.sample(x, y, z, sampleTime, out),
+    );
+    this.sedimentPlume.update(this.sediment);
+  }
+
+  resetSediment(): void {
+    this.sediment.reset();
+    this.sedimentPlume.update(this.sediment);
+  }
+
+  getSedimentDiagnostics(): {
+    enabled: boolean;
+    activeParticles: number;
+    capacity: number;
+  } {
+    return {
+      enabled: this.waterEffects && this._lightingMode === 'full' && this.waterLayers.sediment,
+      activeParticles: this.sediment.activeCount,
+      capacity: this.sediment.capacity,
+    };
   }
 
   get marineSnowParticleCount(): number {
