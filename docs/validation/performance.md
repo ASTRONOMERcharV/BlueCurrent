@@ -1,6 +1,6 @@
 # Validation — Performance
 
-> 当前性能结论核实：2026-11-14。本文区分历史硬件、软件和 CPU 数据；2026-11-14 Phase F F1 已用真实 `EXT_disjoint_timer_query_webgl2` 测到 GPU EMA 并完成四档压力矩阵（1 捕食者代理）。干净复测（暂停动态壁纸、关闭用户 Chrome）中 standard telemetry-off 3/3 达到 D028 的 60 FPS 目标；补测的四档干净矩阵中 base/standard 可重复，pressure/extreme 仍受剩余后台 GPU 负载与整机状态影响，只作诊断。
+> 当前性能结论核实：2026-11-15。本文区分历史硬件、软件和 CPU 数据；2026-11-14 Phase F F1 已用真实 `EXT_disjoint_timer_query_webgl2` 测到 GPU EMA 并完成四档压力矩阵（1 捕食者代理）。干净复测（暂停动态壁纸、关闭用户 Chrome）中 standard telemetry-off 3/3 达到 D028 的 60 FPS 目标；2026-11-15 关闭 Chrome/DeepSeek 重试后 extreme 两种模式可重复、pressure telemetry-on 可重复，pressure telemetry-off 仍有 cadence decay。
 
 ## 指标定义
 
@@ -163,11 +163,28 @@ telemetry-on 分项中位（ms）：
 | pressure | 13.42 | 1.78 | 1.43 | 1.80 | 1.39 | 1.60 |
 | extreme | 33.62 | 3.64 | 2.99 | 4.47 | 1.72 | 2.03 |
 
-结论：base 与 standard 的 P50 与 dropped 可重复（P50 spread ≤1.03、0 dropped），但 FPS mean spread 为 1.44/1.48，受长尾尖峰影响，不满足旧矩阵的 ≤1.15 口径；standard 仍按 D028 的 P50/P95/dropped 3/3 通过。pressure 与 extreme 仍不可重复。pressure telemetry-off 的 r1/r3 约 5 FPS、sim 22 ms，r2 约 27 FPS、sim 12.7 ms（FPS spread 5.17、P50 spread 6.40）；telemetry-on 的 pressure/extreme 也在 >2× 范围摆动。相同 counts/candidates 下出现 1.7× 的 sim 差异，说明是整机状态/后台负载而不是场景内容；telemetry-on 的 pressure 反而比 telemetry-off 快，也证明两次运行不在同一状态，不能用于 on/off 开销或扩展性签核。完整 pressure/extreme 基线需要关闭剩余后台 GPU/CPU 应用并固定热状态，3/5 捕食者仍缺。
+结论：base 与 standard 的 P50 与 dropped 可重复（P50 spread ≤1.03、0 dropped），但 FPS mean spread 为 1.44/1.48，受长尾尖峰影响，不满足旧矩阵的 ≤1.15 口径；standard 仍按 D028 的 P50/P95/dropped 3/3 通过。pressure 与 extreme 在本次仍不可重复；关闭剩余后台应用后的重试见下节。pressure telemetry-off 的 r1/r3 约 5 FPS、sim 22 ms，r2 约 27 FPS、sim 12.7 ms（FPS spread 5.17、P50 spread 6.40）；telemetry-on 的 pressure/extreme 也在 >2× 范围摆动。相同 counts/candidates 下出现 1.7× 的 sim 差异，说明是整机状态/后台负载而不是场景内容；telemetry-on 的 pressure 反而比 telemetry-off 快，也证明两次运行不在同一状态，不能用于 on/off 开销或扩展性签核。
+
+### pressure/extreme 重试（2026-11-15 02:25，关闭 Chrome/DeepSeek）
+
+用户关闭 Chrome 与 DeepSeek Harness 后，暂停 Wallpaper Engine 重跑 pressure/extreme；剩余后台只有 Claude 应用约 6% iGPU，CPU 起始负载约 21%，页面每次采样前后 `visible/focused`。证据：`test-artifacts/phase-f/2026-11-14T18-25-37Z-retry/matrix-retry.md`。
+
+| Mode | Row | n | FPS mean | P50 ms | P95 ms | GPU EMA ms | Sim EMA ms | Render EMA ms | Dropped | FPS spread | P50 spread |
+| --- | --- | ---: | ---: | ---: | ---: | ---: | ---: | ---: | ---: | ---: | ---: |
+| off | pressure | 3 | 21.6 | 30.4 | 133.3 | N/A | 13.56 | 4.95 | 38 | 2.571 | 2.212 |
+| off | extreme | 3 | 3.88 | 254.5 | 339.2 | N/A | 26.20 | 7.35 | 119 | 1.054 | 1.075 |
+| on | pressure | 3 | 12.7 | 66.7 | 157.5 | 9.81 | 15.13 | 5.50 | 71 | 1.125 | 1.296 |
+| on | extreme | 3 | 3.50 | 302.9 | 357.6 | 24.05 | 26.82 | 7.03 | 106 | 1.061 | 1.041 |
+
+- extreme 两种模式均可重复（spread ≤1.08），是当前最可信的扩展性数据。
+- pressure telemetry-on 可重复（spread ≤1.30）；telemetry-off r1/r2 为 P50 30.2/30.4 ms（0/16 dropped），r3 降到 66.8 ms（38 dropped），而 sim 稳定在 13.1–14.2 ms——这是帧节奏/热状态问题，不是模拟吞吐变化。
+- 与第一次干净尝试相比，pressure 从 5.2/26.9/5.3 FPS 提升到 33.2/21.6/12.9 FPS，extreme 从 3.8/3.1/3.1 到 4.0/3.8/3.9；关闭后台应用显著降低了噪声。
+- telemetry-on 分项中位（ms）：pressure boidsMain 13.23、boidsClown 1.82、obstacle 1.29、fish 1.86、env 1.53、draw 1.59；extreme boidsMain 23.86、boidsClown 2.72、obstacle 2.50、fish 3.40、env 1.34、draw 1.68。`boidsMain` 仍是主瓶颈。
+- pressure telemetry-off 的 cadence decay 仍需独立的热/节奏控制（更长 cooldown 或分段冷却）才能签核；3/5 捕食者仍缺。
 
 ### Phase F 仍缺
 
-- pressure/extreme 的干净复测已在 2026-11-14 补做，但仍受后台 GPU 负载与整机状态影响，未达重复性；不能用于扩展性签核。
+- pressure/extreme 已在 2026-11-15 关闭 Chrome/DeepSeek 后重试：extreme 两种模式可重复，pressure telemetry-on 可重复，pressure telemetry-off 仍有 cadence decay；pressure telemetry-off 签核基线与 3/5 捕食者仍缺。
 - pressure/extreme 的 3/5 捕食者完整矩阵未测，只有 1 捕食者代理（D027）。
 - GPU 内存只有 `renderer.info.memory` 的资源计数，没有字节级 GPU memory counter；`performance.memory` 是 JS heap，不能当 GPU 内存。
 - 本轮没有优化代码，也没有优化前后同版对照；D028 目标已签核并在 standard 档验证，优化项另开工作包。

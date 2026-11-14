@@ -4,7 +4,7 @@
 
 ## 当前唯一活跃阶段：Phase F — Performance & Validation（第一轮测量完成，2026-11-14）
 
-Phase F 第一轮（F1）已完成测量与瓶颈审计：新增 `baseline:phase-f` 四档矩阵 harness、默认关闭的 CPU 相位遥测与真实 WebGL2 GPU timer query，完成 base/standard/pressure/extreme ×3 repeats、standard 1440×900 spot 与 telemetry-off 对照。pressure/extreme 先用 1 捕食者代理，采样期间存在动态壁纸/并发负载与整机漂移；标准档验收目标已由 D028 签核并在 2026-11-14 干净复测中验证通过，随后补测的干净四档矩阵中 base/standard 的 P50 可重复（FPS mean 受长尾影响仍有波动）、pressure/extreme 仍受剩余后台 GPU 负载影响，3/5 捕食者矩阵待后续（`DECISIONS.md` D027/D028）。性能数值只在 `../test-artifacts/phase-f/2026-11-14T11-26-00Z/rows/analysis.md`、`../test-artifacts/phase-f/2026-11-14T13-38-06Z-clean/acceptance.md`、`../test-artifacts/phase-f/2026-11-14T13-38-06Z-clean/matrix.md` 与 `validation/performance.md` 维护；证据目录被 Git 忽略。
+Phase F 第一轮（F1）已完成测量与瓶颈审计：新增 `baseline:phase-f` 四档矩阵 harness、默认关闭的 CPU 相位遥测与真实 WebGL2 GPU timer query，完成 base/standard/pressure/extreme ×3 repeats、standard 1440×900 spot 与 telemetry-off 对照。pressure/extreme 先用 1 捕食者代理，采样期间存在动态壁纸/并发负载与整机漂移；标准档验收目标已由 D028 签核并在 2026-11-14 干净复测中验证通过，随后补测的干净四档矩阵中 base/standard 的 P50 可重复（FPS mean 受长尾影响仍有波动）；2026-11-15 关闭 Chrome/DeepSeek 重试后 extreme 两种模式与 pressure telemetry-on 可重复，pressure telemetry-off 仍有 cadence decay，3/5 捕食者矩阵待后续（`DECISIONS.md` D027/D028）。性能数值只在 `../test-artifacts/phase-f/2026-11-14T11-26-00Z/rows/analysis.md`、`../test-artifacts/phase-f/2026-11-14T13-38-06Z-clean/acceptance.md`、`../test-artifacts/phase-f/2026-11-14T13-38-06Z-clean/matrix.md`、`../test-artifacts/phase-f/2026-11-14T18-25-37Z-retry/matrix-retry.md` 与 `validation/performance.md` 维护；证据目录被 Git 忽略。
 
 A/B/C Integration Gate 已于 2026-11-13 通过（带限制），`reef-camera-integration-v1` 标签建立在收尾提交上。Phase D 第一轮完成 D4 全局光照与 D1 水体（D023），第二轮完成 D2 海床程序化材质与 D3 海草受流摆动/成簇分布（D024）；两轮均完成同版对照与 Intel Iris Xe 硬件签核。Phase E 第一轮完成 E1 鱼体俯仰平滑/限幅与转弯弯曲、E3 捕食事件只读呈现与 `predator-watch` 单行（D025）；第二轮完成 E2 鱼群动态结构（split/merge 遥测、局部惊扰、边缘逃逸、密度响应、地形预判）与 E4 环境/生物交互（小丑鱼海葵栖息、近底沙尘/悬浮颗粒），建立新 checksum 基线并完成软件与 Intel Iris Xe 硬件签核（D026）。D2 剩余碎石/附着细节仍未做。证据见 `../test-artifacts/phase-e/2026-11-14t08-31-46z/summary.md` 与第一轮 `2026-11-14t00-13-00z/summary.md`，当前未决清单见 `CURRENT_STATE.md` 第 5 节。
 
@@ -36,7 +36,7 @@ P0 已通过（带限制，2026-11-13），`reef-camera-integration-v1` annotate
 | --- | --- | --- | --- |
 | D — Environment Look Development | Integration Gate 通过并保存基线 | 两轮完成：D4/D1（D023）与 D2/D3（D024）；D2 剩余碎石/附着细节未做。 | 两轮完成 2026-11-13 |
 | E — Ecosystem Behavior | D 视觉基线稳定 | 两轮完成：第一轮 E1 鱼体运动 + E3 捕食事件呈现（D025）；第二轮 E2 鱼群动态结构 + E4 环境/生物交互（D026）；不重写第二套控制器。 | 两轮完成 2026-11-14 |
-| F — Performance & Validation | A–E 主要功能稳定 | 当前硬件 CPU/GPU 分项、富默认与压力矩阵、同版优化对照；无 GPU timestamp 写 N/A。 | 第一轮测量完成 2026-11-14（四档矩阵、GPU timer、瓶颈审计）；标准档验收目标已签核并在干净复测中验证（D028）；干净四档矩阵中 base/standard 的 P50 可重复，pressure/extreme 仍受后台负载影响，3/5 捕食者待后续 |
+| F — Performance & Validation | A–E 主要功能稳定 | 当前硬件 CPU/GPU 分项、富默认与压力矩阵、同版优化对照；无 GPU timestamp 写 N/A。 | 第一轮测量完成 2026-11-14（四档矩阵、GPU timer、瓶颈审计）；标准档验收目标已签核并在干净复测中验证（D028）；干净四档矩阵中 base/standard 的 P50 可重复；关闭 Chrome/DeepSeek 重试后 extreme 与 pressure telemetry-on 可重复，pressure telemetry-off 仍有 cadence decay，3/5 捕食者待后续 |
 | G — Release & Presentation | F 验收完成、展示稳定 | 复用同一世界完成 Overview、School、Predator、Laboratory 四展示路径、正式截图、视频和发布说明。 | 未启动 |
 
 历史文档中的“Phase D / School Fish”、光照 P2.x 和视觉 Phase 3/4 不等于本路线的新 Phase D 已完成。
