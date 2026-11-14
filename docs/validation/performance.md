@@ -1,6 +1,6 @@
 # Validation — Performance
 
-> 当前性能结论核实：2026-11-14。本文区分历史硬件、软件和 CPU 数据；2026-11-14 Phase F F1 已用真实 `EXT_disjoint_timer_query_webgl2` 测到 GPU EMA 并完成四档压力矩阵（1 捕食者代理），但采样期间存在动态壁纸/并发负载与整机漂移，尚未形成空闲、固定电源/热状态的签核基线。
+> 当前性能结论核实：2026-11-14。本文区分历史硬件、软件和 CPU 数据；2026-11-14 Phase F F1 已用真实 `EXT_disjoint_timer_query_webgl2` 测到 GPU EMA 并完成四档压力矩阵（1 捕食者代理）。干净复测（暂停动态壁纸、关闭并发负载）中 standard telemetry-off 3/3 达到 D028 的 60 FPS 目标；pressure/extreme 矩阵仍在共享负载下采集，只作诊断。
 
 ## 指标定义
 
@@ -93,7 +93,7 @@ base 与 standard 的重复性达标（FPS spread ≤1.09、P50 spread ≤1.02�
 
 - standard 1440×900 spot：FPS mean 34.2、P50 30.2 ms、P95 42.6 ms、GPU 8.29 ms、sim 9.41 ms、render 7.37 ms、0 dropped、61 draws。宽屏剔除少了 1 个 draw，绝对 FPS 不与 1280×720 直接比较。
 - standard telemetry-off 对照（1280×720）：FPS mean 45.2、P50 18.4 ms、P95 36.3 ms、GPU N/A（timer 随遥测关闭）、sim 7.47 ms、render 7.12 ms、0 dropped。
-- 与同场景 telemetry-on 的 standard 行相比，逐鱼障碍计时的测量开销约为 sim +2.0 ms、render +0.7 ms，P50 从 18.4 ms 抬到 24.3 ms（一个刷新档）。该对照是测量开销参考，不是产品路径性能结论。
+- 与同场景 telemetry-on 的 standard 行相比，污染会话中的 off/on 对照为 sim 7.47 vs 9.45 ms、render 7.12 vs 7.84 ms（约 +2.0/+0.7 ms），但两者不是严格同会话 A/B；干净会话的同场对照见下节，测量开销更大。该对照是测量开销参考，不是产品路径性能结论。
 
 ### 环境、会话漂移与刷新量化（必须与矩阵一起读）
 
@@ -106,17 +106,38 @@ base 与 standard 的重复性达标（FPS spread ≤1.09、P50 spread ≤1.02�
 
 同一场景的 CPU 分项在约 40 分钟内慢了 1.5–2×，FPS 因此整档下降；这不是场景内容差异。采样期间 Wallpaper Engine（`wallpaper64`）占用 33.6–42.3% 的 iGPU 3D engine，用户自己的 Chrome 窗口也在活动；电源为 AC、Balanced scheme、无 overlay，`Win32_Processor.CurrentClockSpeed` 报 1520 MHz（Max 2400，WMI 对 boost 不可靠）。系统空闲超时为 180 s，早期交错 run 期间 Windows 记录过 Modern Standby 进入/退出；从 21:08 起用 `SetThreadExecutionState(ES_CONTINUOUS|ES_SYSTEM_REQUIRED|ES_DISPLAY_REQUIRED)` 保持显示与系统唤醒。extreme/spot/control 的页面可见性与焦点均已 instrument，采样前后为 `visible/focused`；base/standard/pressure 的样本早于该字段，显示 N/A，但 base/standard 的内部重复性正常。
 
-P50 落在 12.2 / 18.2 / 24.3 / 30.2 ms 等 6.06 ms 的整数倍上（165 Hz 面板的 82.5/55/41.25/33 fps 档），因此 P50 与 FPS 是离散档位，小量 CPU 变化可能整档跳变；P95 与 dropped steps 才描述尾部。综合以上，`rows/` 矩阵可作为本机晚间的实测基线，但还不是“空闲、固定电源/热状态”的签核基线；在设定验收目标前，需要在关闭动态壁纸、无并发用户负载、记录电源/热状态的同一台机器上用同一 harness 重跑一次。
+P50 落在 12.2 / 18.2 / 24.3 / 30.2 ms 等 6.06 ms 的整数倍上（165 Hz 面板的 82.5/55/41.25/33 fps 档），因此 P50 与 FPS 是离散档位，小量 CPU 变化可能整档跳变；P95 与 dropped steps 才描述尾部。综合以上，`rows/` 矩阵只作为共享桌面负载下的晚间实测基线保留；干净复测已于 2026-11-14 在暂停动态壁纸、关闭并发负载、记录电源/热状态的条件下完成，见下节。
 
-### Phase F 验收目标（D028）
+### Phase F 验收目标（D028）与干净复测
 
-标准档（500/100/1、1280×720、Iris Xe D3D11、telemetry-off 对照）的验收目标为 P50 ≤ 16.7 ms、P95 ≤ 33 ms、0 dropped steps，并在 3 repeats 中稳定复现；pressure/extreme 只作扩展性诊断，不要求实时。该目标需在关闭动态壁纸与并发负载、固定电源/热状态的同一台机器上用同一 harness 复测确认。当前 `rows/` 的 telemetry-off 对照为 45.2 FPS / P50 18.4 ms / P95 36.3 ms、0 dropped，未达目标；更早 `stability-standard` 会话在同一场景达到 P50 12.1 ms，但未做 telemetry-off 对照且未关闭动态壁纸。目标本身不据 degraded session 判定通过或失败；下一步是干净复测，若仍未达标再按以 `boidsMain` 为主的实测分项进入优化工作包。
+标准档（500/100/1、1280×720、Iris Xe D3D11、telemetry-off 对照）的验收目标为 P50 ≤ 16.7 ms、P95 ≤ 33 ms、0 dropped steps，并在 3 repeats 中稳定复现；pressure/extreme 只作扩展性诊断，不要求实时。
+
+干净复测证据：`test-artifacts/phase-f/2026-11-14T13-38-06Z-clean/acceptance.md`、`standard-off/results.json`。条件：Wallpaper Engine（`wallpaper64`，pid 6412）进程暂停（CPU 时间冻结、GPU engine <1%），用户 Chrome 关闭，AC/Balanced，无 power overlay，显示/系统保持唤醒，页面每次采样前后均为 `visible/focused`。同一 harness 跑 standard telemetry-off 3 repeats：
+
+| Repeat | Frames | FPS mean | P50 ms | P95 ms | Sim EMA ms | Render EMA ms | Dropped |
+| ---: | ---: | ---: | ---: | ---: | ---: | ---: | ---: |
+| 1 | 899 | 89.8 | 12.1 | 18.1 | 4.42 | 3.30 | 0 |
+| 2 | 933 | 93.3 | 12.1 | 12.3 | 4.44 | 3.43 | 0 |
+| 3 | 629 | 62.9 | 12.4 | 24.4 | 7.47 | 7.52 | 0 |
+
+中位：P50 12.1 ms、P95 18.1 ms、0 dropped；3/3 达到 P50 ≤ 16.7、P95 ≤ 33、0 dropped，D028 标准档目标在本机干净会话通过。更早 `rows/` 的 telemetry-off 对照（45.2 FPS / P50 18.4 / P95 36.3）是在动态壁纸与并发负载下采集，只作污染基线，不用于目标判定。
+
+同会话 telemetry-on 诊断（非验收路径）：
+
+| Repeat | Frames | FPS mean | P50 ms | P95 ms | GPU EMA ms | Sim EMA ms | Render EMA ms | Dropped |
+| ---: | ---: | ---: | ---: | ---: | ---: | ---: | ---: | ---: |
+| 1 | 379 | 37.8 | 24.3 | 36.5 | 10.58 | 9.13 | 8.31 | 0 |
+| 2 | 325 | 32.5 | 30.3 | 48.5 | 13.18 | 10.03 | 7.92 | 0 |
+| 3 | 387 | 38.6 | 24.3 | 36.4 | 10.64 | 10.28 | 8.61 | 0 |
+
+中位：P50 24.3 ms、P95 36.5 ms、GPU 10.64 ms、sim 10.03 ms、render 8.31 ms、0 dropped。逐鱼障碍计时与 GPU timer query polling 使 sim 比同场 telemetry-off 高约 5.6 ms、render 高约 4.9 ms，P50 从 12.1 抬到 24.3 ms；因此验收使用 telemetry-off，telemetry-on 只用于分项诊断，其 GPU 时间不能与产品路径帧时间直接相加。
 
 ### Phase F 仍缺
 
 - pressure/extreme 的 3/5 捕食者完整矩阵未测，只有 1 捕食者代理（D027）。
+- pressure/extreme 的干净复测未做；`rows/` 的这两档受共享桌面负载与整机漂移影响，未达重复性，也不能用于扩展性签核。
 - GPU 内存只有 `renderer.info.memory` 的资源计数，没有字节级 GPU memory counter；`performance.memory` 是 JS heap，不能当 GPU 内存。
-- 本轮没有优化代码，也没有优化前后同版对照；优化项必须等目标签核后另开工作包。
+- 本轮没有优化代码，也没有优化前后同版对照；D028 目标已签核并在 standard 档验证，优化项另开工作包。
 - SwiftShader 未参与本矩阵；所有四档与 spot/control 均为 Iris Xe D3D11 硬件路径。
 
 
@@ -132,7 +153,7 @@ B1 `test-artifacts/reef-collision/experiment-b.json` 在 t63 记录 Sphere/ReefP
 
 ## 当前 N/A 项
 
-Phase F F1 已把 GPU timestamp 从 N/A 变为实测（4.33–13.47 ms EMA，0 disjoint），并完成 1000/2000 鱼的 1 捕食者代理矩阵；仍为 N/A 的是 3/5 捕食者完整矩阵、字节级 GPU memory、空闲且固定电源/热状态的签核基线。帧率优化与压力矩阵已于 2026-11-12 决定留到 Phase F（`../DECISIONS.md` D014）；F1 只测量与审计，不改优化参数（D027）。1000/2000 是否需要 Worker/WASM、邻居上限或降频，必须先由当前分项测量和用户验收目标决定；不得通过降低默认质量绕过。验收目标已由 D028 签核为标准档 60 FPS（P50 ≤ 16.7 ms、P95 ≤ 33 ms、0 dropped），但尚未在干净基线上验证。
+Phase F F1 已把 GPU timestamp 从 N/A 变为实测（4.33–13.47 ms EMA，0 disjoint），并完成 1000/2000 鱼的 1 捕食者代理矩阵；standard 档已在干净复测中验证（3/3 达 D028），仍为 N/A 的是 3/5 捕食者完整矩阵、字节级 GPU memory、pressure/extreme 的干净矩阵。帧率优化与压力矩阵已于 2026-11-12 决定留到 Phase F（`../DECISIONS.md` D014）；F1 只测量与审计，不改优化参数（D027）。1000/2000 是否需要 Worker/WASM、邻居上限或降频，必须先由当前分项测量和用户验收目标决定；不得通过降低默认质量绕过。验收目标已由 D028 签核为标准档 60 FPS（P50 ≤ 16.7 ms、P95 ≤ 33 ms、0 dropped），并在 2026-11-14 干净复测中验证通过。
 
 ## 当前硬件复测命令
 

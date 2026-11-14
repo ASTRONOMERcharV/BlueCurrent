@@ -172,4 +172,4 @@
 
 **状态：接受（2026-11-14，用户决定）。** 标准档（500 主鱼 / 100 小丑鱼 / 1 捕食者、1280×720、Iris Xe D3D11、telemetry-off 对照）的验收目标为 P50 ≤ 16.7 ms、P95 ≤ 33 ms、0 dropped steps，并在 3 repeats 中稳定复现；pressure/extreme 只作扩展性诊断，不要求实时。该目标必须在关闭动态壁纸与并发负载、固定电源/热状态的同一台机器上用同一 harness 复测确认。
 
-**后果：** 2026-11-14 的 `rows/` 矩阵不满足干净验证条件：standard telemetry-off 对照为 45.2 FPS / P50 18.4 ms / P95 36.3 ms、0 dropped，尚未达到 P50 ≤ 16.7 ms；更早的 `stability-standard` 会话在同一场景达到 P50 12.1 ms，但当时未关闭动态壁纸且未做 telemetry-off 对照。目标本身不由 degraded session 判定失败或通过；下一步是干净复测，若仍未达标再据实测分项进入优化工作包。证据与数值只在 `test-artifacts/phase-f/2026-11-14T11-26-00Z/` 与 `docs/validation/performance.md` 维护。
+**后果：** 2026-11-14 的 `rows/` 矩阵不满足干净验证条件（动态壁纸/并发负载），因此目标不由该矩阵判定。同日 21:38 在暂停 Wallpaper Engine、关闭用户 Chrome、AC/Balanced、页面 visible/focused 的条件下，用同一 harness 复测 standard telemetry-off 3 repeats，3/3 达到 P50 ≤ 16.7 ms、P95 ≤ 33 ms、0 dropped，D028 目标在本机干净会话通过；更早的污染矩阵只作诊断。telemetry-on 对照显示测量开销显著，不作为产品路径性能。证据见 `test-artifacts/phase-f/2026-11-14T13-38-06Z-clean/acceptance.md`，数值只在 `docs/validation/performance.md` 维护。
