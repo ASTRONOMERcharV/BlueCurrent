@@ -94,6 +94,11 @@ interface Api {
   getPerformanceDiagnostics(): PerformanceDiagnostics;
 }
 
+interface PageVisibility {
+  visibility: string;
+  focused: boolean;
+}
+
 interface RowSpec {
   id: string;
   main: number;
@@ -135,6 +140,7 @@ interface SampleSummary {
   renderPhases: PerformanceSnapshot | null;
   rendererStats: PerformanceDiagnostics['renderer'] | null;
   memory: PerformanceDiagnostics['memory'];
+  visibility: { before: PageVisibility; after: PageVisibility };
   framesFile: string;
   screenshot: string | null;
   browserErrors: string[];
@@ -374,6 +380,10 @@ async function runSample(
       && diagnostics.seaweedModel === 'blender';
   }, undefined, { timeout: 180000, polling: 500 });
   await page.bringToFront();
+  const visibilityBefore = await page.evaluate(() => ({
+    visibility: document.visibilityState,
+    focused: document.hasFocus(),
+  }));
 
   const pageRenderer = await readRenderer(page);
   assertRenderer(pageRenderer);
@@ -493,6 +503,13 @@ async function runSample(
     renderPhases: options.telemetry ? after.render : null,
     rendererStats: after.renderer,
     memory: after.memory,
+    visibility: {
+      before: visibilityBefore,
+      after: await page.evaluate(() => ({
+        visibility: document.visibilityState,
+        focused: document.hasFocus(),
+      })),
+    },
     framesFile,
     screenshot: screenshotFile,
     browserErrors: errors,

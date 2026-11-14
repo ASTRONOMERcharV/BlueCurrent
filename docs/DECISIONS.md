@@ -161,3 +161,9 @@
 **后果：** 建立新 checksum 基线：encounter 17/43/52/60/63 s dynamic 为 `8a4ebd8073cc884fa5621e60`、`69d993ea1f7a467566b1e394`、`251d7c0f66ffc470ef667eab`、`937cdfef29cd2a9c2b21ac48`、`42e406513e0b960cd0c4c5e5`；旧 `535bf8835258bcf1b2e9e696` 只由 `?schoolDynamics=legacy` + `?habitat=legacy` 逐位复现。E2 只改主鱼群（`fishChecksum` 在 E4 前后完全相同），E4 只改小丑鱼段；`?sediment=0` 与开启时模拟 checksum 完全相同，沙尘只增加 1 个 draw call。3600 步压力无 NaN/越界且两次运行一致；Sphere/ReefProxy 五时间点 ReefProxy 0 穿入、Sphere 仅一次 −0.018 m 瞬态（旧基线同类 −0.062 m）。49 文件 365 tests、tsc、构建、rich smoke、observatory 与 `accept:gpu` 通过；Intel Iris Xe 硬件画面已签核，证据见 `test-artifacts/phase-e/2026-11-14t08-31-46z/summary.md`（Git 忽略）。回滚通道 `?schoolDynamics=legacy`、`?habitat=legacy`、`?sediment=0` 保留。SwiftShader 不是性能结论；沙尘使用 8 m 距离衰减影响高度（字面近底阈值不可达）；D2 剩余碎石/附着细节仍未做。
 
 当前未决清单只在 `CURRENT_STATE.md` 第 5 节维护，本文件不复制一份可能不同的列表。某项由 Integration Gate 或用户明确决定后，在这里新增 ADR，并更新当前状态、受影响子系统文档和回归证据。
+
+## D027 — Phase F 第一轮只做测量与瓶颈审计，压力档先用单捕食者代理
+
+**状态：接受（2026-11-14，用户决定）。** Phase F 第一轮（F1）只建立当前硬件的 CPU/GPU 分项基线、四档压力矩阵与瓶颈排序，不修改模拟行为、渲染质量、默认鱼数/资产或任何优化参数。压力档（1000+200）与极限档（2000+300）按路线要求保留 3/5 捕食者目标数量，但本轮实际只放 1 个捕食者作为代理；intended-vs-measured 缺口写入 `results.json`、`summary.md` 与 `docs/validation/performance.md`，不得把代理写成已支持多捕食者生态。性能验收目标（例如标准档 P50/P95 阈值）在基线完成并由用户签核后另行确定。
+
+**后果：** 本轮交付 `scripts/phase-f-baseline.ts`、`PhaseEmaRecorder` CPU 相位遥测、真实 `EXT_disjoint_timer_query_webgl2` GPU 计时与 `getRendererStats()`；遥测默认关闭，`?perfTelemetry=1` 才启用，且开关不改变固定种子模拟结果。压力/极限档的 3/5 捕食者完整测量是后续独立工作包，不能以 1 捕食者代理代替完整矩阵签核。基线受共享桌面负载、电源方案与热状态影响时，必须记录实测条件与波动范围，不能用单次最好值代表硬件能力。证据见 `test-artifacts/phase-f/2026-11-14T11-26-00Z/`（Git 忽略）。

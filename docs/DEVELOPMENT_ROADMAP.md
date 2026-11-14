@@ -125,7 +125,9 @@ E3 是对现有 Patrol / Pursuit / Attack / Search 和真实捕获规则的表�
 
 ## 5. Phase F — Performance & Validation
 
-**状态：未启动，等待 A–E 主要功能稳定。** 2026-11-09 的 Iris Xe 历史结果不能替代当前 B1 + C 富场景复测，SwiftShader 数据不能替代真实 GPU 验收。
+**状态：进行中（F1 测量与瓶颈审计完成，2026-11-14）。** F1 只测量、不改优化参数；四档矩阵与 GPU timer 已落地，空闲签核基线、3/5 捕食者完整矩阵与验收目标待后续。2026-11-09 的 Iris Xe 历史结果不能替代当前 B1 + C 富场景复测，SwiftShader 数据不能替代真实 GPU 验收。
+
+**F1 执行记录（2026-11-14）：** 新增 `scripts/phase-f-baseline.ts`（`npm run baseline:phase-f`）、默认关闭的 `PhaseEmaRecorder` CPU 相位遥测、真实 WebGL2 `EXT_disjoint_timer_query_webgl2` GPU 计时与 `getRendererStats()`；完成 base/standard/pressure/extreme 四档 ×3 repeats、standard 1440×900 spot 与 telemetry-off 对照。结论：CPU 模拟是随规模单调放大的主瓶颈，渲染提交次之，GPU 在高负载下未先饱和；pressure/extreme 先用 1 捕食者代理，并因动态壁纸/并发负载与整机漂移未达重复性，不能作为空闲签核基线。数值、采样条件和缺口只在 `../test-artifacts/phase-f/2026-11-14T11-26-00Z/rows/analysis.md` 与 `validation/performance.md`；D027 记录本轮范围。
 
 ### 5.1 真实硬件基线
 
@@ -189,4 +191,4 @@ E3 是对现有 Patrol / Pursuit / Attack / Search 和真实捕获规则的表�
 5. 每个阶段完成后更新对应 docs 报告、本文件状态和项目活记忆的指针；阶段细节只留在仓库 docs，不新增重复的阶段记忆。
 6. 当前目录无 Git 元数据时先备份再修改。捕获、测试和烘焙串行执行，保留原始数据、失败项和剩余限制。
 
-一个阶段只有在其交付物、回归、实际证据和已知限制全部记录后才算完成。Gate 已关闭，Phase D 两轮、Phase E 两轮均已完成并签核；下一入口是 **Phase F — Performance & Validation**，并需确认 D2 剩余碎石/附着细节是否补做。
+一个阶段只有在其交付物、回归、实际证据和已知限制全部记录后才算完成。Gate 已关闭，Phase D 两轮、Phase E 两轮均已完成并签核；Phase F F1 测量与瓶颈审计已完成，下一入口是 F 的签核基线/目标确认与优化工作包，并需确认 D2 剩余碎石/附着细节是否补做。
