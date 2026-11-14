@@ -163,7 +163,7 @@ telemetry-on 分项中位（ms）：
 | pressure | 13.42 | 1.78 | 1.43 | 1.80 | 1.39 | 1.60 |
 | extreme | 33.62 | 3.64 | 2.99 | 4.47 | 1.72 | 2.03 |
 
-结论：base 与 standard 可重复（P50 spread ≤1.03），standard 仍 3/3 达 D028；pressure 与 extreme 仍不可重复。pressure telemetry-off 的 r1/r3 约 5 FPS、sim 22 ms，r2 约 27 FPS、sim 12.7 ms（FPS spread 5.17、P50 spread 6.40）；telemetry-on 的 pressure/extreme 也在 >2× 范围摆动。相同 counts/candidates 下出现 1.7× 的 sim 差异，说明是整机状态/后台负载而不是场景内容；telemetry-on 的 pressure 反而比 telemetry-off 快，也证明两次运行不在同一状态，不能用于 on/off 开销或扩展性签核。完整 pressure/extreme 基线需要关闭剩余后台 GPU/CPU 应用并固定热状态，3/5 捕食者仍缺。
+结论：base 与 standard 的 P50 与 dropped 可重复（P50 spread ≤1.03、0 dropped），但 FPS mean spread 为 1.44/1.48，受长尾尖峰影响，不满足旧矩阵的 ≤1.15 口径；standard 仍按 D028 的 P50/P95/dropped 3/3 通过。pressure 与 extreme 仍不可重复。pressure telemetry-off 的 r1/r3 约 5 FPS、sim 22 ms，r2 约 27 FPS、sim 12.7 ms（FPS spread 5.17、P50 spread 6.40）；telemetry-on 的 pressure/extreme 也在 >2× 范围摆动。相同 counts/candidates 下出现 1.7× 的 sim 差异，说明是整机状态/后台负载而不是场景内容；telemetry-on 的 pressure 反而比 telemetry-off 快，也证明两次运行不在同一状态，不能用于 on/off 开销或扩展性签核。完整 pressure/extreme 基线需要关闭剩余后台 GPU/CPU 应用并固定热状态，3/5 捕食者仍缺。
 
 ### Phase F 仍缺
 
