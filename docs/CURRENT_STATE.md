@@ -75,19 +75,18 @@ P0 目标版本是富默认场景：500 主鱼 + 100 小丑鱼 + 1 shayu，B1 He
 
 WP0 锁定版本、WP1 完成 build/regression、WP2 补齐 B1 层级/碰撞 Debug/通道、WP3 补齐同版三机位、六时间点、目标轨迹和 UI 响应式、WP4 补齐真实 Intel Iris Xe 短测与 180 s/30 分钟长跑；这些结果均基于 pre-FSM 源码，仅作历史对照。2026-11-12 FSM direct-retarget 修改已实现并捕获浏览器 4 次 direct；WP1–WP4 已在 post-FSM 锁 `2026-11-12T14-30-00Z` 重跑完成，Gate 于 2026-11-13 关闭。具体图片索引和版本见 `validation/visual-baseline.md`，FSM 变更见 `validation/fsm-retarget.md`，Phase D 两轮证据见 `test-artifacts/phase-d/2026-11-13t10-45-43z/summary.md` 与 `test-artifacts/phase-d/2026-11-13t12-16-00z/summary.md`；Phase E 两轮证据见 `test-artifacts/phase-e/2026-11-14t00-13-00z/summary.md` 与 `test-artifacts/phase-e/2026-11-14t08-31-46z/summary.md`。E2/E4 已完成并签核；D2 剩余碎石/附着细节未做；持续闪烁在本轮后未重新观察。
 
-Integration 还需补：无（Gate 已关闭）。WP1–WP4 已在新锁重跑；School 构图由 D016、D 通道由 D017、Hero shelf 由 D018、默认碰撞由 D019、B 基座力由 D020、扩展目标由 D021、retarget 阈值由 D022 关闭。持续闪烁观察已由用户完成并在 `2026-11-13T06-33-00Z/flicker-observation.md` 记录（未观察到）。旧 `accept:observatory` 全套在 checks/mobile 阶段超时，无 results JSON；其覆盖的 UI 行为已由独立 UI 工具验证；Phase E 期间已修复环境问题并四跑通过。Phase D 两轮、Phase E 两轮均已完成并签核；D2 剩余碎石/附着细节是否补做未定。Phase F F1 已完成四档测量与瓶颈审计，但空闲签核基线、3/5 捕食者完整矩阵和验收目标仍未完成；当前 `rows/` 矩阵在动态壁纸/并发负载下采集，pressure/extreme 重复性不达标。测试计数口径：`vitest.config.ts` 已排除 `.claude/worktrees` 与 `.task-locks` 的重复测试副本，当前项目自身为 50 文件/370 tests（含 Phase F 遥测测试）；旧的 80/623、83/642 与 45/342 含不同阶段或副本，不可直接比较。
+Integration 还需补：无（Gate 已关闭）。WP1–WP4 已在新锁重跑；School 构图由 D016、D 通道由 D017、Hero shelf 由 D018、默认碰撞由 D019、B 基座力由 D020、扩展目标由 D021、retarget 阈值由 D022 关闭。持续闪烁观察已由用户完成并在 `2026-11-13T06-33-00Z/flicker-observation.md` 记录（未观察到）。旧 `accept:observatory` 全套在 checks/mobile 阶段超时，无 results JSON；其覆盖的 UI 行为已由独立 UI 工具验证；Phase E 期间已修复环境问题并四跑通过。Phase D 两轮、Phase E 两轮均已完成并签核；D2 剩余碎石/附着细节是否补做未定。Phase F F1 已完成四档测量与瓶颈审计，但空闲签核基线和 3/5 捕食者完整矩阵仍未完成；标准档验收目标已由 D028 签核，待干净复测验证。当前 `rows/` 矩阵在动态壁纸/并发负载下采集，pressure/extreme 重复性不达标。测试计数口径：`vitest.config.ts` 已排除 `.claude/worktrees` 与 `.task-locks` 的重复测试副本，当前项目自身为 50 文件/370 tests（含 Phase F 遥测测试）；旧的 80/623、83/642 与 45/342 含不同阶段或副本，不可直接比较。
 
 ## 5. 当前未决清单（唯一维护处）
 
 | 决策点 | 待确认内容 |
 | --- | --- |
-| Phase F 验收目标 | 基线已出；采用标准档 P50/P95、FPS 还是稳定性阈值，需要用户签核后才能进入优化工作包。 |
-| Phase F 空闲签核基线 | 需关闭动态壁纸/并发负载、记录电源与热状态，用同一 harness 重跑；当前 `rows/` 只能作为晚间实测基线。 |
+| Phase F 空闲签核基线 | 目标已由 D028 签核；需关闭动态壁纸/并发负载、记录电源与热状态，用同一 harness 复测标准档 telemetry-off 对照，阈值只在 `validation/performance.md` 维护。 |
 | 3/5 捕食者完整矩阵 | pressure/extreme 当前只有 1 捕食者代理；完整多捕食者测量是独立工作包（D027）。 |
 | D2 剩余碎石/附着细节 | 是否补做碎石/附着细节，以及是否作为独立轮次进入后续路线。 |
 | 持续闪烁 | 用户 2026-11-13 观察未发现持续闪烁，但未 instrument；Phase D 两轮与 Phase E 两轮改动后未重复长时观察。 |
 
-已于 2026-11-12 决定：帧率优化与压力矩阵留到 Phase F（`DECISIONS.md` D014）；Predator FSM 允许 pursuit direct index→index（D015）。已于 2026-11-13 决定：School 构图保留 fit 上限 1.4（D016）；D 双柱保持封闭（D017）；Hero 不加低前 shelf（D018）；默认碰撞保持 Sphere（D019）；B 基座力与 Proxy 成本留 Phase F（D020）；1000/2000 与多捕食者不作为 Gate 目标（D021）；接受 retarget 0.85（D022）；Phase D 第一轮 D4/D1 参数定稿并保持当前风格（D023）；第二轮 D2/D3 定稿（D024）；Phase E 第一轮 E1/E3 定稿（D025）；第二轮 E2/E4 定稿并建立新 checksum 基线（D026）；Phase F 第一轮只做测量与瓶颈审计，压力档先用 1 捕食者代理（D027）。除上述 ADR 外无其他未决设计项；持续闪烁仍未 instrument。长期已确定边界见 `DECISIONS.md`；某项决定后，在本表移除或更新状态，并在 `DECISIONS.md` 新增对应 ADR。
+已于 2026-11-12 决定：帧率优化与压力矩阵留到 Phase F（`DECISIONS.md` D014）；Predator FSM 允许 pursuit direct index→index（D015）。已于 2026-11-13 决定：School 构图保留 fit 上限 1.4（D016）；D 双柱保持封闭（D017）；Hero 不加低前 shelf（D018）；默认碰撞保持 Sphere（D019）；B 基座力与 Proxy 成本留 Phase F（D020）；1000/2000 与多捕食者不作为 Gate 目标（D021）；接受 retarget 0.85（D022）；Phase D 第一轮 D4/D1 参数定稿并保持当前风格（D023）；第二轮 D2/D3 定稿（D024）；Phase E 第一轮 E1/E3 定稿（D025）；第二轮 E2/E4 定稿并建立新 checksum 基线（D026）；Phase F 第一轮只做测量与瓶颈审计，压力档先用 1 捕食者代理（D027）；标准档验收目标已签核（D028）。除上述 ADR 外无其他未决设计项；持续闪烁仍未 instrument。长期已确定边界见 `DECISIONS.md`；某项决定后，在本表移除或更新状态，并在 `DECISIONS.md` 新增对应 ADR。
 
 ## 6. 旧文档使用限制
 

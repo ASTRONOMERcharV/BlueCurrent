@@ -108,6 +108,10 @@ base 与 standard 的重复性达标（FPS spread ≤1.09、P50 spread ≤1.02�
 
 P50 落在 12.2 / 18.2 / 24.3 / 30.2 ms 等 6.06 ms 的整数倍上（165 Hz 面板的 82.5/55/41.25/33 fps 档），因此 P50 与 FPS 是离散档位，小量 CPU 变化可能整档跳变；P95 与 dropped steps 才描述尾部。综合以上，`rows/` 矩阵可作为本机晚间的实测基线，但还不是“空闲、固定电源/热状态”的签核基线；在设定验收目标前，需要在关闭动态壁纸、无并发用户负载、记录电源/热状态的同一台机器上用同一 harness 重跑一次。
 
+### Phase F 验收目标（D028）
+
+标准档（500/100/1、1280×720、Iris Xe D3D11、telemetry-off 对照）的验收目标为 P50 ≤ 16.7 ms、P95 ≤ 33 ms、0 dropped steps，并在 3 repeats 中稳定复现；pressure/extreme 只作扩展性诊断，不要求实时。该目标需在关闭动态壁纸与并发负载、固定电源/热状态的同一台机器上用同一 harness 复测确认。当前 `rows/` 的 telemetry-off 对照为 45.2 FPS / P50 18.4 ms / P95 36.3 ms、0 dropped，未达目标；更早 `stability-standard` 会话在同一场景达到 P50 12.1 ms，但未做 telemetry-off 对照且未关闭动态壁纸。目标本身不据 degraded session 判定通过或失败；下一步是干净复测，若仍未达标再按以 `boidsMain` 为主的实测分项进入优化工作包。
+
 ### Phase F 仍缺
 
 - pressure/extreme 的 3/5 捕食者完整矩阵未测，只有 1 捕食者代理（D027）。
@@ -128,7 +132,7 @@ B1 `test-artifacts/reef-collision/experiment-b.json` 在 t63 记录 Sphere/ReefP
 
 ## 当前 N/A 项
 
-Phase F F1 已把 GPU timestamp 从 N/A 变为实测（4.33–13.47 ms EMA，0 disjoint），并完成 1000/2000 鱼的 1 捕食者代理矩阵；仍为 N/A 的是 3/5 捕食者完整矩阵、字节级 GPU memory、空闲且固定电源/热状态的签核基线。帧率优化与压力矩阵已于 2026-11-12 决定留到 Phase F（`../DECISIONS.md` D014）；F1 只测量与审计，不改优化参数（D027）。1000/2000 是否需要 Worker/WASM、邻居上限或降频，必须先由当前分项测量和用户验收目标决定；不得通过降低默认质量绕过。验收目标仍未签核。
+Phase F F1 已把 GPU timestamp 从 N/A 变为实测（4.33–13.47 ms EMA，0 disjoint），并完成 1000/2000 鱼的 1 捕食者代理矩阵；仍为 N/A 的是 3/5 捕食者完整矩阵、字节级 GPU memory、空闲且固定电源/热状态的签核基线。帧率优化与压力矩阵已于 2026-11-12 决定留到 Phase F（`../DECISIONS.md` D014）；F1 只测量与审计，不改优化参数（D027）。1000/2000 是否需要 Worker/WASM、邻居上限或降频，必须先由当前分项测量和用户验收目标决定；不得通过降低默认质量绕过。验收目标已由 D028 签核为标准档 60 FPS（P50 ≤ 16.7 ms、P95 ≤ 33 ms、0 dropped），但尚未在干净基线上验证。
 
 ## 当前硬件复测命令
 

@@ -167,3 +167,9 @@
 **状态：接受（2026-11-14，用户决定）。** Phase F 第一轮（F1）只建立当前硬件的 CPU/GPU 分项基线、四档压力矩阵与瓶颈排序，不修改模拟行为、渲染质量、默认鱼数/资产或任何优化参数。压力档（1000+200）与极限档（2000+300）按路线要求保留 3/5 捕食者目标数量，但本轮实际只放 1 个捕食者作为代理；intended-vs-measured 缺口写入 `results.json`、`summary.md` 与 `docs/validation/performance.md`，不得把代理写成已支持多捕食者生态。性能验收目标（例如标准档 P50/P95 阈值）在基线完成并由用户签核后另行确定。
 
 **后果：** 本轮交付 `scripts/phase-f-baseline.ts`、`PhaseEmaRecorder` CPU 相位遥测、真实 `EXT_disjoint_timer_query_webgl2` GPU 计时与 `getRendererStats()`；遥测默认关闭，`?perfTelemetry=1` 才启用，且开关不改变固定种子模拟结果。压力/极限档的 3/5 捕食者完整测量是后续独立工作包，不能以 1 捕食者代理代替完整矩阵签核。基线受共享桌面负载、电源方案与热状态影响时，必须记录实测条件与波动范围，不能用单次最好值代表硬件能力。证据见 `test-artifacts/phase-f/2026-11-14T11-26-00Z/`（Git 忽略）。
+
+## D028 — Phase F 验收目标：标准档 60 FPS
+
+**状态：接受（2026-11-14，用户决定）。** 标准档（500 主鱼 / 100 小丑鱼 / 1 捕食者、1280×720、Iris Xe D3D11、telemetry-off 对照）的验收目标为 P50 ≤ 16.7 ms、P95 ≤ 33 ms、0 dropped steps，并在 3 repeats 中稳定复现；pressure/extreme 只作扩展性诊断，不要求实时。该目标必须在关闭动态壁纸与并发负载、固定电源/热状态的同一台机器上用同一 harness 复测确认。
+
+**后果：** 2026-11-14 的 `rows/` 矩阵不满足干净验证条件：standard telemetry-off 对照为 45.2 FPS / P50 18.4 ms / P95 36.3 ms、0 dropped，尚未达到 P50 ≤ 16.7 ms；更早的 `stability-standard` 会话在同一场景达到 P50 12.1 ms，但当时未关闭动态壁纸且未做 telemetry-off 对照。目标本身不由 degraded session 判定失败或通过；下一步是干净复测，若仍未达标再据实测分项进入优化工作包。证据与数值只在 `test-artifacts/phase-f/2026-11-14T11-26-00Z/` 与 `docs/validation/performance.md` 维护。
