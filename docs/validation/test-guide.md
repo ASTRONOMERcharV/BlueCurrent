@@ -38,7 +38,7 @@ npm run accept:observatory
 | E2 结构捕获 | `npx tsx scripts/school-structure-capture.ts --mode=dynamic|legacy --out=<dir> --seconds=70 --step=30`；固定世界机位，输出事件帧、五时间点固定帧与结构 JSON。`--channel=chrome --headed=1 --software=0` 切换硬件。`--out` 可传完整 `test-artifacts/...` 或相对目录名。 |
 | E4 栖息/沙尘捕获 | `npx tsx scripts/e4-capture.ts --kind=habitat|sediment --mode=<anemone|legacy|on|off> --out=<dir>`；habitat 用 reef-0 海葵机位，sediment 用 school 下方低机位并推进 90 个 1/30 s tick。硬件同上。 |
 | 硬件 GPU | `npm run accept:gpu -- --channel=chrome`，详见 `performance.md`。 |
-| Phase F 四档基线 | `npm run baseline:phase-f -- --row=standard --repeats=3 --cooldown-ms=90000 --append=1 --headed=1 --channel=chrome --out=test-artifacts/phase-f/<UTC>/rows`；`--rows=none --spot=1 --control=1` 只跑 1440×900 spot 与 telemetry-off 对照；`--quick=1` 做短探针。每个 sample 新页面并固定计数/相机/预热；pressure/extreme 目标 3/5 捕食者但当前只测 1 捕食者代理（D027）。采样前关闭动态壁纸和并发重负载，保持显示唤醒，数值与限制只在 `performance.md` 维护。 |
+| Phase F 四档基线 | `npm run baseline:phase-f -- --row=standard --repeats=3 --cooldown-ms=90000 --append=1 --headed=1 --channel=chrome --out=test-artifacts/phase-f/<UTC>/rows`；`--rows=none --spot=1 --control=1` 只跑 1440×900 spot 与 telemetry-off 对照；`--quick=1` 做短探针。D028 验收用 `--telemetry=0` 跑 standard 3 repeats；`--telemetry=1` 只作 GPU/分项诊断。每个 sample 新页面并固定计数/相机/预热；pressure/extreme 目标 3/5 捕食者但当前只测 1 捕食者代理（D027）。采样前关闭动态壁纸和并发重负载，保持显示唤醒，数值与限制只在 `performance.md` 维护。 |
 | 硬件 180 s / 30 分钟 | WP4 使用 `test-artifacts/integration-abc/2026-11-12T08-22-20Z/wp4/tools/hardware-monitor-180s.mjs`、`hardware-monitor-30min.mjs`；headed Chrome、`channel=chrome`、拒绝 SwiftShader，输出 `hardware-180s.json` / `hardware-30min.json`。30 分钟分析用 `summarize-30min.mjs`。 |
 
 这些脚本不一定有 `--help` 实现；运行前读脚本顶部用法和参数解析。不要复用已不存在的构建目录，也不要让新实验覆盖旧 A/B/C 证据。
