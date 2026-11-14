@@ -125,9 +125,9 @@ E3 是对现有 Patrol / Pursuit / Attack / Search 和真实捕获规则的表�
 
 ## 5. Phase F — Performance & Validation
 
-**状态：进行中（F1 测量与瓶颈审计完成，2026-11-14）。** F1 只测量、不改优化参数；四档矩阵与 GPU timer 已落地，standard 档已在干净复测中验证 D028，pressure/extreme 干净矩阵与 3/5 捕食者完整矩阵待后续。2026-11-09 的 Iris Xe 历史结果不能替代当前 B1 + C 富场景复测，SwiftShader 数据不能替代真实 GPU 验收。
+**状态：进行中（F1 测量与瓶颈审计完成，2026-11-14）。** F1 只测量、不改优化参数；四档矩阵与 GPU timer 已落地，standard 档已在干净复测中验证 D028，干净四档矩阵中 base/standard 可重复、pressure/extreme 仍受剩余后台负载影响，3/5 捕食者完整矩阵待后续。2026-11-09 的 Iris Xe 历史结果不能替代当前 B1 + C 富场景复测，SwiftShader 数据不能替代真实 GPU 验收。
 
-**F1 执行记录（2026-11-14）：** 新增 `scripts/phase-f-baseline.ts`（`npm run baseline:phase-f`）、默认关闭的 `PhaseEmaRecorder` CPU 相位遥测、真实 WebGL2 `EXT_disjoint_timer_query_webgl2` GPU 计时与 `getRendererStats()`；完成 base/standard/pressure/extreme 四档 ×3 repeats、standard 1440×900 spot 与 telemetry-off 对照。结论：CPU 模拟是随规模单调放大的主瓶颈，渲染提交次之，GPU 在高负载下未先饱和；pressure/extreme 先用 1 捕食者代理，并因动态壁纸/并发负载与整机漂移未达重复性。同日暂停 Wallpaper Engine、关闭用户 Chrome 后复测 standard telemetry-off 3 repeats，3/3 达到 D028；telemetry-on 诊断显示逐鱼计时与 GPU query polling 有明显测量开销，不作为产品路径性能。数值、采样条件和缺口只在 `../test-artifacts/phase-f/2026-11-14T11-26-00Z/rows/analysis.md`、`../test-artifacts/phase-f/2026-11-14T13-38-06Z-clean/acceptance.md` 与 `validation/performance.md`；D027/D028 记录本轮范围与目标。
+**F1 执行记录（2026-11-14）：** 新增 `scripts/phase-f-baseline.ts`（`npm run baseline:phase-f`）、默认关闭的 `PhaseEmaRecorder` CPU 相位遥测、真实 WebGL2 `EXT_disjoint_timer_query_webgl2` GPU 计时与 `getRendererStats()`；完成 base/standard/pressure/extreme 四档 ×3 repeats、standard 1440×900 spot 与 telemetry-off 对照。结论：CPU 模拟是随规模单调放大的主瓶颈，渲染提交次之，GPU 在高负载下未先饱和；pressure/extreme 先用 1 捕食者代理，并因动态壁纸/并发负载与整机漂移未达重复性。同日暂停 Wallpaper Engine、关闭用户 Chrome 后复测 standard telemetry-off 3 repeats，3/3 达到 D028；补测的干净四档矩阵中 base/standard 可重复，但 pressure/extreme 仍受 DeepSeek Harness/Claude 等剩余后台 GPU 负载影响，未形成签核基线。telemetry-on 诊断显示逐鱼计时与 GPU query polling 有明显测量开销，不作为产品路径性能。数值、采样条件和缺口只在 `../test-artifacts/phase-f/2026-11-14T11-26-00Z/rows/analysis.md`、`../test-artifacts/phase-f/2026-11-14T13-38-06Z-clean/acceptance.md`、`../test-artifacts/phase-f/2026-11-14T13-38-06Z-clean/matrix.md` 与 `validation/performance.md`；D027/D028 记录本轮范围与目标。
 
 ### 5.1 真实硬件基线
 
@@ -191,4 +191,4 @@ E3 是对现有 Patrol / Pursuit / Attack / Search 和真实捕获规则的表�
 5. 每个阶段完成后更新对应 docs 报告、本文件状态和项目活记忆的指针；阶段细节只留在仓库 docs，不新增重复的阶段记忆。
 6. 当前目录无 Git 元数据时先备份再修改。捕获、测试和烘焙串行执行，保留原始数据、失败项和剩余限制。
 
-一个阶段只有在其交付物、回归、实际证据和已知限制全部记录后才算完成。Gate 已关闭，Phase D 两轮、Phase E 两轮均已完成并签核；Phase F F1 测量与瓶颈审计已完成，standard 档 D028 目标已在干净复测中验证，下一入口是 pressure/extreme 干净复测、3/5 捕食者完整矩阵与优化工作包，并需确认 D2 剩余碎石/附着细节是否补做。
+一个阶段只有在其交付物、回归、实际证据和已知限制全部记录后才算完成。Gate 已关闭，Phase D 两轮、Phase E 两轮均已完成并签核；Phase F F1 测量与瓶颈审计已完成，standard 档 D028 目标已在干净复测中验证，干净四档矩阵中 base/standard 可重复、pressure/extreme 仍受后台负载影响；下一入口是关闭剩余后台应用后的 pressure/extreme 复测、3/5 捕食者完整矩阵与优化工作包，并需确认 D2 剩余碎石/附着细节是否补做。
