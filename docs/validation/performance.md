@@ -181,7 +181,7 @@ telemetry-on 分项中位（ms）：
 - 与第一次干净尝试相比，pressure 从 5.2/26.9/5.3 FPS 提升到 33.2/21.6/12.9 FPS，extreme 从 3.8/3.1/3.1 到 4.0/3.8/3.9；关闭后台应用显著降低了噪声。
 - telemetry-on 分项中位（ms）：pressure boidsMain 13.23、boidsClown 1.82、obstacle 1.29、fish 1.86、env 1.53、draw 1.59；extreme boidsMain 23.86、boidsClown 2.72、obstacle 2.50、fish 3.40、env 1.34、draw 1.68。`boidsMain` 仍是主瓶颈。
 - pressure telemetry-off 的 cadence decay 仍需独立的热/节奏控制（更长 cooldown 或分段冷却）才能签核；3/5 捕食者仍缺。
-- pressure telemetry-off 再用 180 s cooldown 重跑一次：FPS 36.1/27.7/20.2、P50 24.2/30.2/36.5 ms、sim 12.4/12.6/13.7 ms、render 4.5/4.6/5.5 ms；FPS spread 1.79、P50 spread 1.51。更长冷却降低了 decay（90 s 时为 P50 30.2/30.4/66.8），但没有消除，sim 与 render 仍随 repeat 缓慢上升；pressure telemetry-off 仍不作为签核基线。
+- pressure telemetry-off 再用 180 s cooldown 重跑一次：FPS 36.1/27.7/20.2、P50 24.2/30.2/36.5 ms、sim 12.4/12.6/13.7 ms、render 4.5/4.6/5.5 ms；FPS spread 1.79、P50 spread 1.51。更长冷却降低了 decay（90 s 时为 P50 30.2/30.4/66.8），但没有消除，sim 与 render 仍随 repeat 缓慢上升；尾帧也随 repeat 增大（p99 96.9→157.7→157.4 ms、max 103.2→181.8→175.9 ms），heap 51→62 MB，不是内存上限压力。下一步可用每 repeat 重启浏览器验证是否为同一浏览器会话累积；pressure telemetry-off 仍不作为签核基线。
 
 ### Phase F 仍缺
 
