@@ -17,7 +17,7 @@ P0 的目标整合版本是富默认场景：500 条主鱼、100 条小丑鱼、
 | A/B/C Integration Gate | 证明碰撞、B1 礁石、相机和 UI 组合正确 | **P0，通过（带限制，2026-11-13）；Phase D 可启动** | 已完成 |
 | D — Environment Look Development | 统一水体、材质、植被与光照，建立视觉基线 | 两轮完成（2026-11-13） | Integration Gate 通过并保存基线 |
 | E — Ecosystem Behavior | 提升游动、群体动态、捕食事件和局部环境交互 | 两轮完成（E1+E3 / E2+E4，2026-11-14） | D 视觉基线稳定 |
-| F — Performance & Validation | 真实 GPU、CPU/GPU 分项、压力测试和优化 | 未启动 | A–E 主要功能稳定 |
+| F — Performance & Validation | 真实 GPU、CPU/GPU 分项、压力测试和优化 | 进行中：F1 测量与 F2 第一轮优化完成（2026-11-15） | A–E 主要功能稳定 |
 | G — Release & Presentation | 完整观察流程、演示、文档和发布 | 未启动 | F 验收完成，展示内容稳定 |
 
 总原则是先把现有系统做成可验证的实时生态模拟，再扩充内容。任何阶段都不得为了画面或演示结果改写模拟事实；不可测数据保持 `N/A`，参考图片只用于美术方向，不能作为项目验收截图。
@@ -125,9 +125,11 @@ E3 是对现有 Patrol / Pursuit / Attack / Search 和真实捕获规则的表�
 
 ## 5. Phase F — Performance & Validation
 
-**状态：进行中（F1 测量与瓶颈审计完成，2026-11-14）。** F1 只测量、不改优化参数；四档矩阵与 GPU timer 已落地，standard 档已在干净复测中验证 D028，干净四档矩阵中 base/standard 的 P50 可重复（FPS mean 受长尾影响仍有波动）；2026-11-15 关闭 Chrome/DeepSeek 重试后 extreme 两种模式与 pressure telemetry-on 可重复，pressure telemetry-off 仍有 cadence decay（180 s cooldown 重跑改善但未消除），3/5 捕食者完整矩阵待后续。2026-11-09 的 Iris Xe 历史结果不能替代当前 B1 + C 富场景复测，SwiftShader 数据不能替代真实 GPU 验收。
+**状态：进行中（F1 测量与瓶颈审计完成 2026-11-14；F2 第一轮位相同优化完成 2026-11-15）。** F1 只测量、不改优化参数；四档矩阵与 GPU timer 已落地，standard 档已在干净复测中验证 D028，干净四档矩阵中 base/standard 的 P50 可重复（FPS mean 受长尾影响仍有波动）；2026-11-15 关闭 Chrome/DeepSeek 重试后 extreme 两种模式与 pressure telemetry-on 可重复，pressure telemetry-off 仍有 cadence decay（180 s cooldown 重跑改善但未消除），3/5 捕食者完整矩阵待后续。F2 第一轮只做保持逐位相同的 CPU 热路径优化，稳定 A/B 约 −3% wall / −3–8% CPU，标准档 telemetry-off 优化后复核一次 3/3 达 D028、另一次 r3 热漂移；tests 50/370、tsc、构建与 checksum 不变（D029）。2026-11-09 的 Iris Xe 历史结果不能替代当前 B1 + C 富场景复测，SwiftShader 数据不能替代真实 GPU 验收。
 
 **F1 执行记录（2026-11-14）：** 新增 `scripts/phase-f-baseline.ts`（`npm run baseline:phase-f`）、默认关闭的 `PhaseEmaRecorder` CPU 相位遥测、真实 WebGL2 `EXT_disjoint_timer_query_webgl2` GPU 计时与 `getRendererStats()`；完成 base/standard/pressure/extreme 四档 ×3 repeats、standard 1440×900 spot 与 telemetry-off 对照。结论：CPU 模拟是随规模单调放大的主瓶颈，渲染提交次之，GPU 在高负载下未先饱和；pressure/extreme 先用 1 捕食者代理，并因动态壁纸/并发负载与整机漂移未达重复性。同日暂停 Wallpaper Engine、关闭用户 Chrome 后复测 standard telemetry-off 3 repeats，3/3 达到 D028；补测的干净四档矩阵中 base/standard 的 P50 可重复（FPS mean 受长尾影响仍有波动）；2026-11-15 关闭 Chrome/DeepSeek 重试后 extreme 两种模式与 pressure telemetry-on 可重复，pressure telemetry-off 仍有 cadence decay（180 s cooldown 重跑改善但未消除），未形成签核基线。telemetry-on 诊断显示逐鱼计时与 GPU query polling 有明显测量开销，不作为产品路径性能。数值、采样条件和缺口只在 `../test-artifacts/phase-f/2026-11-14T11-26-00Z/rows/analysis.md`、`../test-artifacts/phase-f/2026-11-14T13-38-06Z-clean/acceptance.md`、`../test-artifacts/phase-f/2026-11-14T13-38-06Z-clean/matrix.md`、`../test-artifacts/phase-f/2026-11-14T18-25-37Z-retry/matrix-retry.md` 与 `validation/performance.md`；D027/D028 记录本轮范围与目标。
+
+**F2 优化第一轮执行记录（2026-11-15）：** 只做位相同 CPU 热路径优化（D029）：`BoidSystem` 提升每步常量、减少邻居速度重复读取、predator 关闭时跳过 fear 读取、每步预计算鱼速；`UniformGrid3D` 内联 cell 坐标并移除临时数组；`ObstacleSystem`/`EnvironmentForces` 提升循环外常量。稳定 A/B 在临时 Performance 电源方案下交替 baseline/optimized（Wallpaper Engine 暂停、Chrome/DeepSeek 关闭、各状态先预热），500/1000/2000 主鱼 wall mean 3.146/7.945/20.462 → 3.043/7.673/19.868 ms（约 −3%），P95 改善 1.8–5.1%；绝对值不能与 Balanced 下的 F1 基线直接比较。标准档 telemetry-off 优化后复核 run A 3/3 达 D028（P50 12.0/12.1/12.1、P95 18.2/18.2/18.3、0 dropped），run B r3 热漂移到 P50 18.2 但 P95 30.2、0 dropped；没有同会话 baseline/optimized 浏览器 A/B。被否决的邻居几何缓存（慢 12–15%）、cell 位置缓存（噪声内）与 Float32 距离缓存（改变 checksum）未进入代码。证据见 `../test-artifacts/phase-f/optimization/`；数值只在 `validation/performance.md` 维护。
 
 ### 5.1 真实硬件基线
 
@@ -149,6 +151,8 @@ E3 是对现有 Patrol / Pursuit / Attack / Search 和真实捕获规则的表�
 ### 5.3 优化顺序
 
 先依据 CPU/GPU 分项定位瓶颈，再选择 Instanced Rendering、几何/材质共享、LOD、Frustum Culling、粒子 GPU 更新、减少逐帧分配、阴影投射控制和远景降级。项目已有实例化与部分 LOD 时，应先审计实际覆盖和收益，不重复实现。优化必须让细节成本随距离递减，不能将近景礁石和鱼群一并简化。
+
+F2 第一轮的实测瓶颈是 CPU 模拟中的 `UniformGrid3D.collect`（2000 鱼约 49% profile）与 `BoidSystem.update`（约 40%），因此先做了不改变邻居顺序和浮点求和的常量提升、重复读取消除与速度预计算；约 3% 的收益不足以改变压力档实时性。继续优化若采用 Worker/WASM、改变邻居求和顺序、复用跨步邻居或降低默认质量，必须另立决定并重建 checksum、碰撞/相机与同版性能证据，不能作为“无害微优化”直接合入。
 
 **F 交付物：** 当前真实硬件报告、CPU/GPU 分项、四档压力矩阵、优化前后同版对照和仍未通过的限制。历史 500 鱼通过与当前富默认通过必须分开陈述。
 
@@ -191,4 +195,4 @@ E3 是对现有 Patrol / Pursuit / Attack / Search 和真实捕获规则的表�
 5. 每个阶段完成后更新对应 docs 报告、本文件状态和项目活记忆的指针；阶段细节只留在仓库 docs，不新增重复的阶段记忆。
 6. 当前目录无 Git 元数据时先备份再修改。捕获、测试和烘焙串行执行，保留原始数据、失败项和剩余限制。
 
-一个阶段只有在其交付物、回归、实际证据和已知限制全部记录后才算完成。Gate 已关闭，Phase D 两轮、Phase E 两轮均已完成并签核；Phase F F1 测量与瓶颈审计已完成，standard 档 D028 目标已在干净复测中验证，干净四档矩阵中 base/standard 的 P50 可重复；关闭 Chrome/DeepSeek 重试后 extreme 与 pressure telemetry-on 可重复，pressure telemetry-off 仍有 cadence decay（180 s cooldown 重跑改善但未消除）；下一入口是 pressure telemetry-off 热/节奏复测、3/5 捕食者完整矩阵与优化工作包，并需确认 D2 剩余碎石/附着细节是否补做。
+一个阶段只有在其交付物、回归、实际证据和已知限制全部记录后才算完成。Gate 已关闭，Phase D 两轮、Phase E 两轮均已完成并签核；Phase F F1 测量与瓶颈审计已完成，standard 档 D028 目标已在干净复测中验证，干净四档矩阵中 base/standard 的 P50 可重复；关闭 Chrome/DeepSeek 重试后 extreme 与 pressure telemetry-on 可重复，pressure telemetry-off 仍有 cadence decay（180 s cooldown 重跑改善但未消除）；F2 第一轮位相同优化已完成（D029，约 −3% CPU 模拟 wall，checksum 不变）。下一入口是 pressure telemetry-off 热/节奏复测、3/5 捕食者完整矩阵、是否继续非位相同优化，并需确认 D2 剩余碎石/附着细节是否补做。

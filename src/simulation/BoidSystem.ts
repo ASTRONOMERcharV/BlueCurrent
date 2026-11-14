@@ -106,6 +106,7 @@ export class BoidSystem {
 
   private search: NeighborSearch;
   private readonly neighbors: Int32Array;
+  private readonly speeds: Float64Array;
   private readonly obstacleForce = new Float32Array(3);
   private readonly boundaryForce = new Float32Array(3);
   private readonly velocityTurn = new Float32Array(3);
@@ -123,6 +124,7 @@ export class BoidSystem {
     this.bruteForce = new BruteForceSearch();
     this.search = this.grid;
     this.neighbors = new Int32Array(flock.capacity);
+    this.speeds = new Float64Array(flock.capacity);
     this.debugSample.neighbors = new Int32Array(flock.capacity);
   }
 
@@ -151,6 +153,46 @@ export class BoidSystem {
     const cohesionRadiusSquared = config.cohesionRadius ** 2;
     const cosHalfFov = Math.cos((config.fieldOfViewDegrees * Math.PI) / 360);
     const restrictFov = config.fieldOfViewDegrees < 359.999;
+    // Every value below is fixed for the whole step; hoisting keeps the
+    // per-fish loop free of repeated property loads without changing math.
+    const separationWeight = config.separationWeight;
+    const alignmentWeight = config.alignmentWeight;
+    const cohesionWeight = config.cohesionWeight;
+    const maxAcceleration = config.maxAcceleration;
+    const maxSpeed = config.maxSpeed;
+    const minSpeed = config.minSpeed;
+    const maxTurnRate = config.maxTurnRate;
+    const predatorEnabled = config.predatorEnabled;
+    const schoolDynamicsEnabled = config.schoolDynamicsEnabled;
+    const weightedAlignment = schoolDynamicsEnabled && config.alignmentAgreementBlend > 0;
+    const alignmentBlend = clamp(config.alignmentAgreementBlend, 0, 1);
+    const obstacleAnticipationBlend = config.obstacleAnticipationBlend;
+    const anticipateObstacles = schoolDynamicsEnabled && obstacleAnticipationBlend > 0;
+    const kelpCoverThreshold = config.kelpCoverThreshold;
+    const kelpCoverAccelerationPenalty = config.kelpCoverAccelerationPenalty;
+    const kelpCoverSpeedPenalty = config.kelpCoverSpeedPenalty;
+    const evasionRadius = config.evasionRadius;
+    const evasionPredictionTime = config.evasionPredictionTime;
+    const evasionWeight = config.evasionWeight;
+    const evasionLateralWeight = config.evasionLateralWeight;
+    const kelpFearMultiplier = config.kelpFearMultiplier;
+    const kelpShelterFearThreshold = config.kelpShelterFearThreshold;
+    const kelpShelterRadius = config.kelpShelterRadius;
+    const kelpShelterWeight = config.kelpShelterWeight;
+    const habitatCenter = config.habitatCenter;
+    const habitatAttractWeight = config.habitatAttractWeight ?? 0;
+    const habitatAttractRadius = Math.max(0.2, config.habitatAttractRadius ?? 3.4);
+    const habitatCoreRadius = clamp(config.habitatCoreRadius ?? 1.1, 0.05, habitatAttractRadius * 0.9);
+    const habitatRepelWeight = config.habitatRepelWeight ?? 0.7;
+    const homeCenter = config.homeCenter;
+    const homeWeight = config.homeWeight ?? 0;
+    const homeRadius = Math.max(0.1, config.homeRadius ?? 3);
+    const predatorX = predator.position[0];
+    const predatorY = predator.position[1];
+    const predatorZ = predator.position[2];
+    const predatorVx = predator.velocity[0];
+    const predatorVy = predator.velocity[1];
+    const predatorVz = predator.velocity[2];
     let totalNeighbors = 0;
     let totalSeparationNeighbors = 0;
     let totalAlignmentNeighbors = 0;
@@ -164,6 +206,14 @@ export class BoidSystem {
       || this.performanceTelemetry?.enabled === true;
     let obstacleQueryMs = 0;
     const neighbors = this.neighbors;
+    const speeds = this.speeds;
+    for (let i = 0; i < count; i += 1) {
+      const offset = i * 3;
+      const vx = velocities[offset];
+      const vy = velocities[offset + 1];
+      const vz = velocities[offset + 2];
+      speeds[i] = Math.sqrt(vx * vx + vy * vy + vz * vz);
+    }
     this.debugSample.index = -1;
     this.debugSample.neighborCount = 0;
 
@@ -178,7 +228,7 @@ export class BoidSystem {
       const vz = velocities[offset + 2];
       const speed = Math.sqrt(vx * vx + vy * vy + vz * vz);
       const cover = kelpActive && kelp ? kelp.coverAt(px, py, pz) : 0;
-      if (cover >= config.kelpCoverThreshold) sheltered += 1;
+      if (cover >= kelpCoverThreshold) sheltered += 1;
       const neighborCount = this.search.collect(i, radius, neighbors);
       totalNeighbors += neighborCount;
 
@@ -198,8 +248,6 @@ export class BoidSystem {
       let agreementX = 0;
       let agreementY = 0;
       let agreementZ = 0;
-      const weightedAlignment = config.schoolDynamicsEnabled
-        && config.alignmentAgreementBlend > 0;
 
       for (let n = 0; n < neighborCount; n += 1) {
         const other = neighbors[n];
@@ -208,7 +256,7 @@ export class BoidSystem {
         const dy = positions[otherOffset + 1] - py;
         const dz = positions[otherOffset + 2] - pz;
         const distanceSquared = dx * dx + dy * dy + dz * dz;
-        neighborFear = Math.max(neighborFear, fear[other]);
+        if (predatorEnabled) neighborFear = Math.max(neighborFear, fear[other]);
 
         if (distanceSquared <= separationRadiusSquared) {
           const inverse = 1 / (distanceSquared + 1e-4);
@@ -226,25 +274,25 @@ export class BoidSystem {
         if (!visible) continue;
 
         if (distanceSquared <= alignmentRadiusSquared) {
-          alignmentX += velocities[otherOffset];
-          alignmentY += velocities[otherOffset + 1];
-          alignmentZ += velocities[otherOffset + 2];
+          const otherVx = velocities[otherOffset];
+          const otherVy = velocities[otherOffset + 1];
+          const otherVz = velocities[otherOffset + 2];
+          alignmentX += otherVx;
+          alignmentY += otherVy;
+          alignmentZ += otherVz;
           alignmentCount += 1;
           totalAlignmentNeighbors += 1;
           if (weightedAlignment) {
-            const otherX = velocities[otherOffset];
-            const otherY = velocities[otherOffset + 1];
-            const otherZ = velocities[otherOffset + 2];
-            const otherSpeed = Math.sqrt(otherX * otherX + otherY * otherY + otherZ * otherZ);
+            const otherSpeed = speeds[other];
             const denominator = speed * otherSpeed;
             const dot = denominator > 1e-9
-              ? (vx * otherX + vy * otherY + vz * otherZ) / denominator
+              ? (vx * otherVx + vy * otherVy + vz * otherVz) / denominator
               : 1;
-            const weight = alignmentAgreementWeight(dot);
+            const weight = 0.5 + 0.5 * clamp(dot, -1, 1);
             agreementWeight += weight;
-            agreementX += otherX * weight;
-            agreementY += otherY * weight;
-            agreementZ += otherZ * weight;
+            agreementX += otherVx * weight;
+            agreementY += otherVy * weight;
+            agreementZ += otherVz * weight;
           }
         }
         if (distanceSquared <= cohesionRadiusSquared) {
@@ -260,7 +308,7 @@ export class BoidSystem {
         const plainY = alignmentY / alignmentCount - vy;
         const plainZ = alignmentZ / alignmentCount - vz;
         if (weightedAlignment && agreementWeight > 0) {
-          const blend = clamp(config.alignmentAgreementBlend, 0, 1);
+          const blend = alignmentBlend;
           const weightedX = agreementX / agreementWeight - vx;
           const weightedY = agreementY / agreementWeight - vy;
           const weightedZ = agreementZ / agreementWeight - vz;
@@ -280,17 +328,17 @@ export class BoidSystem {
       }
 
       const separationScale = densityAwareSeparationScale(alignmentCount, config);
-      const separationForceX = config.separationWeight * separationScale * separationX;
-      const separationForceY = config.separationWeight * separationScale * separationY;
-      const separationForceZ = config.separationWeight * separationScale * separationZ;
-      const alignmentForceX = config.alignmentWeight * alignmentX;
-      const alignmentForceY = config.alignmentWeight * alignmentY;
-      const alignmentForceZ = config.alignmentWeight * alignmentZ;
+      const separationForceX = separationWeight * separationScale * separationX;
+      const separationForceY = separationWeight * separationScale * separationY;
+      const separationForceZ = separationWeight * separationScale * separationZ;
+      const alignmentForceX = alignmentWeight * alignmentX;
+      const alignmentForceY = alignmentWeight * alignmentY;
+      const alignmentForceZ = alignmentWeight * alignmentZ;
       const cohesionScale = densityAwareCohesionScale(alignmentCount, config);
       totalCohesionScale += cohesionScale;
-      const cohesionForceX = config.cohesionWeight * cohesionScale * cohesionX;
-      const cohesionForceY = config.cohesionWeight * cohesionScale * cohesionY;
-      const cohesionForceZ = config.cohesionWeight * cohesionScale * cohesionZ;
+      const cohesionForceX = cohesionWeight * cohesionScale * cohesionX;
+      const cohesionForceY = cohesionWeight * cohesionScale * cohesionY;
+      const cohesionForceZ = cohesionWeight * cohesionScale * cohesionZ;
       let ax = separationForceX + alignmentForceX + cohesionForceX;
       let ay = separationForceY + alignmentForceY + cohesionForceY;
       let az = separationForceZ + alignmentForceZ + cohesionForceZ;
@@ -300,10 +348,10 @@ export class BoidSystem {
       let escapeX = 0;
       let escapeY = 0;
       let escapeZ = 0;
-      if (config.predatorEnabled) {
-        const dx = px - predator.position[0];
-        const dy = py - predator.position[1];
-        const dz = pz - predator.position[2];
+      if (predatorEnabled) {
+        const dx = px - predatorX;
+        const dy = py - predatorY;
+        const dz = pz - predatorZ;
         const distance = Math.sqrt(dx * dx + dy * dy + dz * dz);
         const inverseDistance = 1 / Math.max(distance, 1e-4);
         const radialX = dx * inverseDistance;
@@ -313,38 +361,38 @@ export class BoidSystem {
         // Closing speed extends the perceived threat range: fish react earlier
         // to an approaching predator than to a receding one.
         const closingSpeed = -(
-          predator.velocity[0] * radialX
-          + predator.velocity[1] * radialY
-          + predator.velocity[2] * radialZ
+          predatorVx * radialX
+          + predatorVy * radialY
+          + predatorVz * radialZ
         );
-        const threatRadius = config.evasionRadius
-          + Math.max(0, closingSpeed) * config.evasionPredictionTime;
+        const threatRadius = evasionRadius
+          + Math.max(0, closingSpeed) * evasionPredictionTime;
         const propagated = propagatedFear(neighborFear, config);
         if (distance < threatRadius) {
           directFear = Math.max(0, Math.min(1, 1 - distance / threatRadius));
           const reefBlocked = this.obstacles.blocksSegment(
-            predator.position[0], predator.position[1], predator.position[2],
+            predatorX, predatorY, predatorZ,
             px, py, pz,
             config,
           );
           const kelpBlocked = kelpActive && kelp !== undefined && kelp.blocksSegment(
-            predator.position[0], predator.position[1], predator.position[2],
+            predatorX, predatorY, predatorZ,
             px, py, pz,
           );
           directFear *= kelpBlocked
-            ? config.kelpFearMultiplier
+            ? kelpFearMultiplier
             : reefBlocked ? 0.25 : 1;
           if (directFear > 0.15 && !reefBlocked && !kelpBlocked) threatened += 1;
         }
         fearLevel = Math.max(directFear, propagated);
 
         if (fearLevel > 0.001) {
-          const escapeForce = config.maxAcceleration * config.evasionWeight * fearLevel * fearLevel;
+          const escapeForce = maxAcceleration * evasionWeight * fearLevel * fearLevel;
           // A lateral component turns the uniform radial panic into a
           // per-fish escape direction; its sign is deterministic per fish.
           const phaseWave = Math.sin(this.flock.phases[i] * 3.7);
           const sideSign = phaseWave >= 0 ? 1 : -1;
-          const lateral = config.evasionLateralWeight
+          const lateral = evasionLateralWeight
             * (0.5 + 0.5 * Math.abs(phaseWave));
           const lateralX = radialY * sideSign;
           const lateralY = -radialX * sideSign;
@@ -371,15 +419,15 @@ export class BoidSystem {
         // should not be pulled toward the nearest stalk.
         if (
           kelpActive && kelp !== undefined
-          && directFear > config.kelpShelterFearThreshold
-          && cover < config.kelpCoverThreshold
+          && directFear > kelpShelterFearThreshold
+          && cover < kelpCoverThreshold
         ) {
           const proximity = kelp.nearestRefuge(
-            px, py, pz, config.kelpShelterRadius, this.shelterDirection,
+            px, py, pz, kelpShelterRadius, this.shelterDirection,
           );
           if (proximity > 0) {
-            const shelterForce = config.maxAcceleration
-              * config.kelpShelterWeight
+            const shelterForce = maxAcceleration
+              * kelpShelterWeight
               * fearLevel * fearLevel
               * proximity;
             ax += this.shelterDirection[0] * shelterForce;
@@ -395,10 +443,10 @@ export class BoidSystem {
       let obstacleVelocityX = vx;
       let obstacleVelocityY = vy;
       let obstacleVelocityZ = vz;
-      if (config.schoolDynamicsEnabled && config.obstacleAnticipationBlend > 0) {
-        obstacleVelocityX = vx + alignmentX * config.obstacleAnticipationBlend;
-        obstacleVelocityY = vy + alignmentY * config.obstacleAnticipationBlend;
-        obstacleVelocityZ = vz + alignmentZ * config.obstacleAnticipationBlend;
+      if (anticipateObstacles) {
+        obstacleVelocityX = vx + alignmentX * obstacleAnticipationBlend;
+        obstacleVelocityY = vy + alignmentY * obstacleAnticipationBlend;
+        obstacleVelocityZ = vz + alignmentZ * obstacleAnticipationBlend;
       }
       this.obstacles.computeAvoidance(
         px, py, pz,
@@ -415,7 +463,7 @@ export class BoidSystem {
       }
       addBoundaryForce(
         px, py, pz, config, this.boundaryForce,
-        config.schoolDynamicsEnabled ? fearLevel : 0,
+        schoolDynamicsEnabled ? fearLevel : 0,
       );
       ax += this.boundaryForce[0];
       ay += this.boundaryForce[1];
@@ -424,8 +472,6 @@ export class BoidSystem {
       // The reef-dwelling second school keeps a soft habitat anchor. It is a
       // real steering force with a smooth ramp, never a hard teleport. Phase E4
       // replaces the point home with an annular anemone habitat when present.
-      const habitatCenter = config.habitatCenter;
-      const habitatAttractWeight = config.habitatAttractWeight ?? 0;
       if (habitatCenter && habitatAttractWeight > 0) {
         const habitatX = habitatCenter[0] - px;
         const habitatY = habitatCenter[1] - py;
@@ -433,13 +479,13 @@ export class BoidSystem {
         const habitatDistance = Math.sqrt(
           habitatX * habitatX + habitatY * habitatY + habitatZ * habitatZ,
         );
-        const attractRadius = Math.max(0.2, config.habitatAttractRadius ?? 3.4);
-        const coreRadius = clamp(config.habitatCoreRadius ?? 1.1, 0.05, attractRadius * 0.9);
+        const attractRadius = habitatAttractRadius;
+        const coreRadius = habitatCoreRadius;
         const fearScale = 1 - 0.5 * clamp(fearLevel, 0, 1);
         if (habitatDistance > attractRadius && habitatDistance > 1e-6) {
           const t = Math.min(1, (habitatDistance - attractRadius) / Math.max(1, attractRadius));
           const smooth = t * t * (3 - 2 * t);
-          const force = config.maxAcceleration * habitatAttractWeight * smooth * fearScale;
+          const force = maxAcceleration * habitatAttractWeight * smooth * fearScale;
           const inverse = 1 / habitatDistance;
           ax += habitatX * inverse * force;
           ay += habitatY * inverse * force;
@@ -447,42 +493,37 @@ export class BoidSystem {
         } else if (habitatDistance < coreRadius && habitatDistance > 1e-6) {
           const t = 1 - habitatDistance / coreRadius;
           const smooth = t * t * (3 - 2 * t);
-          const force = config.maxAcceleration
-            * (config.habitatRepelWeight ?? 0.7) * smooth * fearScale;
+          const force = maxAcceleration
+            * habitatRepelWeight * smooth * fearScale;
           const inverse = -1 / habitatDistance;
           ax += habitatX * inverse * force;
           ay += habitatY * inverse * force;
           az += habitatZ * inverse * force;
         }
-      } else {
-        const homeCenter = config.homeCenter;
-        const homeWeight = config.homeWeight ?? 0;
-        if (homeCenter && homeWeight > 0) {
-          const homeX = homeCenter[0] - px;
-          const homeY = homeCenter[1] - py;
-          const homeZ = homeCenter[2] - pz;
-          const homeDistance = Math.sqrt(
-            homeX * homeX + homeY * homeY + homeZ * homeZ,
-          );
-          const homeRadius = Math.max(0.1, config.homeRadius ?? 3);
-          if (homeDistance > homeRadius) {
-            const t = Math.min(1, (homeDistance - homeRadius) / homeRadius);
-            const smooth = t * t * (3 - 2 * t);
-            const force = config.maxAcceleration * homeWeight * smooth;
-            const inverse = 1 / homeDistance;
-            ax += homeX * inverse * force;
-            ay += homeY * inverse * force;
-            az += homeZ * inverse * force;
-          }
+      } else if (homeCenter && homeWeight > 0) {
+        const homeX = homeCenter[0] - px;
+        const homeY = homeCenter[1] - py;
+        const homeZ = homeCenter[2] - pz;
+        const homeDistance = Math.sqrt(
+          homeX * homeX + homeY * homeY + homeZ * homeZ,
+        );
+        if (homeDistance > homeRadius) {
+          const t = Math.min(1, (homeDistance - homeRadius) / homeRadius);
+          const smooth = t * t * (3 - 2 * t);
+          const force = maxAcceleration * homeWeight * smooth;
+          const inverse = 1 / homeDistance;
+          ax += homeX * inverse * force;
+          ay += homeY * inverse * force;
+          az += homeZ * inverse * force;
         }
       }
 
       const acceleration = Math.sqrt(ax * ax + ay * ay + az * az);
       const coverAccelerationScale = Math.max(
         0.05,
-        1 - config.kelpCoverAccelerationPenalty * cover,
+        1 - kelpCoverAccelerationPenalty * cover,
       );
-      const maximumAcceleration = config.maxAcceleration
+      const maximumAcceleration = maxAcceleration
         * (1 + fearLevel * 0.25)
         * coverAccelerationScale;
       if (acceleration > maximumAcceleration) {
@@ -496,32 +537,32 @@ export class BoidSystem {
       let nextVy = vy + ay * delta;
       let nextVz = vz + az * delta;
       let nextSpeed = Math.sqrt(nextVx * nextVx + nextVy * nextVy + nextVz * nextVz);
-      const coverSpeedScale = Math.max(0.05, 1 - config.kelpCoverSpeedPenalty * cover);
-      const maximumSpeed = config.maxSpeed * (1 + fearLevel * 0.25) * coverSpeedScale;
+      const coverSpeedScale = Math.max(0.05, 1 - kelpCoverSpeedPenalty * cover);
+      const maximumSpeed = maxSpeed * (1 + fearLevel * 0.25) * coverSpeedScale;
       if (nextSpeed > maximumSpeed) {
         const scale = maximumSpeed / nextSpeed;
         nextVx *= scale;
         nextVy *= scale;
         nextVz *= scale;
         nextSpeed = maximumSpeed;
-      } else if (nextSpeed < config.minSpeed) {
+      } else if (nextSpeed < minSpeed) {
         if (nextSpeed > 1e-5) {
-          const scale = config.minSpeed / nextSpeed;
+          const scale = minSpeed / nextSpeed;
           nextVx *= scale;
           nextVy *= scale;
           nextVz *= scale;
         } else {
-          nextVx = config.minSpeed;
+          nextVx = minSpeed;
           nextVy = 0;
           nextVz = 0;
         }
-        nextSpeed = config.minSpeed;
+        nextSpeed = minSpeed;
       }
 
       clampVelocityTurn(
         vx, vy, vz,
         nextVx, nextVy, nextVz,
-        config.maxTurnRate, delta, this.velocityTurn,
+        maxTurnRate, delta, this.velocityTurn,
       );
       nextVx = this.velocityTurn[0];
       nextVy = this.velocityTurn[1];

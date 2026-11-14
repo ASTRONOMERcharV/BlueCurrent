@@ -60,6 +60,8 @@ E2 在默认路径加入五个局部项：按朝向一致度加权的对齐（`a
 
 `SimulationWorld.performance` 是默认关闭的 `PhaseEmaRecorder`（`src/simulation/PerformanceTelemetry.ts`），按固定步记录 `boidsMain`、`boidsClown`、`predator`、`metrics` 与子项 `obstacleQuery`，并派生 `other`。只有 `?perfTelemetry=1` 或 `setPerformanceTelemetryEnabled(true)` 才启用；关闭时 `performance.now()` 不计时，默认运行路径与 Phase E 相同。`BoidSystem` 的障碍查询小计只在遥测或 obstacle metrics 开启时逐鱼计时。`resetPerformanceCounters()` 清空并重新播种 EMA，`getPerformanceSnapshot()` 只读。`metrics.lastStepMs/averageStepMs` 仍是整步权威值；遥测不得改变 checksum（`tests/PerformanceTelemetry.test.ts` 验证 on/off 轨迹逐位一致）。
 
+F2 第一轮（D029）只做位相同热路径优化：`BoidSystem` 每步提升配置/边界/栖息/predator 常量、邻居速度只读一次、每次 update 预计算鱼速供加权对齐复用；`UniformGrid3D` 内联 cell 坐标，但 27 单元遍历顺序、候选集、距离筛选和邻居输出顺序不变。`collect` 的候选计数仍可用于诊断，但不得把候选数变化解释为邻居集变化。任何会改变邻居顺序/半径、跨步复用邻居或改变浮点求和顺序的优化都必须另立决定并重建 checksum 基线。
+
 ## 容易误改的细节
 
 `UniformGrid3D` 保存构造时的 bounds 引用，替换整个 `config.bounds` 会使网格与世界边界失配。`world.center` 最多滞后约 0.5 s，School 相机和 UI 不能声称它是逐帧中心。

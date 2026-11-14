@@ -1,6 +1,6 @@
 # Validation — Performance
 
-> 当前性能结论核实：2026-11-15。本文区分历史硬件、软件和 CPU 数据；2026-11-14 Phase F F1 已用真实 `EXT_disjoint_timer_query_webgl2` 测到 GPU EMA 并完成四档压力矩阵（1 捕食者代理）。干净复测（暂停动态壁纸、关闭用户 Chrome）中 standard telemetry-off 3/3 达到 D028 的 60 FPS 目标；2026-11-15 关闭 Chrome/DeepSeek 重试后 extreme 两种模式可重复、pressure telemetry-on 可重复，pressure telemetry-off 仍有 cadence decay（180 s cooldown 重跑改善但未消除）。
+> 当前性能结论核实：2026-11-15。本文区分历史硬件、软件和 CPU 数据；2026-11-14 Phase F F1 已用真实 `EXT_disjoint_timer_query_webgl2` 测到 GPU EMA 并完成四档压力矩阵（1 捕食者代理）。干净复测（暂停动态壁纸、关闭用户 Chrome）中 standard telemetry-off 3/3 达到 D028 的 60 FPS 目标；2026-11-15 关闭 Chrome/DeepSeek 重试后 extreme 两种模式可重复、pressure telemetry-on 可重复，pressure telemetry-off 仍有 cadence decay（180 s cooldown 重跑改善但未消除）。同日完成 F2 第一轮位相同热路径优化：CPU 模拟基准约 −3% wall / −3–8% CPU，标准档 telemetry-off 复核仍达 D028（一次 3/3，另一次 r3 热漂移）。
 
 ## 指标定义
 
@@ -183,12 +183,36 @@ telemetry-on 分项中位（ms）：
 - pressure telemetry-off 的 cadence decay 仍需独立的热/节奏控制（更长 cooldown 或分段冷却）才能签核；3/5 捕食者仍缺。
 - pressure telemetry-off 再用 180 s cooldown 重跑一次：FPS 36.1/27.7/20.2、P50 24.2/30.2/36.5 ms、sim 12.4/12.6/13.7 ms、render 4.5/4.6/5.5 ms；FPS spread 1.79、P50 spread 1.51。更长冷却降低了 decay（90 s 时为 P50 30.2/30.4/66.8），但没有消除，sim 与 render 仍随 repeat 缓慢上升；尾帧也随 repeat 增大（p99 96.9→157.7→157.4 ms、max 103.2→181.8→175.9 ms），heap 51→62 MB，不是内存上限压力。下一步可用每 repeat 重启浏览器验证是否为同一浏览器会话累积；pressure telemetry-off 仍不作为签核基线。
 
+### F2 优化第一轮：位相同热路径优化（2026-11-15）
+
+本轮只做保持逐位相同的 CPU 热路径优化；不改模拟参数、邻居半径/顺序、默认鱼数/资产、渲染、相机或固定步长语义。代码变更：
+
+- `BoidSystem`：每步提升 config、bounds、habitat/home、predator pose 等常量；邻居速度只读一次；对齐权重内联；predator 关闭时不再读取未使用的 `fear[other]`；每步预计算所有鱼速度供加权对齐复用，消除逐邻居 `sqrt`。
+- `UniformGrid3D`：内联 `rebuild`/`collect` 的 cell 坐标计算，移除临时 `Int32Array` 与两个 private helper；邻居输出顺序、距离过滤和候选集不变。
+- `ObstacleSystem` / `EnvironmentForces`：把每鱼/每障碍重复读取的 margin、look-ahead、force scale、definitions、metrics、proxySet、bounds 提升到循环外，center 改用直接索引。
+
+CPU A/B（`test-artifacts/phase-f/optimization/2026-11-14T20-21-09Z-baseline-vs-opt/`）：Node 24.14.1、grid、500/1000/2000 主鱼 + 默认 100 小丑鱼、predator/detailed metrics 关闭、150 steps、30 warmup、4 repeats × 2 次交替；每个状态前先跑一次 2000 鱼 60 步丢弃预热。Wallpaper Engine 暂停、Chrome/DeepSeek 关闭；为消除本机约 2× 的频率漂移，A/B 期间临时使用 Performance 电源方案 `27fa6203-3987-4dcc-918d-748559d549ec`，结束后恢复 Balanced `381b4222-f694-41f0-9685-ff5bb260df2e`。下表的绝对值只在该电源方案内可比，不能与 Balanced 下的 Phase F 基线（8.25/19.40/48.05 ms）直接比较。
+
+| 主鱼 | Baseline wall ms | Optimized wall ms | Wall 变化 | Baseline CPU ms | Optimized CPU ms | CPU 变化 | Baseline P95 ms | Optimized P95 ms |
+| ---: | ---: | ---: | ---: | ---: | ---: | ---: | ---: | ---: |
+| 500 | 3.146 | 3.043 | −3.28% | 3.123 | 2.867 | −8.22% | 3.400 | 3.337 |
+| 1000 | 7.945 | 7.673 | −3.43% | 7.913 | 7.600 | −3.96% | 9.655 | 9.167 |
+| 2000 | 20.462 | 19.868 | −2.90% | 20.210 | 19.633 | −2.85% | 27.958 | 26.799 |
+
+两次交替的 wall mean 分别为 baseline 3.150/7.873/20.500、3.143/8.018/20.425，optimized 3.034/7.701/19.850、3.052/7.645/19.887。结论：约 3% wall / 3–8% CPU 的稳定改善，P95 改善 1.8–5.1%；幅度小是因为基准同时包含 grid rebuild、小丑鱼群和其他固定步工作，CPU profile 中 `UniformGrid3D.collect` 仍占 2000 鱼的约 49%，`BoidSystem.update` 约 40%。
+
+浏览器复核（标准档、telemetry-off、1280×720、Iris Xe D3D11、499/100/1、62 draws、1,374,095 三角形、0 errors）：优化后构建在 2026-11-15 04:26 的干净会话中 3 repeats 为 P50 12.0/12.1/12.1 ms、P95 18.2/18.2/18.3 ms、sim 4.75/4.52/5.26 ms、render 3.59/3.48/4.16 ms、0 dropped，3/3 达 D028；04:32 重新生成（修复 telemetry-off 聚合后）的 3 repeats 中 r1/r2 为 P50 12.0/12.1、P95 18.2/18.2、0 dropped，r3 热漂移到 P50 18.2、P95 30.2、sim 7.35、render 8.59、仍 0 dropped。两次都不是 baseline/optimized 同会话 A/B；相对 2026-11-14 干净基线（P50 12.1/12.1/12.4、P95 18.1/12.3/24.4、sim 4.42/4.44/7.47），优化后构建处于同一水平且第三轮 sim 尾部更低。r3 的 P50 漂移与已记录的 cadence/热状态限制一致，不是功能或 checksum 回归。证据：`test-artifacts/phase-f/optimization/2026-11-14T20-26-07Z-browser-standard/`、`2026-11-14T20-32-36Z-browser-standard/`。
+
+被否决的试验（同树，不保留）：把 `dx/dy/dz/distanceSquared/positions` 从 `collect` 缓存到 Float64 数组在 1000/2000 慢 12–15%；cell 顺序位置缓存在噪声内（±2–3%）；Float32 缓存会舍入 f64 距离并改变 encounter checksum（`52478c71` vs `535bf883`），立即否决。`scripts/benchmark.ts` 新增 `--modes=grid|brute-force` 过滤与逐 step `process.cpuUsage()` CPU 时间，便于后续同版对照。验证：50 文件/370 tests、`tsc --noEmit`、构建、`sim:regression` 全部通过，checksums 与 Phase E 基线完全相同（`8a4ebd80…`、`69d993ea…`、`251d7c0f…`、`937cdfef…`、`42e40651…`）。另修复 `phase-f-baseline.ts` 的 `aggregate()` 只统计 telemetry-on 样本的问题；该修复只影响报告聚合，不改变采样或模拟。
+
+仍缺：本轮没有 Worker/WASM 或其他会改变浮点求和顺序的大改动，约 3% 的收益不足以改变 pressure/extreme 的实时性；标准档只做了优化后复核，没有同会话 baseline/optimized 浏览器 A/B；pressure/extreme 未重测。
+
 ### Phase F 仍缺
 
 - pressure/extreme 已在 2026-11-15 关闭 Chrome/DeepSeek 后重试：extreme 两种模式可重复，pressure telemetry-on 可重复，pressure telemetry-off 仍有 cadence decay（180 s cooldown 重跑改善但未消除）；pressure telemetry-off 签核基线与 3/5 捕食者仍缺。
 - pressure/extreme 的 3/5 捕食者完整矩阵未测，只有 1 捕食者代理（D027）。
 - GPU 内存只有 `renderer.info.memory` 的资源计数，没有字节级 GPU memory counter；`performance.memory` 是 JS heap，不能当 GPU 内存。
-- 本轮没有优化代码，也没有优化前后同版对照；D028 目标已签核并在 standard 档验证，优化项另开工作包。
+- F1 测量轮没有优化代码；F2 第一轮已于 2026-11-15 完成位相同热路径优化与 CPU A/B（约 −3% wall / −3–8% CPU），标准档 telemetry-off 复核仍达 D028，但只有优化后复核、没有同会话 baseline/optimized 浏览器 A/B；Worker/WASM 等会改变求和顺序或架构的改动未做。
 - SwiftShader 未参与本矩阵；所有四档与 spot/control 均为 Iris Xe D3D11 硬件路径。
 
 
@@ -204,7 +228,7 @@ B1 `test-artifacts/reef-collision/experiment-b.json` 在 t63 记录 Sphere/ReefP
 
 ## 当前 N/A 项
 
-Phase F F1 已把 GPU timestamp 从 N/A 变为实测（4.33–13.47 ms EMA，0 disjoint），并完成 1000/2000 鱼的 1 捕食者代理矩阵；standard 档已在干净复测中验证（3/3 达 D028），pressure/extreme 已在干净会话中补测但未达重复性，仍为 N/A 的是 3/5 捕食者完整矩阵、字节级 GPU memory、pressure/extreme 的签核基线。帧率优化与压力矩阵已于 2026-11-12 决定留到 Phase F（`../DECISIONS.md` D014）；F1 只测量与审计，不改优化参数（D027）。1000/2000 是否需要 Worker/WASM、邻居上限或降频，必须先由当前分项测量和用户验收目标决定；不得通过降低默认质量绕过。验收目标已由 D028 签核为标准档 60 FPS（P50 ≤ 16.7 ms、P95 ≤ 33 ms、0 dropped），并在 2026-11-14 干净复测中验证通过。
+Phase F F1 已把 GPU timestamp 从 N/A 变为实测（4.33–13.47 ms EMA，0 disjoint），并完成 1000/2000 鱼的 1 捕食者代理矩阵；standard 档已在干净复测中验证（3/3 达 D028），pressure/extreme 已在干净会话中补测但未达重复性，仍为 N/A 的是 3/5 捕食者完整矩阵、字节级 GPU memory、pressure/extreme 的签核基线。帧率优化与压力矩阵已于 2026-11-12 决定留到 Phase F（`../DECISIONS.md` D014）；F1 只测量与审计（D027），F2 第一轮只做位相同 CPU 热路径优化并已记录约 3% 的 CPU 模拟收益（D029），没有决定 1000/2000 是否需要 Worker/WASM、邻居上限或降频；不得通过降低默认质量绕过。验收目标已由 D028 签核为标准档 60 FPS（P50 ≤ 16.7 ms、P95 ≤ 33 ms、0 dropped），并在 2026-11-14 干净复测与 2026-11-15 优化后复核中验证。
 
 ## 当前硬件复测命令
 

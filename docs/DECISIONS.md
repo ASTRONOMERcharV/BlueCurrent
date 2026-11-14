@@ -173,3 +173,9 @@
 **状态：接受（2026-11-14，用户决定）。** 标准档（500 主鱼 / 100 小丑鱼 / 1 捕食者、1280×720、Iris Xe D3D11、telemetry-off 对照）的验收目标为 P50 ≤ 16.7 ms、P95 ≤ 33 ms、0 dropped steps，并在 3 repeats 中稳定复现；pressure/extreme 只作扩展性诊断，不要求实时。该目标必须在关闭动态壁纸与并发负载、固定电源/热状态的同一台机器上用同一 harness 复测确认。
 
 **后果：** 2026-11-14 的 `rows/` 矩阵不满足干净验证条件（动态壁纸/并发负载），因此目标不由该矩阵判定。同日 21:38 在暂停 Wallpaper Engine、关闭用户 Chrome、AC/Balanced、页面 visible/focused 的条件下，用同一 harness 复测 standard telemetry-off 3 repeats，3/3 达到 P50 ≤ 16.7 ms、P95 ≤ 33 ms、0 dropped，D028 目标在本机干净会话通过；更早的污染矩阵只作诊断。telemetry-on 对照显示测量开销显著，不作为产品路径性能。证据见 `test-artifacts/phase-f/2026-11-14T13-38-06Z-clean/acceptance.md`，数值只在 `docs/validation/performance.md` 维护。
+
+## D029 — Phase F 优化第一轮：位相同 CPU 热路径优化
+
+**状态：接受（2026-11-15，用户决定进入优化）。** 第一轮只做保持模拟逐位相同的 CPU 热路径优化，不改模拟参数、邻居半径/顺序、默认鱼数/资产、渲染、相机、固定步长语义或检查点格式。改动集中在 `BoidSystem`、`UniformGrid3D`、`ObstacleSystem`、`EnvironmentForces`：提升每步常量、减少重复邻居读取、内联 cell 坐标与对齐权重、predator 关闭时跳过未使用的 fear 读取、每步预计算鱼速以复用加权对齐。`scripts/benchmark.ts` 增加 `--modes` 过滤与逐 step CPU 时间；`scripts/phase-f-baseline.ts` 修复 telemetry-off 样本被聚合过滤的问题（只影响报告）。
+
+**后果：** 在同电源方案、交替 baseline/optimized、各状态先丢弃预热的 CPU 基准中，500/1000/2000 主鱼的 wall mean 从 3.146/7.945/20.462 ms 降到 3.043/7.673/19.868 ms（约 −2.9…−3.4%），CPU 时间 −2.9…−8.2%，P95 改善 1.8–5.1%。收益有限，因为 `UniformGrid3D.collect` 仍约占 2000 鱼 profile 的 49%，`BoidSystem.update` 约占 40%；它不足以改变 pressure/extreme 的实时性。标准档 telemetry-off 优化后复核在干净会话中一次 3/3 达 D028（P50 12.0/12.1/12.1、P95 18.2/18.2/18.3、0 dropped），另一次 r3 热漂移到 P50 18.2 但 P95 仍 30.2、0 dropped；未做同会话 baseline/optimized 浏览器 A/B。完整 tests（50 文件/370）、tsc、构建与 `sim:regression` 通过，checksums 与 Phase E 基线逐位相同。被否决的邻居几何缓存（慢 12–15%）、cell 位置缓存（噪声内）与 Float32 距离缓存（改变 checksum）不进入代码。后续若要 Worker/WASM、改变邻居求和顺序、降低默认质量或做其他非位相同优化，必须另立决定并重新建立 checksum/性能证据。证据见 `test-artifacts/phase-f/optimization/2026-11-14T20-21-09Z-baseline-vs-opt/`、`2026-11-14T20-26-07Z-browser-standard/`、`2026-11-14T20-32-36Z-browser-standard/`（Git 忽略）。

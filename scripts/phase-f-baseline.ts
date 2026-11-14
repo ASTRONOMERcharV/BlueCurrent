@@ -527,7 +527,7 @@ function aggregate(rows: readonly SampleSummary[]) {
   const rowIds = [...new Set(rows.map((sample) => sample.row))]
     .filter((row) => ROWS.some((spec) => spec.id === row));
   return rowIds.map((row) => {
-    const samples = rows.filter((sample) => sample.row === row && sample.telemetry);
+    const samples = rows.filter((sample) => sample.row === row);
     const fps = samples.map((sample) => sample.fpsMean);
     const gpuValues = samples
       .map((sample) => sample.rendererStats?.gpuTimer.emaMs)
