@@ -179,3 +179,16 @@
 **状态：接受（2026-11-15，用户决定进入优化）。** 第一轮只做保持模拟逐位相同的 CPU 热路径优化，不改模拟参数、邻居半径/顺序、默认鱼数/资产、渲染、相机、固定步长语义或检查点格式。改动集中在 `BoidSystem`、`UniformGrid3D`、`ObstacleSystem`、`EnvironmentForces`：提升每步常量、减少重复邻居读取、内联 cell 坐标与对齐权重、predator 关闭时跳过未使用的 fear 读取、每步预计算鱼速以复用加权对齐。`scripts/benchmark.ts` 增加 `--modes` 过滤与逐 step CPU 时间；`scripts/phase-f-baseline.ts` 修复 telemetry-off 样本被聚合过滤的问题（只影响报告）。
 
 **后果：** 在同电源方案、交替 baseline/optimized、各状态先丢弃预热的 CPU 基准中，500/1000/2000 主鱼的 wall mean 从 3.146/7.945/20.462 ms 降到 3.043/7.673/19.868 ms（约 −2.9…−3.4%），CPU 时间 −2.9…−8.2%，P95 改善 1.8–5.1%。收益有限，因为 `UniformGrid3D.collect` 仍约占 2000 鱼 profile 的 49%，`BoidSystem.update` 约占 40%；它不足以改变 pressure/extreme 的实时性。标准档 telemetry-off 优化后复核在干净会话中一次 3/3 达 D028（P50 12.0/12.1/12.1、P95 18.2/18.2/18.3、0 dropped），另一次 r3 热漂移到 P50 18.2 但 P95 仍 30.2、0 dropped；未做同会话 baseline/optimized 浏览器 A/B。完整 tests（50 文件/370）、tsc、构建与 `sim:regression` 通过，checksums 与 Phase E 基线逐位相同。被否决的邻居几何缓存（慢 12–15%）、cell 位置缓存（噪声内）与 Float32 距离缓存（改变 checksum）不进入代码。后续若要 Worker/WASM、改变邻居求和顺序、降低默认质量或做其他非位相同优化，必须另立决定并重新建立 checksum/性能证据。证据见 `test-artifacts/phase-f/optimization/2026-11-14T20-21-09Z-baseline-vs-opt/`、`2026-11-14T20-26-07Z-browser-standard/`、`2026-11-14T20-32-36Z-browser-standard/`（Git 忽略）。
+
+## D030 — Phase F 第二轮：F2-2R 位相同 prune、checksum fixture 与 1440×900 gate
+
+**状态：接受（2026-11-15，用户批准按推荐默认执行）。** F2 第二轮采用 measurement-first 的位相同路线，目标不是改变已通过的 D028，而是关闭 F2 的“位相同优化”线并取得 pressure/extreme 诊断余量：
+
+1. 先提交 encounter checksum fixture 与未排序的 grid 参考序列测试；fixture 覆盖五个 D026 动态 checksum（`8a4ebd80…`、`69d993ea…`、`251d7c0f…`、`937cdfef…`、`42e40651…`）和 PRE_E2 的 `535bf883` / `535bf8835258bcf1b2e9e696` 对。fixture 只能在显式 `--new-baseline` 且两次运行一致时重写；任何漂移是硬停止，不得为了通过而 rebless。
+2. 在 Balanced 电源方案下跑一次干净的 1440×900 design-viewport gate，并以 1280×720 standard telemetry-off 作为对照；gate 的预登记规则为 `PASS_1440` / `ONE_TIER` / `TWO_TIER` / `INVALID` / `INCONCLUSIVE`。1280×720 仍是唯一 D028 验收视口；1440×900 是先诊断、后决定，不自动成为验收目标。
+3. 只有在用户已资助 pressure/extreme 诊断余量，或 gate 显示 1440 成本确实由 CPU 归因时，才落地 `UniformGrid3D.collect` 的保守 cell-AABB 跳过；必须保持 27-cell `dz/dy/dx` 遍历、精确距离过滤、邻居顺序、半径和浮点求和不变。`candidatesExamined` 保持历史语义，新增 `candidatesSkipped`/`skippedCells`/`candidatesTested` 作为诊断，不改 StatisticsPanel 或 F1 固定负载候选表。
+4. BoidSystem 只允许两个可证明安全的 trim：用预计算的 `speeds[i]` 替代每鱼重复 `sqrt`；当 `cohesionRadius` 是最大邻居半径且 FOV=360 时跳过恒真的 cohesion 比较。两项独立 commit、可独立回滚。
+5. CPU A/B 使用 D029 的交替、固定电源方案、丢弃预热协议；prune 的预登记 keep/revert 规则是：2000 鱼 wall 中位改善至少 2%、1000 鱼为正、500 鱼回退不超过 2%，否则回滚 prune 并保留 fixture/ordered tests 及负结果记录。标准档只在 optimized build 上复核 3/3 D028，不声称 D028 改善或 pressure/extreme 实时。
+6. 本轮不做 fused grid/Boid 跟随项、Worker/WASM/SIMD/SAB、更小 cell/125-cell 遍历、pair-symmetric 力、空间排序、跨步邻居复用、渲染质量调整或非位相同优化；这些需要新 ADR、新 checksum 基线和独立预算。gate 若为 `ONE_TIER`/`TWO_TIER`，后续另开 render/GPU 调查，不自动资助 fused CPU pass。
+
+**后果：** 验收证据写入新的 `test-artifacts/phase-f/optimization/<UTC>-f2-2r-gate/`，包含 fixture/、regression/、tests/、gate/、cpu-ab/、browser/standard-off/ 与 `artifact.sha256`；性能数字只在 `docs/validation/performance.md` 维护。回滚以单 commit revert 为主；由于 state checksums 必须逐位相同，不需要迁移 checksum 基线。标准档已经满足 D028，本轮的 4–9% CPU 预期仅是诊断余量和 F2 收口，不是帧时间修复；如果 A/B 未能复现收益，prune 回滚，fixture/gate 仍然保留。

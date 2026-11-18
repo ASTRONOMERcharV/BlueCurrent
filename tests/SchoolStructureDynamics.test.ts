@@ -8,48 +8,12 @@ import { addBoundaryForce } from '../src/simulation/EnvironmentForces';
 import { createDefaultConfig } from '../src/simulation/SimulationConfig';
 import { applyScenario } from '../src/simulation/Scenarios';
 import { SimulationWorld } from '../src/simulation/SimulationWorld';
-
-const PRE_E2_CHECKSUM = '535bf8835258bcf1b2e9e696';
-const PRE_E2_FISH_CHECKSUM = '535bf883';
-
-function checksumFloats(hash: number, values: Float32Array): number {
-  const view = new DataView(values.buffer, values.byteOffset, values.byteLength);
-  for (let offset = 0; offset < values.byteLength; offset += 4) {
-    hash = Math.imul(hash ^ view.getUint32(offset, true), 0x01000193) >>> 0;
-  }
-  return hash;
-}
-
-function checksumFlock(flock: {
-  count: number;
-  aliveCount: number;
-  positions: Float32Array;
-  velocities: Float32Array;
-  alive: Uint8Array;
-}): string {
-  let hash = Math.imul(0x811c9dc5 ^ flock.count, 0x01000193) >>> 0;
-  hash = Math.imul(hash ^ flock.aliveCount, 0x01000193) >>> 0;
-  hash = checksumFloats(hash, flock.positions.subarray(0, flock.count * 3));
-  hash = checksumFloats(hash, flock.velocities.subarray(0, flock.count * 3));
-  for (let index = 0; index < flock.count; index += 1) {
-    hash = Math.imul(hash ^ flock.alive[index], 0x01000193) >>> 0;
-  }
-  return hash.toString(16).padStart(8, '0');
-}
-
-function combinedChecksum(world: SimulationWorld): string {
-  const fish = checksumFlock(world.flock);
-  const clownfish = checksumFlock(world.clownfishFlock);
-  const predatorHash = world.predator.state
-    .split('')
-    .reduce((hash, character) => Math.imul(hash ^ character.charCodeAt(0), 0x01000193) >>> 0, 0x811c9dc5);
-  let combined = Math.imul(0x811c9dc5 ^ world.metrics.totalSteps, 0x01000193) >>> 0;
-  combined = Math.imul(combined ^ world.metrics.captures, 0x01000193) >>> 0;
-  combined = checksumFloats(combined, world.predator.position);
-  combined = checksumFloats(combined, world.predator.velocity);
-  combined = Math.imul(combined ^ predatorHash, 0x01000193) >>> 0;
-  return `${fish}${clownfish}${(combined >>> 0).toString(16).padStart(8, '0')}`;
-}
+import {
+  PRE_E2_CHECKSUM,
+  PRE_E2_FISH_CHECKSUM,
+  checksumFlock,
+  snapshot,
+} from '../scripts/simulation-checksum-lib';
 
 describe('E2 school-structure terms', () => {
   it('weights alignment by heading agreement', () => {
@@ -99,7 +63,7 @@ describe('E2 deterministic effect', () => {
     applyScenario(world, 'encounter');
     while (world.metrics.totalSteps < 1020) world.step();
     expect(checksumFlock(world.flock)).toBe(PRE_E2_FISH_CHECKSUM);
-    expect(combinedChecksum(world)).toBe(PRE_E2_CHECKSUM);
+    expect(snapshot(world).checksum).toBe(PRE_E2_CHECKSUM);
   }, 60000);
 
   it('changes the encounter trajectory but stays deterministic with the terms on', () => {
@@ -109,12 +73,12 @@ describe('E2 deterministic effect', () => {
     const second = new SimulationWorld();
     applyScenario(second, 'encounter');
     while (second.metrics.totalSteps < 600) second.step();
-    expect(combinedChecksum(second)).toBe(combinedChecksum(first));
+    expect(snapshot(second).checksum).toBe(snapshot(first).checksum);
     const legacy = new SimulationWorld();
     legacy.setSchoolDynamicsEnabled(false);
     applyScenario(legacy, 'encounter');
     while (legacy.metrics.totalSteps < 600) legacy.step();
-    expect(combinedChecksum(first)).not.toBe(combinedChecksum(legacy));
+    expect(snapshot(first).checksum).not.toBe(snapshot(legacy).checksum);
   }, 60000);
 });
 
