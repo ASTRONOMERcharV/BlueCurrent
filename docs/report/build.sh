@@ -9,18 +9,30 @@ ROOT="$(cd "$HERE/../.." && pwd)"                       # Project/BlueCurrent
 SRC="$HERE/FINAL_REPORT.md"
 OUT="$HERE/BlueCurrent-实验报告.pdf"
 TPL="$HERE/template/eisvogel-cover.latex"
-# 构建目录放系统临时目录：仓库挂载盘通常不允许删除文件，
-# 图片已复制进 assets/，文档不再依赖 ../screenshots 相对路径
-TMP="${TMPDIR:-/tmp}/bluecurrent-report-build"
+# 构建目录放在仓库内 .tmp/（已 gitignore）：Windows 原生 pandoc 在 MSYS 的
+# /tmp 映射目录下会把 PWD 拼成 C:\c\... 而失败；图片已复制进 assets/，
+# 文档不再依赖 ../screenshots 相对路径
+BUILD="$ROOT/.tmp/bluecurrent-report-build-$$"
 
 command -v pandoc >/dev/null || { echo "缺少 pandoc"; exit 1; }
 command -v xelatex >/dev/null || { echo "缺少 xelatex（TeX Live）"; exit 1; }
 
-rm -rf "$TMP"
-mkdir -p "$TMP/assets"
+# Windows（MSYS bash）下 pandoc 是原生 exe，不接受 /c/... 路径；
+# 用 cygpath 转成原生路径，Linux 沙箱无 cygpath 时原样使用。
+winpath() { if command -v cygpath >/dev/null 2>&1; then cygpath -w "$1"; else printf '%s\n' "$1"; fi; }
+OUT_ARG="$(winpath "$OUT")"
+TPL_ARG="$(winpath "$TPL")"
+HEADER_ARG="$(winpath "$HERE/template/header.tex")"
+FILTER_ARG="$(winpath "$HERE/template/codebreak.lua")"
+# 混合式路径（C:/...）：bash 内可直接 cd，pandoc 也不会再把 PWD 拼成 C:\c\...
+winpathm() { if command -v cygpath >/dev/null 2>&1; then cygpath -m "$1"; else printf '%s\n' "$1"; fi; }
+BUILD_ARG="$(winpathm "$BUILD")"
+
+rm -rf "$BUILD"
+mkdir -p "$BUILD/assets"
 
 # 1) 生成 pandoc 输入：加 YAML 头、去原 H1 标题与元信息块、降一级标题
-python3 - "$SRC" "$TMP/build.md" "$ROOT/screenshots" <<'PY'
+python - "$SRC" "$BUILD/build.md" "$ROOT/screenshots" <<'PY'
 import sys, shutil
 from pathlib import Path
 src, dst, shots = map(Path, sys.argv[1:])
@@ -40,6 +52,17 @@ while lines and (not lines[0].strip() or lines[0].startswith(('项目：', '版�
 
 body = '\n'.join(lines)
 
+# Windows pandoc 2.12 lacks tex_math_single_backslash here; normalize the
+# report's LaTeX delimiters to the default dollar-math extension.
+normalized = []
+for ln in body.splitlines():
+    stripped = ln.strip()
+    if stripped == '\[' or stripped == '\]':
+        normalized.append('$$')
+    else:
+        normalized.append(ln.replace('\(', '$').replace('\)', '$'))
+body = '\n'.join(normalized)
+
 # ## → #，### → ##（article 类以 # 为节）
 out_lines = []
 for ln in body.splitlines():
@@ -55,7 +78,7 @@ body = '\n'.join(out_lines)
 body = body.replace('# 5. 实验与结果', '\\clearpage\n\n# 5. 实验与结果', 1)
 
 # 截图转 RGB（RGBA 存成带 SMask 的 16bit 图，部分阅读器显示偏色）并改写链接
-for name in ['fig-performance.png', 'fig-ablation.png', 'fig-predator.png']:
+for name in ['fig-performance.png', 'fig-ablation.png', 'fig-predator.png', 'fig-final-visual.png']:
     from PIL import Image
     Image.open(shots / name).convert('RGB').save(
         dst.parent / 'assets' / name, dpi=(220, 220), optimize=True)
@@ -67,7 +90,7 @@ subtitle: "三维群体生态模拟实验报告"
 author: ["孙嘉泽"]
 studentid: "3230104713"
 course: "计算机动画"
-date: "2026 年 11 月 8 日"
+date: "2026 年 11 月 15 日"
 title-meta: "%s"
 subject: "计算机动画课程实验报告"
 keywords: ["Boids", "群体模拟", "Three.js", "性能实验"]
@@ -77,7 +100,7 @@ toc-title: "目录"
 fontsize: 11pt
 linestretch: 1.25
 header-left: "Blue Current 实验报告"
-header-right: "2026-11-08"
+header-right: "2026-11-15"
 footer-left: "Blue Current"
 footer-right: '第\\hspace{0.3em}\\thepage\\hspace{0.3em}页'
 ...
@@ -94,21 +117,22 @@ if grep -q "Noto Serif CJK SC" <<< "$FCLIST"; then
   FONTS=(-V mainfont="Noto Serif CJK SC" -V sansfont="Noto Sans CJK SC"
          -V monofont="Noto Sans Mono CJK SC" -V mainfontoptions="AutoFakeSlant=0.2")
 else
-  FONTS=(-V mainfont="Times New Roman" -V sansfont="Microsoft YaHei"
-         -V monofont="Consolas")
+  FONTS=(-V mainfont="SimSun" -V sansfont="Microsoft YaHei"
+         -V monofont="SimSun")
 fi
 
 # 3) 编译
-cd "$TMP"
-pandoc build.md -o "$OUT" \
-  --from markdown+tex_math_single_backslash \
-  --template="$TPL" \
-  --pdf-engine xelatex \
-  --toc --toc-depth=2 \
-  --resource-path="." \
-  -H "$HERE/template/header.tex" \
-  --lua-filter "$HERE/template/codebreak.lua" \
-  "${FONTS[@]}"
+# 分两步：pandoc 只生成 .tex。pandoc 的 --pdf-engine 路径在 Windows/MSYS 下
+# 会在构建目录里建出 C:\c\... 形式的临时目录而失败，交给 xelatex 本地编译即可。
+cd "$BUILD"
+pandoc build.md -o report.tex --from markdown+tex_math_dollars --template="$TPL_ARG" --toc --toc-depth=2 --resource-path=. -H "$HEADER_ARG" --lua-filter "$FILTER_ARG" "${FONTS[@]}"
+
+for pass in 1 2 3; do
+  xelatex -interaction=nonstopmode -halt-on-error report.tex </dev/null > "xelatex-$pass.log" 2>&1 || {
+    echo "xelatex 第 $pass 遍失败，日志末尾："; tail -40 "xelatex-$pass.log"; exit 1;
+  }
+done
+cp report.pdf "$OUT"
 
 echo "[OK] $OUT"
 if command -v pdfinfo >/dev/null; then

@@ -1,5 +1,7 @@
-import { readFileSync, writeFileSync, mkdirSync } from 'node:fs';
-import { fileURLToPath } from 'node:url';
+import { existsSync, mkdirSync, readFileSync, readdirSync, writeFileSync } from 'node:fs';
+import { join } from 'node:path';
+import { fileURLToPath, pathToFileURL } from 'node:url';
+import type { Browser } from 'playwright';
 
 interface PerformancePayload {
   environment: {
@@ -73,6 +75,9 @@ const colors = {
   blue: '#5d9da6',
 };
 
+// 中文字体优先（雅黑在前），保证 SVG 与 Chromium 截图中的 CJK 正常渲染。
+const fontFamily = "'Microsoft YaHei', 'Aptos', 'Segoe UI', sans-serif";
+
 function escapeXml(value: string): string {
   return value.replaceAll('&', '&amp;').replaceAll('<', '&lt;').replaceAll('>', '&gt;');
 }
@@ -81,12 +86,16 @@ function text(
   x: number,
   y: number,
   value: string,
-  size = 12,
+  size: number,
   fill = colors.text,
   anchor: 'start' | 'middle' | 'end' = 'start',
   weight = '400',
 ): string {
-  return `<text x="${x}" y="${y}" font-family="Aptos, Segoe UI, sans-serif" font-size="${size}" fill="${fill}" text-anchor="${anchor}" font-weight="${weight}">${escapeXml(value)}</text>`;
+  return `<text x="${x}" y="${y}" font-family="${fontFamily}" font-size="${size}" fill="${fill}" text-anchor="${anchor}" font-weight="${weight}">${escapeXml(value)}</text>`;
+}
+
+function rotatedText(x: number, y: number, value: string, size: number, fill: string): string {
+  return `<text x="${x}" y="${y}" font-family="${fontFamily}" font-size="${size}" fill="${fill}" text-anchor="middle" transform="rotate(-90 ${x} ${y})">${escapeXml(value)}</text>`;
 }
 
 function line(x1: number, y1: number, x2: number, y2: number, stroke: string, width = 1, dash = ''): string {
@@ -100,107 +109,139 @@ function rect(x: number, y: number, width: number, height: number, fill: string,
 function svg(width: number, height: number, title: string, body: string): string {
   return `<svg xmlns="http://www.w3.org/2000/svg" width="${width}" height="${height}" viewBox="0 0 ${width} ${height}" role="img">
 <title>${escapeXml(title)}</title>
-<desc>Generated directly from Blue Current benchmark JSON files. Unit and test conditions are printed inside the figure.</desc>
+<desc>由 Blue Current 基准 JSON 文件直接生成。单位与测试条件均标注在图内。</desc>
 <rect width="${width}" height="${height}" fill="${colors.background}"/>
 ${body}
 </svg>`;
 }
 
-function panelLabel(x: number, y: number, index: string, title: string): string {
-  return `${text(x, y, index, 11, colors.gridLine, 'start', '600')}${text(x + 24, y, title, 14, colors.text, 'start', '600')}`;
+function panelLabel(
+  x: number,
+  y: number,
+  index: string,
+  title: string,
+  indexSize: number,
+  titleSize: number,
+): string {
+  return `${text(x, y, index, indexSize, colors.gridLine, 'start', '600')}${text(x + indexSize + 10, y, title, titleSize, colors.text, 'start', '600')}`;
 }
 
 const performance = JSON.parse(readFileSync(`${root}benchmarks/performance-grid-vs-brute.json`, 'utf8')) as PerformancePayload;
 const counts = performance.environment.options.counts;
-const chartWidth = 980;
-const chartHeight = 520;
-const left = 90;
-const right = 55;
-const top = 108;
-const bottom = 145;
-const plotWidth = chartWidth - left - right;
-const plotHeight = chartHeight - top - bottom;
+const performanceWidth = 980;
+const performanceHeight = 580;
+const left = 96;
+const right = 60;
+const top = 124;
+const bottom = 150;
+const plotWidth = performanceWidth - left - right;
+const plotHeight = performanceHeight - top - bottom;
 const yMax = Math.ceil(Math.max(...performance.summaries.map((row) => row.medianMeanStepMs)) / 20) * 20;
 const xFor = (count: number): number => left + (counts.indexOf(count) / Math.max(1, counts.length - 1)) * plotWidth;
 const yForStep = (value: number): number => top + plotHeight - (value / yMax) * plotHeight;
-let performanceBody = text(left, 48, 'CPU simulation step time: brute force vs uniform grid', 21, colors.text, 'start', '600');
-performanceBody += text(left, 72, 'Lower is better. Unit: milliseconds per fixed simulation step.', 12, colors.muted);
+const axisY = top + plotHeight;
+let performanceBody = text(left, 52, 'CPU 模拟步耗时：暴力搜索 vs. Uniform Grid', 26, colors.text, 'start', '600');
+performanceBody += text(left, 84, '越低越好。单位：每个固定模拟步的毫秒数。', 17, colors.muted);
 for (let tick = 0; tick <= yMax; tick += 20) {
   const y = yForStep(tick);
   performanceBody += line(left, y, left + plotWidth, y, colors.grid);
-  performanceBody += text(left - 12, y + 4, String(tick), 11, colors.muted, 'end');
+  performanceBody += text(left - 14, y + 6, String(tick), 17, colors.muted, 'end');
 }
 for (const count of counts) {
   const x = xFor(count);
-  performanceBody += line(x, top, x, top + plotHeight, colors.grid, 1, '3 5');
-  performanceBody += text(x, top + plotHeight + 24, count.toLocaleString('en-US'), 11, colors.muted, 'middle');
+  performanceBody += line(x, top, x, axisY, colors.grid, 1, '3 5');
+  performanceBody += text(x, axisY + 28, count.toLocaleString('en-US'), 17, colors.muted, 'middle');
 }
-performanceBody += line(left, top + plotHeight, left + plotWidth, top + plotHeight, colors.pale, 1);
-performanceBody += text(24, top + plotHeight / 2, 'mean step (ms)', 11, colors.muted, 'middle').replace(
-  '<text ',
-  `<text transform="rotate(-90 24 ${top + plotHeight / 2})" `,
-);
-performanceBody += text(left + plotWidth / 2, top + plotHeight + 50, 'fish count', 12, colors.muted, 'middle');
+performanceBody += line(left, axisY, left + plotWidth, axisY, colors.pale, 1);
+performanceBody += rotatedText(28, (top + axisY) / 2, '平均步耗时（ms）', 17, colors.muted);
+performanceBody += text(left + plotWidth / 2, axisY + 58, '鱼数量', 17, colors.muted, 'middle');
+const bruteRows = counts.map((count) => performance.summaries.find((row) => row.count === count && row.mode === 'brute-force')!);
+const gridRows = counts.map((count) => performance.summaries.find((row) => row.count === count && row.mode === 'grid')!);
 for (const mode of ['brute-force', 'grid'] as const) {
-  const rows = counts.map((count) => performance.summaries.find((row) => row.count === count && row.mode === mode)!);
+  const rows = mode === 'grid' ? gridRows : bruteRows;
   const color = mode === 'grid' ? colors.gridLine : colors.brute;
   const points = rows.map((row) => `${xFor(row.count)},${yForStep(row.medianMeanStepMs)}`).join(' ');
   performanceBody += `<polyline points="${points}" fill="none" stroke="${color}" stroke-width="2.5"/>`;
   for (const row of rows) {
     performanceBody += `<circle cx="${xFor(row.count)}" cy="${yForStep(row.medianMeanStepMs)}" r="4" fill="${colors.background}" stroke="${color}" stroke-width="2"/>`;
-    performanceBody += text(xFor(row.count), yForStep(row.medianMeanStepMs) - 11, row.medianMeanStepMs.toFixed(2), 10, color, 'middle');
   }
-  const legendX = left + (mode === 'grid' ? 230 : 70);
-  performanceBody += line(legendX, 93, legendX + 24, 93, color, 3);
-  performanceBody += text(legendX + 32, 97, mode === 'grid' ? 'Uniform grid' : 'Brute force', 12, colors.text);
+  const legendX = left + (mode === 'grid' ? 240 : 70);
+  performanceBody += line(legendX, 103, legendX + 24, 103, color, 3);
+  performanceBody += text(legendX + 32, 109, mode === 'grid' ? 'Uniform Grid' : '暴力搜索', 17, colors.text);
+}
+// 两条曲线在低倍率区几乎重合：数值标注左右错开，避免 17px 字号下互相压盖。
+for (let i = 0; i < counts.length; i += 1) {
+  const x = xFor(counts[i]);
+  const bruteY = yForStep(bruteRows[i].medianMeanStepMs);
+  const gridY = yForStep(gridRows[i].medianMeanStepMs);
+  const bruteLabel = bruteRows[i].medianMeanStepMs.toFixed(2);
+  const gridLabel = gridRows[i].medianMeanStepMs.toFixed(2);
+  if (Math.abs(bruteY - gridY) < 30) {
+    performanceBody += text(x - 10, bruteY - 13, bruteLabel, 17, colors.brute, 'end');
+    if (gridY + 28 < axisY - 6) {
+      // 曲线在此处快速上升：把网格数值放在数据点正下方，避免折线穿过文字。
+      performanceBody += text(x, gridY + 28, gridLabel, 17, colors.gridLine, 'middle');
+    } else {
+      performanceBody += text(x + 10, gridY - 13, gridLabel, 17, colors.gridLine, 'start');
+    }
+  } else {
+    performanceBody += text(x, bruteY - 13, bruteLabel, 17, colors.brute, 'middle');
+    performanceBody += text(x, gridY - 13, gridLabel, 17, colors.gridLine, 'middle');
+  }
 }
 performanceBody += text(
   left,
-  chartHeight - 55,
-  `Environment: ${performance.environment.cpu}; ${performance.environment.logicalCores} logical cores; Node ${performance.environment.node}; Linux sandbox.`,
-  10,
+  performanceHeight - 64,
+  `环境：${performance.environment.cpu}；${performance.environment.logicalCores} 个逻辑核；Node ${performance.environment.node}；Linux 沙箱。`,
+  17,
   colors.muted,
 );
 performanceBody += text(
   left,
-  chartHeight - 37,
-  `Parameters: ${performance.environment.options.steps} measured steps x ${performance.environment.options.repeats} repeats; ${performance.environment.options.warmup}-step warm-up; predator off; no rendering.`,
-  10,
+  performanceHeight - 42,
+  `参数：${performance.environment.options.steps} 步测量 × ${performance.environment.options.repeats} 次重复；${performance.environment.options.warmup} 步预热；无捕食者；无渲染。`,
+  17,
   colors.muted,
 );
 performanceBody += text(
   left,
-  chartHeight - 19,
-  'Source: benchmarks/performance-grid-vs-brute.json. Values are measured means per run, not derived from speed-up ratios.',
-  10,
+  performanceHeight - 20,
+  '数据来源：benchmarks/performance-grid-vs-brute.json。数值为每轮运行实测均值，并非由加速比推算。',
+  17,
   colors.gridLine,
 );
-writeFileSync(`${output}fig-performance.svg`, svg(chartWidth, chartHeight, 'Performance comparison', performanceBody));
+writeFileSync(`${output}fig-performance.svg`, svg(performanceWidth, performanceHeight, '性能对比', performanceBody));
 
 const ablation = JSON.parse(readFileSync(`${root}benchmarks/ablation-results.json`, 'utf8')) as AblationPayload;
 const ablationWidth = 1060;
-const ablationHeight = 500;
-let ablationBody = text(65, 45, 'Boids rule ablation: spatial and directional response', 21, colors.text, 'start', '600');
-ablationBody += text(65, 69, '500 fish, three seeds, no predator. Higher polarization means stronger directional agreement.', 12, colors.muted);
+const ablationHeight = 560;
+let ablationBody = text(65, 50, 'Boids 规则消融：空间与方向响应', 26, colors.text, 'start', '600');
+ablationBody += text(
+  65,
+  82,
+  `${ablation.methodology.fishCount} 条鱼、${ablation.methodology.seeds.length} 组随机种子、无捕食者。方向一致性越高，说明方向协同越强。`,
+  18,
+  colors.muted,
+);
 const panelWidth = 285;
-const panelHeight = 240;
-const panelTop = 125;
-const panels = [
-  { title: 'Radius of gyration', unit: 'u', field: 'meanRadiusOfGyration' as const, max: 18 },
-  { title: 'Polarization', unit: '0–1', field: 'meanPolarization' as const, max: 1 },
-  { title: 'Schools (≥ 5 fish)', unit: 'count', field: 'meanSchoolCount' as const, max: 10 },
+const panelHeight = 250;
+const panelTop = 155;
+const ablationPanels = [
+  { title: '回旋半径', unit: 'u', field: 'meanRadiusOfGyration' as const, max: 18 },
+  { title: '方向一致性', unit: '0–1', field: 'meanPolarization' as const, max: 1 },
+  { title: '群体数量（≥ 5 条鱼）', unit: '个', field: 'meanSchoolCount' as const, max: 10 },
 ];
-for (let panelIndex = 0; panelIndex < panels.length; panelIndex += 1) {
-  const panel = panels[panelIndex];
+for (let panelIndex = 0; panelIndex < ablationPanels.length; panelIndex += 1) {
+  const panel = ablationPanels[panelIndex];
   const panelX = 65 + panelIndex * (panelWidth + 40);
-  ablationBody += panelLabel(panelX, 103, `0${panelIndex + 1}`, panel.title);
-  ablationBody += text(panelX, 120, `unit: ${panel.unit}`, 10, colors.muted);
+  ablationBody += panelLabel(panelX, 116, `0${panelIndex + 1}`, panel.title, 18, 19);
+  ablationBody += text(panelX, 142, `单位：${panel.unit}`, 18, colors.muted);
   ablationBody += line(panelX, panelTop + panelHeight, panelX + panelWidth, panelTop + panelHeight, colors.pale);
   for (let tick = 0; tick <= 4; tick += 1) {
     const value = (panel.max / 4) * tick;
     const y = panelTop + panelHeight - (value / panel.max) * panelHeight;
     ablationBody += line(panelX, y, panelX + panelWidth, y, colors.grid);
-    ablationBody += text(panelX - 8, y + 4, value.toFixed(panel.max <= 1 ? 1 : 0), 9, colors.muted, 'end');
+    ablationBody += text(panelX - 10, y + 6, value.toFixed(panel.max <= 1 ? 1 : 0), 18, colors.muted, 'end');
   }
   const barWidth = 54;
   ablation.aggregated.forEach((row, rowIndex) => {
@@ -208,60 +249,66 @@ for (let panelIndex = 0; panelIndex < panels.length; panelIndex += 1) {
     const barHeight = (value / panel.max) * panelHeight;
     const x = panelX + 42 + rowIndex * 86;
     ablationBody += rect(x, panelTop + panelHeight - barHeight, barWidth, barHeight, panelIndex === 1 ? colors.accent : colors.gridLine, 0.84);
-    ablationBody += text(x + barWidth / 2, panelTop + panelHeight - barHeight - 8, value.toFixed(panel.max <= 1 ? 3 : 2), 10, colors.text, 'middle');
-    ablationBody += text(x + barWidth / 2, panelTop + panelHeight + 17, row.configuration.label === 'Separation only' ? 'Sep only' : row.configuration.label === 'Separation + alignment' ? 'Sep + align' : 'All three', 9, colors.muted, 'middle');
+    ablationBody += text(x + barWidth / 2, panelTop + panelHeight - barHeight - 10, value.toFixed(panel.max <= 1 ? 3 : 2), 18, colors.text, 'middle');
+    const shortLabel = row.configuration.label === 'Separation only' ? '仅分离' : row.configuration.label === 'Separation + alignment' ? '分离+对齐' : '三者齐备';
+    ablationBody += text(x + barWidth / 2, panelTop + panelHeight + 28, shortLabel, 18, colors.muted, 'middle');
   });
 }
 ablationBody += text(
   65,
-  ablationHeight - 55,
-  `Environment: ${ablation.environment.cpu}; ${ablation.environment.logicalCores} logical cores; Node ${ablation.environment.node}; Linux sandbox.`,
-  10,
+  ablationHeight - 68,
+  `环境：${ablation.environment.cpu}；${ablation.environment.logicalCores} 个逻辑核；Node ${ablation.environment.node}；Linux 沙箱。`,
+  18,
   colors.muted,
 );
 ablationBody += text(
   65,
-  ablationHeight - 36,
-  `Parameters: ${ablation.methodology.fishCount} fish; ${ablation.methodology.warmupSteps} warm-up + ${ablation.methodology.measurementSteps} measured steps; ${ablation.methodology.seeds.length} seeds; predator disabled; ${ablation.methodology.searchMode} search.`,
-  10,
+  ablationHeight - 44,
+  `参数：${ablation.methodology.fishCount} 条鱼；${ablation.methodology.warmupSteps} 步预热 + ${ablation.methodology.measurementSteps} 步测量；${ablation.methodology.seeds.length} 组随机种子；关闭捕食者；${ablation.methodology.searchMode === 'grid' ? 'Uniform Grid' : '暴力搜索'} 搜索。`,
+  18,
   colors.muted,
 );
 ablationBody += text(
   65,
-  ablationHeight - 17,
-  'Source: benchmarks/ablation-results.json, sampled every 30 steps. Error bars are not shown; exact per-seed values are in the CSV.',
-  10,
+  ablationHeight - 20,
+  '数据来源：benchmarks/ablation-results.json，每 30 步采样一次；未绘制误差棒，逐种子精确值见 CSV。',
+  18,
   colors.gridLine,
 );
-writeFileSync(`${output}fig-ablation.svg`, svg(ablationWidth, ablationHeight, 'Boids rule ablation', ablationBody));
+writeFileSync(`${output}fig-ablation.svg`, svg(ablationWidth, ablationHeight, 'Boids 规则消融', ablationBody));
 
 const predator = JSON.parse(readFileSync(`${root}benchmarks/predator-results.json`, 'utf8')) as PredatorPayload;
 const predatorWidth = 1120;
-const predatorHeight = 540;
-let predatorBody = text(65, 45, 'Predator conditions: spatial response and recovery', 21, colors.text, 'start', '600');
-predatorBody += text(65, 69, 'Four conditions, three seeds. Threat and recovery are averaged over the measured windows.', 12, colors.muted);
+const predatorHeight = 600;
+let predatorBody = text(65, 52, '捕食者条件：空间响应与恢复', 26, colors.text, 'start', '600');
+predatorBody += text(65, 86, '四种条件，3 组随机种子。威胁期与恢复期按测量窗口取平均。', 19, colors.muted);
 const predatorPanels = [
-  { title: 'Radius of gyration by phase', unit: 'u', series: ['preRadius', 'threatRadius', 'recoveryRadius'] as const, max: 14 },
-  { title: 'Threatened fish during threat', unit: 'fish', series: ['meanThreatenedCount'] as const, max: 50 },
-  { title: 'Wide components after recovery', unit: `count @ ${predator.methodology.clusterThresholds.wide} u`, series: ['recoverySchoolCount3p2'] as const, max: 2.5 },
+  { title: '回旋半径（按阶段）', unit: 'u', series: ['preRadius', 'threatRadius', 'recoveryRadius'] as const, max: 14 },
+  { title: '威胁期间受惊鱼数量', unit: '条', series: ['meanThreatenedCount'] as const, max: 50 },
+  {
+    title: '恢复期宽连通群体数',
+    unit: `个（宽阈值 ${predator.methodology.clusterThresholds.wide} u）`,
+    series: ['recoverySchoolCount3p2'] as const,
+    max: 2.5,
+  },
 ];
 const pPanelWidth = 290;
-const pPanelHeight = 240;
-const pPanelTop = 150;
-const shortLabels = ['No predator', 'Patrol', 'Pursuit', 'Pursuit + evasion'];
+const pPanelHeight = 250;
+const pPanelTop = 200;
+const shortLabels = ['无捕食者', '巡逻', '追击', '追击+逃逸'];
 for (let panelIndex = 0; panelIndex < predatorPanels.length; panelIndex += 1) {
   const panel = predatorPanels[panelIndex];
   const panelX = 65 + panelIndex * (pPanelWidth + 40);
-  predatorBody += panelLabel(panelX, 105, `0${panelIndex + 1}`, panel.title);
-  predatorBody += text(panelX, 122, `unit: ${panel.unit}`, 10, colors.muted);
+  predatorBody += panelLabel(panelX, 156, `0${panelIndex + 1}`, panel.title, 19, 20);
+  predatorBody += text(panelX, 182, `单位：${panel.unit}`, 19, colors.muted);
   predatorBody += line(panelX, pPanelTop + pPanelHeight, panelX + pPanelWidth, pPanelTop + pPanelHeight, colors.pale);
   for (let tick = 0; tick <= 4; tick += 1) {
     const value = (panel.max / 4) * tick;
     const y = pPanelTop + pPanelHeight - (value / panel.max) * pPanelHeight;
     predatorBody += line(panelX, y, panelX + pPanelWidth, y, colors.grid);
-    predatorBody += text(panelX - 8, y + 4, value.toFixed(panel.max <= 2.5 ? 1 : 0), 9, colors.muted, 'end');
+    predatorBody += text(panelX - 10, y + 6, value.toFixed(panel.max <= 2.5 ? 1 : 0), 19, colors.muted, 'end');
   }
-  const groupWidth = 64;
+  const groupWidth = 70;
   predator.aggregated.forEach((row, rowIndex) => {
     const startX = panelX + 8 + rowIndex * groupWidth;
     const seriesColors = [colors.blue, colors.brute, colors.gridLine];
@@ -272,39 +319,122 @@ for (let panelIndex = 0; panelIndex < predatorPanels.length; panelIndex += 1) {
       const x = startX + seriesIndex * (panel.series.length === 1 ? 15 : 17);
       predatorBody += rect(x, pPanelTop + pPanelHeight - barHeight, barWidth, barHeight, seriesColors[seriesIndex], 0.86);
       if (panel.series.length === 1) {
-        predatorBody += text(x + barWidth / 2, pPanelTop + pPanelHeight - barHeight - 7, value.toFixed(value < 10 ? 2 : 1), 9, colors.text, 'middle');
+        predatorBody += text(x + barWidth / 2, pPanelTop + pPanelHeight - barHeight - 9, value.toFixed(value < 10 ? 2 : 1), 19, colors.text, 'middle');
       }
     });
-    predatorBody += text(startX + 31, pPanelTop + pPanelHeight + 18, shortLabels[rowIndex], 8.5, colors.muted, 'middle');
+    predatorBody += text(startX + 32, pPanelTop + pPanelHeight + 30, shortLabels[rowIndex], 19, colors.muted, 'middle');
   });
 }
-const predatorLegend = ['Pre-threat', 'Threat', 'Recovery'];
+const predatorLegend = ['威胁前', '威胁期间', '恢复期'];
 predatorLegend.forEach((label, index) => {
-  const x = 75 + index * 140;
-  predatorBody += rect(x, 130, 9, 9, [colors.blue, colors.brute, colors.gridLine][index], 0.86);
-  predatorBody += text(x + 15, 138, label, 9, colors.muted);
+  const x = 75 + index * 170;
+  predatorBody += rect(x, 104, 14, 14, [colors.blue, colors.brute, colors.gridLine][index], 0.86);
+  predatorBody += text(x + 22, 117, label, 19, colors.muted);
 });
 predatorBody += text(
   65,
-  predatorHeight - 55,
-  `Environment: ${predator.environment.cpu}; ${predator.environment.logicalCores} logical cores; Node ${predator.environment.node}; Linux sandbox.`,
-  10,
+  predatorHeight - 70,
+  `环境：${predator.environment.cpu}；${predator.environment.logicalCores} 个逻辑核；Node ${predator.environment.node}；Linux 沙箱。`,
+  19,
   colors.muted,
 );
 predatorBody += text(
   65,
-  predatorHeight - 36,
-  `Parameters: ${predator.methodology.fishCount} fish; ${predator.methodology.predatorCount} predator; ${predator.methodology.settleSteps}/${predator.methodology.threatSteps}/${predator.methodology.recoverySteps} settle/threat/recovery steps; samples every ${predator.methodology.sampleInterval} steps; 3 seeds.`,
-  10,
+  predatorHeight - 45,
+  `参数：${predator.methodology.fishCount} 条鱼；${predator.methodology.predatorCount} 只捕食者；稳定/威胁/恢复各 ${predator.methodology.settleSteps}/${predator.methodology.threatSteps}/${predator.methodology.recoverySteps} 步；每 ${predator.methodology.sampleInterval} 步采样；3 组随机种子。`,
+  19,
   colors.muted,
 );
 predatorBody += text(
   65,
-  predatorHeight - 17,
-  'Source: benchmarks/predator-results.json. Capture counts are means per 3-seed run; components ignore groups below five fish.',
-  10,
+  predatorHeight - 20,
+  `数据来源：benchmarks/predator-results.json。捕获数为 3 组种子运行的均值；连通分量忽略少于 ${predator.methodology.clusterThresholds.minimumComponentSize} 条鱼的群体。`,
+  19,
   colors.gridLine,
 );
-writeFileSync(`${output}fig-predator.svg`, svg(predatorWidth, predatorHeight, 'Predator split and recovery experiment', predatorBody));
+writeFileSync(`${output}fig-predator.svg`, svg(predatorWidth, predatorHeight, '捕食者实验', predatorBody));
 
-console.log('Generated screenshots/fig-performance.svg, fig-ablation.svg and fig-predator.svg from raw benchmark JSON.');
+const figures = [
+  { svg: 'fig-performance.svg', png: 'fig-performance.png', width: performanceWidth, height: performanceHeight },
+  { svg: 'fig-ablation.svg', png: 'fig-ablation.png', width: ablationWidth, height: ablationHeight },
+  { svg: 'fig-predator.svg', png: 'fig-predator.png', width: predatorWidth, height: predatorHeight },
+];
+console.log('已生成 screenshots/fig-performance.svg、fig-ablation.svg、fig-predator.svg（中文标注，数据直接读取 benchmarks/*.json）。');
+
+// PNG 渲染方案（按优先级尝试）：
+//   1. 直接 chromium.launch()，使用 Playwright 自带的 Chromium（node_modules/playwright 与
+//      %LOCALAPPDATA%\ms-playwright 下的 chromium-<revision>\chrome-win64\chrome.exe）；
+//   2. chromium.launch({ channel: 'chrome' })，退回系统安装的 Chrome；
+//   3. 显式扫描 %LOCALAPPDATA%\ms-playwright（以及 PLAYWRIGHT_BROWSERS_PATH）下所有
+//      chromium-*/chrome-win64|chrome-win|chrome-win32\chrome.exe，逐一作为 executablePath 启动。
+// 实际成功的那一档会打印在命令输出中。
+function chromiumExecutableCandidates(): string[] {
+  const roots = [process.env.PLAYWRIGHT_BROWSERS_PATH, process.env.LOCALAPPDATA ? join(process.env.LOCALAPPDATA, 'ms-playwright') : undefined]
+    .filter((value): value is string => Boolean(value));
+  const candidates: string[] = [];
+  for (const candidateRoot of roots) {
+    if (!existsSync(candidateRoot)) continue;
+    for (const entry of readdirSync(candidateRoot)) {
+      if (!entry.startsWith('chromium-')) continue;
+      for (const relative of ['chrome-win64\\chrome.exe', 'chrome-win\\chrome.exe', 'chrome-win32\\chrome.exe']) {
+        const executable = join(candidateRoot, entry, relative);
+        if (existsSync(executable)) candidates.push(executable);
+      }
+    }
+  }
+  return candidates.sort().reverse();
+}
+
+async function launchChromium(): Promise<{ browser: Browser; strategy: string }> {
+  const { chromium } = await import('playwright');
+  const attempts: Array<{ strategy: string; launch: () => Promise<Browser> }> = [
+    { strategy: 'chromium.launch() 默认 Chromium', launch: () => chromium.launch() },
+    { strategy: "chromium.launch({ channel: 'chrome' })", launch: () => chromium.launch({ channel: 'chrome' }) },
+  ];
+  for (const executablePath of chromiumExecutableCandidates()) {
+    attempts.push({ strategy: `executablePath=${executablePath}`, launch: () => chromium.launch({ executablePath }) });
+  }
+  const failures: string[] = [];
+  for (const attempt of attempts) {
+    try {
+      const browser = await attempt.launch();
+      return { browser, strategy: attempt.strategy };
+    } catch (error) {
+      failures.push(`${attempt.strategy}: ${error instanceof Error ? error.message.split('\n')[0] : String(error)}`);
+    }
+  }
+  throw new Error(`Playwright 无法启动 Chromium，已尝试：\n${failures.join('\n')}`);
+}
+
+// 直接以 file:// 打开生成的 SVG，用 deviceScaleFactor 2 截图，PNG 尺寸即为 SVG 的 2 倍。
+async function renderPngs(): Promise<void> {
+  const { browser, strategy } = await launchChromium();
+  console.log(`Playwright 浏览器启动成功（${strategy}）。`);
+  try {
+    const context = await browser.newContext({ viewport: { width: figures[0].width, height: figures[0].height }, deviceScaleFactor: 2 });
+    const page = await context.newPage();
+    for (const figure of figures) {
+      await page.setViewportSize({ width: figure.width, height: figure.height });
+      await page.goto(pathToFileURL(`${output}${figure.svg}`).href, { waitUntil: 'load' });
+      await page.evaluate(async () => {
+        if (document.fonts) await document.fonts.ready;
+      });
+      await page.waitForTimeout(100);
+      await page.screenshot({
+        path: `${output}${figure.png}`,
+        clip: { x: 0, y: 0, width: figure.width, height: figure.height },
+      });
+      console.log(`已生成 screenshots/${figure.png}（${figure.width * 2}×${figure.height * 2}）。`);
+    }
+  } finally {
+    await browser.close();
+  }
+}
+
+try {
+  await renderPngs();
+  console.log('三张 PNG 已由 Playwright Chromium 以 deviceScaleFactor=2 重新生成。');
+} catch (error) {
+  console.error('SVG 已生成，但 Playwright 渲染 PNG 失败：', error instanceof Error ? error.message : error);
+  process.exitCode = 1;
+}
