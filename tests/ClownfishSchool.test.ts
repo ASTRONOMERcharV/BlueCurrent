@@ -48,14 +48,16 @@ describe('Clownfish school', () => {
     }
   });
 
-  it('stays near its reef habitat during undisturbed schooling', () => {
+  it('stays near its anemone habitat during undisturbed schooling', () => {
     const world = new SimulationWorld();
     world.config.predatorEnabled = false;
+    world.clownfishConfig.predatorEnabled = false;
     world.setFishCount(60);
-    for (let step = 0; step < 600; step += 1) world.step();
+    for (let step = 0; step < 900; step += 1) world.step();
 
     const [centerX, centerY, centerZ] = centroid(world);
-    const [homeX, homeY, homeZ] = world.clownfishConfig.homeCenter!;
+    const [homeX, homeY, homeZ] = (world.clownfishConfig.habitatCenter
+      ?? world.clownfishConfig.homeCenter)!;
     expect(Math.hypot(centerX - homeX, centerY - homeY, centerZ - homeZ)).toBeLessThan(6);
 
     for (let i = 0; i < world.clownfishFlock.count; i += 1) {

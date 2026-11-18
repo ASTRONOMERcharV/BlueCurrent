@@ -21,7 +21,6 @@ export class UniformGrid3D implements NeighborSearch {
   private cellItems: Int32Array;
   private cellOf: Int32Array;
   private marks = new Uint8Array(1);
-  private readonly cell = new Int32Array(3);
 
   constructor(config: SimulationConfig, capacity: number) {
     this.min = config.bounds.min;
@@ -35,10 +34,14 @@ export class UniformGrid3D implements NeighborSearch {
     this.flock = flock;
     this.candidatesExamined = 0;
     this.cellSize = Math.max(0.001, radius);
-    this.dimensions[0] = Math.max(1, Math.ceil((this.max[0] - this.min[0]) / this.cellSize));
-    this.dimensions[1] = Math.max(1, Math.ceil((this.max[1] - this.min[1]) / this.cellSize));
-    this.dimensions[2] = Math.max(1, Math.ceil((this.max[2] - this.min[2]) / this.cellSize));
-    const cellCount = this.dimensions[0] * this.dimensions[1] * this.dimensions[2];
+    const cellSize = this.cellSize;
+    const dimX = Math.max(1, Math.ceil((this.max[0] - this.min[0]) / cellSize));
+    const dimY = Math.max(1, Math.ceil((this.max[1] - this.min[1]) / cellSize));
+    const dimZ = Math.max(1, Math.ceil((this.max[2] - this.min[2]) / cellSize));
+    this.dimensions[0] = dimX;
+    this.dimensions[1] = dimY;
+    this.dimensions[2] = dimZ;
+    const cellCount = dimX * dimY * dimZ;
 
     if (this.cellStart.length !== cellCount + 1) {
       this.cellStart = new Int32Array(cellCount + 1);
@@ -48,34 +51,49 @@ export class UniformGrid3D implements NeighborSearch {
     }
     if (this.cellItems.length < this.capacity) this.cellItems = new Int32Array(this.capacity);
     if (this.cellOf.length < this.capacity) this.cellOf = new Int32Array(this.capacity);
-    this.cellCounts.fill(0);
-    this.marks.fill(0);
+    const cellStart = this.cellStart;
+    const cellCounts = this.cellCounts;
+    const writeCursor = this.writeCursor;
+    const cellItems = this.cellItems;
+    const cellOf = this.cellOf;
+    const marks = this.marks;
+    const minX = this.min[0];
+    const minY = this.min[1];
+    const minZ = this.min[2];
+    const positions = flock.positions;
+    const alive = flock.alive;
+    cellCounts.fill(0);
+    marks.fill(0);
     this.occupiedCellCount = 0;
 
     for (let i = 0; i < flock.count; i += 1) {
-      if (flock.alive[i] === 0) continue;
-      const cellIndex = this.cellIndexFor(i);
-      this.cellOf[i] = cellIndex;
-      this.cellCounts[cellIndex] += 1;
-      if (this.marks[cellIndex] === 0) {
-        this.marks[cellIndex] = 1;
+      if (alive[i] === 0) continue;
+      const offset = i * 3;
+      const cx = clamp(Math.floor((positions[offset] - minX) / cellSize), 0, dimX - 1);
+      const cy = clamp(Math.floor((positions[offset + 1] - minY) / cellSize), 0, dimY - 1);
+      const cz = clamp(Math.floor((positions[offset + 2] - minZ) / cellSize), 0, dimZ - 1);
+      const cellIndex = cx + dimX * (cy + dimY * cz);
+      cellOf[i] = cellIndex;
+      cellCounts[cellIndex] += 1;
+      if (marks[cellIndex] === 0) {
+        marks[cellIndex] = 1;
         this.occupiedCellCount += 1;
       }
     }
 
     let cursor = 0;
     for (let cellIndex = 0; cellIndex < cellCount; cellIndex += 1) {
-      this.cellStart[cellIndex] = cursor;
-      this.writeCursor[cellIndex] = cursor;
-      cursor += this.cellCounts[cellIndex];
+      cellStart[cellIndex] = cursor;
+      writeCursor[cellIndex] = cursor;
+      cursor += cellCounts[cellIndex];
     }
-    this.cellStart[cellCount] = cursor;
+    cellStart[cellCount] = cursor;
 
     for (let i = 0; i < flock.count; i += 1) {
-      if (flock.alive[i] === 0) continue;
-      const cellIndex = this.cellOf[i];
-      this.cellItems[this.writeCursor[cellIndex]] = i;
-      this.writeCursor[cellIndex] += 1;
+      if (alive[i] === 0) continue;
+      const cellIndex = cellOf[i];
+      cellItems[writeCursor[cellIndex]] = i;
+      writeCursor[cellIndex] += 1;
     }
   }
 
@@ -92,8 +110,13 @@ export class UniformGrid3D implements NeighborSearch {
     const y = positions[offset + 1];
     const z = positions[offset + 2];
     const radiusSquared = radius * radius;
-    const [cx, cy, cz] = this.cellCoordinates(x, y, z);
-    const [nx, ny, nz] = this.dimensions;
+    const cellSize = this.cellSize;
+    const nx = this.dimensions[0];
+    const ny = this.dimensions[1];
+    const nz = this.dimensions[2];
+    const cx = clamp(Math.floor((x - this.min[0]) / cellSize), 0, nx - 1);
+    const cy = clamp(Math.floor((y - this.min[1]) / cellSize), 0, ny - 1);
+    const cz = clamp(Math.floor((z - this.min[2]) / cellSize), 0, nz - 1);
     const cellStart = this.cellStart;
     const cellCounts = this.cellCounts;
     const cellItems = this.cellItems;
@@ -154,24 +177,5 @@ export class UniformGrid3D implements NeighborSearch {
       }
     }
     return { positions: new Float32Array(corners), count };
-  }
-
-  private cellIndexFor(index: number): number {
-    const flock = this.flock;
-    if (!flock) throw new Error('Grid has no flock.');
-    const offset = index * 3;
-    const [x, y, z] = this.cellCoordinates(
-      flock.positions[offset],
-      flock.positions[offset + 1],
-      flock.positions[offset + 2],
-    );
-    return x + this.dimensions[0] * (y + this.dimensions[1] * z);
-  }
-
-  private cellCoordinates(x: number, y: number, z: number): Int32Array {
-    this.cell[0] = clamp(Math.floor((x - this.min[0]) / this.cellSize), 0, this.dimensions[0] - 1);
-    this.cell[1] = clamp(Math.floor((y - this.min[1]) / this.cellSize), 0, this.dimensions[1] - 1);
-    this.cell[2] = clamp(Math.floor((z - this.min[2]) / this.cellSize), 0, this.dimensions[2] - 1);
-    return this.cell;
   }
 }

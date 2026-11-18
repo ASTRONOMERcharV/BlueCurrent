@@ -1,6 +1,6 @@
 # Validation — Test Guide
 
-> 核实日期：2026-11-12。当前通过状态读 `../CURRENT_STATE.md`；本文只维护运行方法、证据规则和环境注意事项。
+> 核实日期：2026-11-14。当前通过状态读 `../CURRENT_STATE.md`；本文只维护运行方法、证据规则和环境注意事项。
 
 ## 核心命令
 
@@ -10,20 +10,22 @@ npm run test:watch      # 开发时监听
 npx tsc --noEmit        # 独立类型检查
 npm run build           # tsc --noEmit && vite build
 npm run sim:regression  # 固定种子模拟回归
+npm run sim:regression -- --school-dynamics=legacy --habitat=legacy  # E2/E4 回滚对照
 npm run smoke           # 基础 Playwright 桌面/移动 smoke
 npm run smoke:rich      # 富默认场景
 npm run accept:observatory
 ```
 
-测试文件集中在 `tests/*.test.ts`。Vitest 配置排除依赖、`**/dist/**` 和 `.task-locks` 回滚副本；没有显式排除所有 `dist-*`，新增构建目录时不要在其中放测试副本。备份测试文件必须改名为 `.test.ts.bak` 等非 `.test.ts` 后缀；`test-artifacts/` 下的 `.test.ts` 备份会被收集并因相对导入失败。静态声明数与 `it.each` 展开后的运行数不同，报告以实际 runner summary 为准。
+测试文件集中在 `tests/*.test.ts`。Vitest 配置排除依赖、`**/dist/**`、`.claude/**` 嵌套 worktree 与 `.task-locks` 回滚副本；没有显式排除所有 `dist-*`，新增构建目录时不要在其中放测试副本。备份测试文件必须改名为 `.test.ts.bak` 等非 `.test.ts` 后缀；`test-artifacts/` 下的 `.test.ts` 备份会被收集并因相对导入失败。静态声明数与 `it.each` 展开后的运行数不同，报告以实际 runner summary 为准。
 
-局部修改优先运行相关测试，再跑全量。不要用“之前 302/302”替代当前改动后的运行；原始日志应写入新的证据路径，并记录命令、开始时间、版本和失败项。
+局部修改优先运行相关测试，再跑全量。不要用“之前 365/365”替代当前改动后的运行；原始日志应写入新的证据路径，并记录命令、开始时间、版本和失败项。
 
 ## 专项脚本
 
 | 范围 | 入口示例 |
 | --- | --- |
 | CPU 网格/行为基准 | `npm run benchmark`、`npm run quality:benchmark`、`npm run benchmark:observatory` |
+| CPU 网格 A/B（Phase F F2） | `npm run benchmark -- --counts=500,1000,2000 --modes=grid --steps=150 --warmup=30 --repeats=4`；`--modes` 可只跑 `grid` 或 `brute-force`。每行输出 wall `mean ms`、`cpu ms`（`process.cpuUsage` delta）、P95、neighbors 与 candidates，写入 `benchmark/latest-results.json`/`.csv`。这是 Node 主线程的 CPU 模拟基准，不是浏览器/GPU 帧率；绝对值受电源方案和频率漂移影响，同版 A/B 必须固定电源方案、交替运行并先做丢弃预热。 |
 | Boids / Predator 实验 | `npm run experiment:ablation`、`npm run experiment:predator` |
 | Reef Proxy 覆盖 | `npx tsx scripts/measure-reef-collision.ts --bins`；固定输出会覆盖 `proxy-coverage.json`，需要先备份旧证据。 |
 | Sphere / ReefProxy 行为 | `npx tsx scripts/reef-collision-experiment.ts --mode=both --out=test-artifacts/reef-collision/<new>.json` |
@@ -33,8 +35,13 @@ npm run accept:observatory
 | Predator 目标轨迹 | `npx tsx scripts/camera-target-switch.ts --out=<name>`；同样只需传目录名。固定 34.5–38.5 s；更长的死亡/重新捕获窗口使用 `wp3/tools/camera-target-switch-long.ts`。 |
 | Predator FSM direct retarget | `npx tsx test-artifacts/fsm-retarget/2026-11-12T14-05-00Z/tools/target-index-probe.ts --seconds=300`；浏览器样本用同目录 `tools/browser-target-switch.ts --start=0 --seconds=30 --port=5217`。 | CPU 300 s：139 次切换、42 direct；浏览器 0–30 s：4 direct、0 错误。当前 FSM 允许 pursuit 直接重选；旧 `gate-target-index` 为 pre-FSM 对照。 |
 | 相机 CPU 数学 | `npx tsx scripts/camera-benchmark.ts` |
-| Observatory UI acceptance | `npm run accept:observatory -- --stage=<desktop|scenarios|checks|mobile|all>`；当前脚本桌面断言仍期待 12 珊瑚，而默认是 48。WP3 使用 `wp3/tools/observatory-acceptance.win.ts` 修补副本；全套 checks/mobile 超时，无 results JSON，详见 `wp3/summary.md`。 |
+| Observatory UI acceptance | `npm run accept:observatory -- --stage=<desktop|scenarios|checks|mobile|all>`；当前脚本已改为与 48 珊瑚默认场景一致，并在全珊瑚页前释放主页面 GL 上下文；2026-11-14 全套 `all` 通过（`passed=true`、`browserErrors=[]`）。旧 WP3 修补副本与超时记录只作历史。 |
+| E2 结构捕获 | `npx tsx scripts/school-structure-capture.ts --mode=dynamic|legacy --out=<dir> --seconds=70 --step=30`；固定世界机位，输出事件帧、五时间点固定帧与结构 JSON。`--channel=chrome --headed=1 --software=0` 切换硬件。`--out` 可传完整 `test-artifacts/...` 或相对目录名。 |
+| E4 栖息/沙尘捕获 | `npx tsx scripts/e4-capture.ts --kind=habitat|sediment --mode=<anemone|legacy|on|off> --out=<dir>`；habitat 用 reef-0 海葵机位，sediment 用 school 下方低机位并推进 90 个 1/30 s tick。硬件同上。 |
 | 硬件 GPU | `npm run accept:gpu -- --channel=chrome`，详见 `performance.md`。 |
+| Phase F 四档基线 | `npm run baseline:phase-f -- --row=standard --repeats=3 --cooldown-ms=90000 --append=1 --headed=1 --channel=chrome --out=test-artifacts/phase-f/<UTC>/rows`；`--rows=none --spot=1 --control=1` 只跑 1440×900 spot 与 telemetry-off 对照；`--quick=1` 做短探针。D028 验收用 `--telemetry=0` 跑 standard 3 repeats；`--telemetry=1` 只作 GPU/分项诊断。harness 的聚合表现在包含 telemetry-off 样本；仿真/渲染分项表仍只在 `--telemetry=1` 时产生。每个 sample 新页面并固定计数/相机/预热；pressure/extreme 目标 3/5 捕食者但当前只测 1 捕食者代理（D027）。采样前关闭动态壁纸和并发重负载，保持显示唤醒，数值与限制只在 `performance.md` 维护。 |
+| F2 checksum fixture | `npm run fixture:checksums` 检查 `tests/fixtures/encounter-checksums.json` 与当前 simulation 是否一致；`npx tsx scripts/simulation-regression.ts --fixture=tests/fixtures/encounter-checksums.json` 做 regression 侧比对。fixture 覆盖五个 D026 encounter checksum 和 PRE_E2 对；任何 mismatch 是硬停止。只有新 ADR/新 checksum 基线下才可 `npx tsx scripts/checksum-fixture.ts --write --new-baseline`，且两次运行必须一致；不得为了通过而 rebless。 |
+| F2 1440×900 gate | 三次独立运行 `npm run baseline:phase-f -- --rows=none --spot=1 --control=1 --telemetry=0 --repeats=1 --cooldown-ms=180000 --headed=1 --channel=chrome --out=test-artifacts/phase-f/optimization/<UTC>-f2-2r-gate/gate/run<N>`；每次产生一个 1280×720 telemetry-off control 和一个 1440×900 spot。随后 `npm run gate:phase-f -- --results=<run1/results.json>,<run2/results.json>,<run3/results.json> --out=<gate.json>` 按 D030 的 V1–V3/D1–D3 规则判定。INVALID 只重跑一次，第二次仍 invalid 记 INCONCLUSIVE；1440×900 只是诊断视口，不是 D028 验收视口。`results.json` 现记录 mode、canvas/client size、device/effective DPR、panel 状态、refresh probe、totalSteps、steps/frame 与 build/commit。 |
 | 硬件 180 s / 30 分钟 | WP4 使用 `test-artifacts/integration-abc/2026-11-12T08-22-20Z/wp4/tools/hardware-monitor-180s.mjs`、`hardware-monitor-30min.mjs`；headed Chrome、`channel=chrome`、拒绝 SwiftShader，输出 `hardware-180s.json` / `hardware-30min.json`。30 分钟分析用 `summarize-30min.mjs`。 |
 
 这些脚本不一定有 `--help` 实现；运行前读脚本顶部用法和参数解析。不要复用已不存在的构建目录，也不要让新实验覆盖旧 A/B/C 证据。

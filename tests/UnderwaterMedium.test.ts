@@ -33,6 +33,7 @@ describe('UnderwaterMedium debug mode', () => {
       lightShafts: true,
       caustics: true,
       surfaceLight: true,
+      sediment: true,
       postProcessing: null,
     });
     expect({ ...state }).not.toBe(state);

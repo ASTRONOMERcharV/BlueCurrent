@@ -116,6 +116,7 @@ function buildPreviewLayout(): SeaweedPlacement[] {
     frequency: 0.85 + (index % 3) * 0.1,
     amplitude: 0.85 + (index % 2) * 0.12,
     tint: index % 3,
+    cluster: index % 6,
   }));
 }
 

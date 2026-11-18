@@ -1,12 +1,16 @@
 # Blue Current — Roadmap
 
-> 当前优先级核实：2026-11-12。本文件只做短导航；详细验收标准与阶段范围以 `DEVELOPMENT_ROADMAP.md` 为准，两份文件在阶段变化时同步。
+> 当前优先级核实：2026-11-14。本文件只做短导航；详细验收标准与阶段范围以 `DEVELOPMENT_ROADMAP.md` 为准，两份文件在阶段变化时同步。
 
-## 当前唯一活跃阶段：A/B/C Integration Gate — 通过（带限制，2026-11-13）；Phase D 可启动
+## 当前唯一活跃阶段：Phase F — Performance & Validation（F1 测量完成、F2 优化第一轮完成，2026-11-15）
 
-目标是证明碰撞、B1 礁石、Experiment C 相机和 UI 在同一版本组合正确，而不是重新盖章单项实验。Gate 全通过并保存稳定基线前，不启动新的 Phase D 实现，不继续增加礁石、珊瑚或生物品种。
+Phase F 第一轮（F1）已完成测量与瓶颈审计：新增 `baseline:phase-f` 四档矩阵 harness、默认关闭的 CPU 相位遥测与真实 WebGL2 GPU timer query，完成 base/standard/pressure/extreme ×3 repeats、standard 1440×900 spot 与 telemetry-off 对照。pressure/extreme 先用 1 捕食者代理，采样期间存在动态壁纸/并发负载与整机漂移；标准档验收目标已由 D028 签核并在 2026-11-14 干净复测中验证通过，随后补测的干净四档矩阵中 base/standard 的 P50 可重复（FPS mean 受长尾影响仍有波动）；2026-11-15 关闭 Chrome/DeepSeek 重试后 extreme 两种模式与 pressure telemetry-on 可重复，pressure telemetry-off 仍有 cadence decay（180 s cooldown 重跑改善但未消除），3/5 捕食者矩阵待后续（`DECISIONS.md` D027/D028）。同日完成 F2 第一轮位相同 CPU 热路径优化（D029）：稳定 A/B 约 −3% wall / −3–8% CPU，标准档 telemetry-off 优化后复核一次 3/3 达 D028、另一次 r3 热漂移；tests 50/370、tsc、构建与 checksum 不变。性能数值只在 `../test-artifacts/phase-f/2026-11-14T11-26-00Z/rows/analysis.md`、`../test-artifacts/phase-f/2026-11-14T13-38-06Z-clean/acceptance.md`、`../test-artifacts/phase-f/2026-11-14T13-38-06Z-clean/matrix.md`、`../test-artifacts/phase-f/2026-11-14T18-25-37Z-retry/matrix-retry.md`、`../test-artifacts/phase-f/optimization/` 与 `validation/performance.md` 维护；证据目录被 Git 忽略。
 
-建议将 Gate 拆成以下顺序，每次只做一个明确工作包：
+A/B/C Integration Gate 已于 2026-11-13 通过（带限制），`reef-camera-integration-v1` 标签建立在收尾提交上。Phase D 第一轮完成 D4 全局光照与 D1 水体（D023），第二轮完成 D2 海床程序化材质与 D3 海草受流摆动/成簇分布（D024）；两轮均完成同版对照与 Intel Iris Xe 硬件签核。Phase E 第一轮完成 E1 鱼体俯仰平滑/限幅与转弯弯曲、E3 捕食事件只读呈现与 `predator-watch` 单行（D025）；第二轮完成 E2 鱼群动态结构（split/merge 遥测、局部惊扰、边缘逃逸、密度响应、地形预判）与 E4 环境/生物交互（小丑鱼海葵栖息、近底沙尘/悬浮颗粒），建立新 checksum 基线并完成软件与 Intel Iris Xe 硬件签核（D026）。D2 剩余碎石/附着细节仍未做。证据见 `../test-artifacts/phase-e/2026-11-14t08-31-46z/summary.md` 与第一轮 `2026-11-14t00-13-00z/summary.md`，当前未决清单见 `CURRENT_STATE.md` 第 5 节。
+
+### Gate 完成记录（2026-11-13 关闭，仅作历史导航）
+
+以下为 Gate 的工作包与证据索引，不再代表当前活跃工作：
 
 | 顺序 | 工作包 | 完成证据 | 状态 |
 | --- | --- | --- | --- |
@@ -14,7 +18,7 @@
 | 1 | Build / Regression | 当前全量 Vitest、`tsc --noEmit`、生产构建、Sphere 回归和 B1 ReefProxy 双跑 checksum。 | **已完成 2026-11-12**：`test-artifacts/integration-abc/2026-11-12T08-22-20Z/wp1/summary.md` |
 | 2 | Collision / Reef | 五 ID 与 GLB 变换、当前 Proxy 覆盖、穿透/假避障/卡鱼、通道计数、当前 Debug 与视觉对照。 | **已完成 2026-11-12**：`test-artifacts/integration-abc/2026-11-12T08-22-20Z/wp2/summary.md` |
 | 3 | Camera / UI / Responsive | 同版三机位、六个 School 时间点、垂直追逐、index→index 与 index→null、Console 开/关、窄屏和移动抽屉。 | **已完成 2026-11-12（有开放决策）**：`test-artifacts/integration-abc/2026-11-12T08-22-20Z/wp3/summary.md` |
-| 4 | Runtime sign-off | 实际硬件 renderer、人工视觉/交互、180 s 相机稳定性和 30 分钟观察；保留失败项与限制。 | **旧源码已完成 2026-11-12**：`test-artifacts/integration-abc/2026-11-12T08-22-20Z/wp4/summary.md`；用户已签核硬件画面/交互，帧率优化留到 Phase F（D014）；FSM 后需重跑 |
+| 4 | Runtime sign-off | 实际硬件 renderer、人工视觉/交互、180 s 相机稳定性和 30 分钟观察；保留失败项与限制。 | **已完成（pre-FSM 2026-11-12；post-FSM 2026-11-13 重跑并签核）**：`test-artifacts/integration-abc/2026-11-12T08-22-20Z/wp4/summary.md`、`2026-11-12T14-30-00Z/wp4/summary.md`；帧率优化留到 Phase F（D014） |
 
 > **2026-11-12 Predator FSM direct-retarget 修改（D015）后：上表 WP0–WP4 的“已完成”均指 pre-FSM 源码；旧 WP0 源码锁与 WP1–WP4 结果失效。新 WP0 run `2026-11-12T14-30-00Z` 上 WP1–WP4 已重跑完成，WP4 硬件画面/交互于 2026-11-13 签核；Isolation/Determinism 与持续闪烁观察同日补齐，D014–D022 决策已记录，Gate 判定为通过（带限制）。判定见 `../test-artifacts/integration-abc/2026-11-13T06-33-00Z/gate-verdict.md`；docs 已由 `2026-11-13T06-33-00Z` 重新锁定。** 变更证据见 `../test-artifacts/fsm-retarget/2026-11-12T14-05-00Z/summary.md`。
 
@@ -30,9 +34,9 @@ P0 已通过（带限制，2026-11-13），`reef-camera-integration-v1` annotate
 
 | 阶段 | 进入条件 | 第一轮范围 | 状态 |
 | --- | --- | --- | --- |
-| D — Environment Look Development | Integration Gate 通过并保存基线 | 只做 D1 水体、D2 海床材质部分、D4 全局光照；固定视觉基线后再做 D3 海草和其余接触细节。 | 未启动 |
-| E — Ecosystem Behavior | D 视觉基线稳定 | 深化现有鱼体/鲨鱼动画、分裂重聚、真实捕食事件和环境交互；不重写第二套控制器。 | 未启动 |
-| F — Performance & Validation | A–E 主要功能稳定 | 当前硬件 CPU/GPU 分项、富默认与压力矩阵、同版优化对照；无 GPU timestamp 写 N/A。 | 未启动 |
+| D — Environment Look Development | Integration Gate 通过并保存基线 | 两轮完成：D4/D1（D023）与 D2/D3（D024）；D2 剩余碎石/附着细节未做。 | 两轮完成 2026-11-13 |
+| E — Ecosystem Behavior | D 视觉基线稳定 | 两轮完成：第一轮 E1 鱼体运动 + E3 捕食事件呈现（D025）；第二轮 E2 鱼群动态结构 + E4 环境/生物交互（D026）；不重写第二套控制器。 | 两轮完成 2026-11-14 |
+| F — Performance & Validation | A–E 主要功能稳定 | 当前硬件 CPU/GPU 分项、富默认与压力矩阵、同版优化对照；无 GPU timestamp 写 N/A。 | 第一轮测量完成 2026-11-14（四档矩阵、GPU timer、瓶颈审计）；标准档验收目标已签核并在干净复测中验证（D028）；干净四档矩阵中 base/standard 的 P50 可重复；关闭 Chrome/DeepSeek 重试后 extreme 与 pressure telemetry-on 可重复，pressure telemetry-off 仍有 cadence decay（180 s cooldown 重跑改善但未消除），3/5 捕食者待后续；F2 第一轮位相同 CPU 热路径优化完成 2026-11-15（D029，约 −3% CPU 模拟 wall，checksum 不变） |
 | G — Release & Presentation | F 验收完成、展示稳定 | 复用同一世界完成 Overview、School、Predator、Laboratory 四展示路径、正式截图、视频和发布说明。 | 未启动 |
 
 历史文档中的“Phase D / School Fish”、光照 P2.x 和视觉 Phase 3/4 不等于本路线的新 Phase D 已完成。

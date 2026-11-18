@@ -68,7 +68,11 @@ export function renderLayout(): string {
 
           <div class="predator-watch" id="predator-watch">
             <span class="watch-reticle" aria-hidden="true"></span>
-            <div><span>Predator</span><strong id="predator-watch-state">Tracking</strong></div>
+            <div>
+              <span>Predator</span><strong id="predator-watch-state">Tracking</strong>
+              <span id="predator-watch-event" class="watch-event">Listening</span>
+              <span id="predator-watch-school" class="watch-school">Listening</span>
+            </div>
           </div>
 
           <div class="scene-caption" aria-live="polite">
@@ -192,12 +196,13 @@ export function renderLayout(): string {
                 <p class="control-note environment-note">Decorative flora and seabed debris are visual scenery. The five reef cores are the simulated colliders.</p>
               </div>
               <details class="control-section water-debug" id="water-debug">
-                <summary><span>Water debug <small>render only</small></span><output id="water-debug-count">7 / 7</output></summary>
+                <summary><span>Water debug <small>render only</small></span><output id="water-debug-count">8 / 8</output></summary>
                 <p class="control-note">Isolate each real rendering contribution. These switches never alter the flock, predator or fixed-step simulation.</p>
                 <label class="debug-toggle"><span>Scene Fog · medium master</span><input type="checkbox" data-water-debug="sceneFog" checked /></label>
                 <label class="debug-toggle"><span>Water Attenuation · transmission</span><input type="checkbox" data-water-debug="waterAttenuation" checked /></label>
                 <label class="debug-toggle"><span>Volumetric Scattering · lit in-scattering</span><input type="checkbox" data-water-debug="volumetricScattering" checked /></label>
                 <label class="debug-toggle"><span>Marine Particles</span><input type="checkbox" data-water-debug="marineParticles" checked /></label>
+                <label class="debug-toggle"><span>Sediment Plume · near-bed</span><input type="checkbox" data-water-debug="sediment" checked /></label>
                 <label class="debug-toggle"><span>Light Shafts</span><input type="checkbox" data-water-debug="lightShafts" checked /></label>
                 <label class="debug-toggle"><span>Caustics</span><input type="checkbox" data-water-debug="caustics" checked /></label>
                 <label class="debug-toggle"><span>Surface Light</span><input type="checkbox" data-water-debug="surfaceLight" checked /></label>

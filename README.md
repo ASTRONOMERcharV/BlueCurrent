@@ -6,6 +6,17 @@ Blue Current 是一个独立的 TypeScript + Three.js 实时生态观测系统�
 
 本目录与 `Project/ElementalWorld` 完全分离，没有修改原有水火蒸汽项目。
 
+## 提交物（2026-11-15）
+
+提交文件与源码包分离，位于仓库根目录 `submission/`（精简源码包本身不包含该目录）：
+
+- `Demo.mp4`：1280×720、25 fps、49.6 s 硬件 Chrome 演示。
+- `Report.pdf`：24 页实验报告，2026-11-15 更新版。
+- `BlueCurrent.zip`：源程序包，含 `src/`、`public/` GLB、`tests/`、checksum/回归脚本与配置；已移除 `preview/` 和其余开发验收脚本。
+- `BlueCurrent-Run.zip`：运行程序包，含预构建 `dist/`、本地静态服务器和启动脚本；解压后双击 `start.bat` 即可运行，不需要 `npm install`。
+- `BlueCurrent-Full.zip`：本地备用归档，额外含 `docs/`、`screenshots/`、`benchmarks/`。
+- `Submission-Instructions.md`：提交清单、运行方式与验证摘要。
+
 ## 当前完成范围
 
 已实现：
@@ -30,7 +41,7 @@ Blue Current 是一个独立的 TypeScript + Three.js 实时生态观测系统�
 - 无渲染 CPU 基准、Boids 消融和捕食者三阶段实验脚本及原始 JSON/CSV。
 - 正式实验报告、环境验证记录、演示录制脚本和真实运行截图。
 
-后续开发总入口：[Blue Current Development Roadmap](docs/DEVELOPMENT_ROADMAP.md)。A/B/C 单项实验已有证据，但 **Integration Gate 尚未执行，Phase D–G 尚未启动**；后续顺序为整合验收 → 环境视觉深化 → 生态行为 → 真实硬件性能验收 → 产品化交付，未通过整合验收前不进入新的 Phase D。
+后续开发总入口：[Blue Current Development Roadmap](docs/DEVELOPMENT_ROADMAP.md)。A/B/C Integration Gate 已于 2026-11-13 通过；Phase D 两轮视觉深化、Phase E 两轮生态行为已完成并签核；Phase F 已完成当前硬件基线、标准档 1280×720 D028 验收和第一轮位相同 CPU 优化。pressure/extreme 的 1 捕食者代理矩阵与 1440×900 诊断 gate 仍未签核。
 
 正式文档：
 
@@ -42,7 +53,8 @@ Blue Current 是一个独立的 TypeScript + Three.js 实时生态观测系统�
 - [海藻庇护场与珊瑚分档](docs/KELP_REFUGE_AND_CORAL_TIER.md)
 - [礁石碰撞代理实验 A：设计与实现](docs/REEF_COLLISION_PROXY_EXPERIMENT.md)
 - [礁石碰撞代理实验 A：交付报告](docs/REEF_COLLISION_PROXY_EXPERIMENT_REPORT.md)
-- [最终实验报告](docs/FINAL_REPORT.md)
+- [最终实验报告（Markdown 源）](docs/report/FINAL_REPORT.md)
+- [最终实验报告（提交 PDF）](docs/report/BlueCurrent-实验报告.pdf)
 - [性能与技术实验分析](docs/BENCHMARK_RESULTS.md)
 - [验证记录](docs/VALIDATION_REPORT.md)
 - [演示视频录制脚本](docs/DEMO_VIDEO_SCRIPT.md)
@@ -53,7 +65,7 @@ Blue Current 是一个独立的 TypeScript + Three.js 实时生态观测系统�
 - [Blender MCP 配置清单](docs/BLENDER_MCP_SETUP.md)
 - [Blender Agent 提示词](docs/BLENDER_AGENT_PROMPTS.md)
 
-外部 GLB 模型现在默认接入完整岩石/沙丘集、48 株珊瑚、91 株海藻、6 处细节海菜、两套 Blender 鱼模型和用户 shayu 捕食者。`?coral=temperate` 恢复 12 株温带珊瑚，`?coral=0` 关闭珊瑚；`?fish=procedural` 回退程序化主鱼群；`?clownfish=0` 关闭小丑鱼群，`?clownfish=N` 调整其数量（0–400）。`?environment=bare` 关闭完整岩石/珊瑚/海藻环境，`?glbRocks=0`、`?kelp=0`、`?seaweed=0` 可分别关闭对应层，`?glbRocks=1` 保留 legacy 单礁石入口。所有加载或契约校验失败均自动回退；小丑鱼资产失败时第二鱼群自动关闭，不会用普通鱼冒充。当前为双鱼群、单捕食者；尚未实现多捕食者、WebGPU Compute 和 LOD。鱼群避障支持可切换的球体基线或基于真实 GLB 变换的 SDF 复合代理（实验 A，默认仍为球体，`?obstacleShape=reefProxy` 启用；详见实验文档）。鱼体碰撞采用个体间分离力，而不是刚体接触求解。正式演示视频尚未录制，需在本机硬件 GPU 环境完成；当前提供录制脚本和真实运行截图。
+外部 GLB 模型现在默认接入完整岩石/沙丘集、48 株珊瑚、91 株海藻、6 处细节海菜、两套 Blender 鱼模型和用户 shayu 捕食者。`?coral=temperate` 恢复 12 株温带珊瑚，`?coral=0` 关闭珊瑚；`?fish=procedural` 回退程序化主鱼群；`?clownfish=0` 关闭小丑鱼群，`?clownfish=N` 调整其数量（0–400）。`?environment=bare` 关闭完整岩石/珊瑚/海藻环境，`?glbRocks=0`、`?kelp=0`、`?seaweed=0` 可分别关闭对应层，`?glbRocks=1` 保留 legacy 单礁石入口。所有加载或契约校验失败均自动回退；小丑鱼资产失败时第二鱼群自动关闭，不会用普通鱼冒充。当前为双鱼群、单捕食者；尚未实现多捕食者、WebGPU Compute 和 LOD。鱼群避障支持可切换的球体基线或基于真实 GLB 变换的 SDF 复合代理（实验 A，默认仍为球体，`?obstacleShape=reefProxy` 启用；详见实验文档）。鱼体碰撞采用个体间分离力，而不是刚体接触求解。正式演示视频已录制：`submission/Demo.mp4`（1280×720、25 fps、49.6 s、硬件 Chrome）；录制脚本与 90 秒 `?demo=cinematic` 时间线仍保留，便于重录。
 
 ## 运行
 
@@ -69,8 +81,9 @@ npm run dev
 ```bash
 npm run build       # TypeScript 类型检查 + 生产构建
 npm run preview     # 预览 dist/
-npm test            # Vitest 算法测试
+npm test            # Vitest：52 文件 / 400 tests
 npm run smoke       # Playwright 桌面/移动浏览器验收
+npm run smoke:demo  # 90 s Demo Mode 的 16:9、技术网格与时间线验收
 npm run accept:observatory  # 观测台双模式/三场景/相机/移动抽屉/真实数据验收
 npm run smoke:glb   # GLB 礁石浏览器验收（?glbRocks=1）
 npm run benchmark   # 暴力搜索 / Uniform Grid 性能实验
@@ -101,6 +114,23 @@ npm run quality:capture -- --scenario=calm --view=console  # 真实浏览器截�
 ```
 
 生产文件位于 `dist/`。请通过 HTTP 服务器访问，不要直接双击 `index.html` 使用 `file://`。实际全部命令以 `package.json` 为准。
+
+## Demo Mode
+
+90 秒演示时间线只控制固定种子场景、相机、Observation/Laboratory、搜索模式和 UI 显隐；鱼群、捕食目标与捕食状态仍由 `SimulationWorld` 更新。
+
+```text
+/?demo=cinematic
+```
+
+该入口会隐藏浏览器页面内的控制台和指标 UI，使 3D 画布填满 16:9 录制区域。53–70 秒自动展示 Uniform Grid、Brute Force 与网格返回。调试接口提供 `getDemoState()`、`restartDemo()`、`stopDemo()` 和仅用于预检的 `seekDemo(seconds)`。
+
+本次提交视频为 49.6 秒手动演示；`?demo=cinematic` 是独立的 90 秒自动时间线，可用于重录。视频方案与拍摄交付：
+
+- [项目审查](docs/demo-video/project-audit.md)
+- [90 秒分镜](docs/demo-video/storyboard.md)
+- [镜头清单](docs/demo-video/shot-list.md)
+- [录制检查表](docs/demo-video/capture-checklist.md)
 
 视觉质量 V1 的鱼群行为、温带海藻森林布局、A/B CPU 性能、截图和待办项见 [docs/VISUAL_QUALITY_V1.md](docs/VISUAL_QUALITY_V1.md)。
 
@@ -356,7 +386,7 @@ npm run smoke
 - `test-artifacts/blue-current-desktop.png`
 - `test-artifacts/blue-current-mobile.png`
 
-本次已通过 31 项 Vitest 测试、生产构建和 Playwright/Chromium 验收，浏览器无脚本错误；桌面运行截图与诊断保存在 `screenshots/`。沙箱浏览器使用 **SwiftShader 软件渲染**，其低 FPS 不代表本机 GPU 性能；仍建议在本机 Chrome/Edge 做一次硬件加速下的视觉和交互验收。验收的当前状态、限制和干净目录结果见 [VALIDATION_REPORT.md](docs/VALIDATION_REPORT.md)。
+当前全量验证为 **52 文件 / 400 tests 通过**，`tsc --noEmit`、生产构建、固定种子 `sim:regression` 与 `tests/fixtures/encounter-checksums.json` fixture 比对通过。硬件环境为 Windows 11、Chrome 157、Intel Iris Xe D3D11、1280×720；标准档 500+100+1、telemetry-off 的 3 repeats 为 P50 12.0/12.1/12.1 ms、P95 18.2/18.2/18.3 ms、0 dropped，3/3 达到 D028（另一次复测 r3 出现热漂移）。视频中的实时 FPS 受屏幕录制与后台负载影响，不作为性能基准。验收的当前状态、限制和证据见 `docs/validation/performance.md` 与 `docs/CURRENT_STATE.md`。
 
 调试接口 `window.__blueCurrent` 提供诊断读取、暂停、固定步进、重置、搜索切换和场景操作，便于复现浏览器测试。接口数值直接来自 `SimulationWorld`。
 
@@ -373,7 +403,7 @@ src/
 preview/              # 独立资产、礁石和动画预览；总览入口 preview/index.html
 docs/                 # 正式报告、验证记录、实验分析、视频录制脚本
 scripts/              # 基准、消融、捕食者实验、图表和浏览器验收/截图
-tests/                # 31 项算法与资产集成自动化测试
+tests/                # 52 文件 / 400 tests，算法、资产与 checksum 回归
 benchmark/            # 第一轮性能基准的未改动原始文件
 benchmarks/           # 三项实验的正式原始 JSON/CSV 和说明
 screenshots/          # 最终真实运行截图、图表和诊断记录

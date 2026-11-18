@@ -1,6 +1,6 @@
 # Validation — Performance
 
-> 当前性能结论核实：2026-11-12。本文区分历史硬件、软件和 CPU 数据；当前 B1+C 富默认已有一次硬件短测、180 s School 长跑和 30 分钟 Overview 观察，但仍无 GPU timestamp 或完整压力矩阵。
+> 当前性能结论核实：2026-11-15。本文区分历史硬件、软件和 CPU 数据；2026-11-14 Phase F F1 已用真实 `EXT_disjoint_timer_query_webgl2` 测到 GPU EMA 并完成四档压力矩阵（1 捕食者代理）。干净复测（暂停动态壁纸、关闭用户 Chrome）中 standard telemetry-off 3/3 达到 D028 的 60 FPS 目标；2026-11-15 关闭 Chrome/DeepSeek 重试后 extreme 两种模式可重复、pressure telemetry-on 可重复，pressure telemetry-off 仍有 cadence decay（180 s cooldown 重跑改善但未消除）。同日完成 F2 第一轮位相同热路径优化：CPU 模拟基准约 −3% wall / −3–8% CPU，标准档 telemetry-off 复核仍达 D028（一次 3/3，另一次 r3 热漂移）。
 
 ## 指标定义
 
@@ -44,6 +44,178 @@ CPU Simulation、Fish Update、CPU Render Submission、Obstacle Query、Camera M
 
 **2026-11-12 Predator FSM direct-retarget 修改后，以上 WP4 硬件数字均为 pre-FSM**；FSM 改变 captures 和模拟负载（300 s CPU captures 18→25），当前源码必须在新 WP0 锁上重跑硬件短测与长跑，才能更新本节性能结论。
 
+## Phase F 基线：2026-11-14 Intel Iris Xe（F1）
+
+原始证据：`test-artifacts/phase-f/2026-11-14T11-26-00Z/`（Git 忽略）。主矩阵在 `rows/`（`results.json`、`analysis.md`、`conditions.md`、逐样本 `frames/` 与 `screenshots/`）；同 run 还保留更早的交错探索 `final/`、`stability-standard/`、`stability-pressure/` 与两次 `probe/`。采样脚本是 `scripts/phase-f-baseline.ts`（`npm run baseline:phase-f`），未改 `gpu-acceptance.ts` 的既有语义。
+
+### 方法与场景
+
+headed Chrome 157、ANGLE Intel Iris Xe Graphics D3D11、1280×720、DPR 1，URL 为 `?scenario=encounter&lighting=full&obstacleShape=sphere&predator=blender&perfTelemetry=1`。每个 sample 使用新页面：等待 `__blueCurrent.ready` 与 GLB 鱼/小丑鱼/鲨鱼/珊瑚/海带/海菜层 → 60 帧预热 → `setFishCount`/`setClownfishCount` → 暂停、`predatorEnabled=false`、`step(150)` → `releasePredator()`、`step(180)` → 相机固定为 `[30,18,29]→[0,6.5,-2]` 并 settle → `resetPerformanceSamples()` → `resume()` 后按 rAF 采样。base/standard 采样 10 s 且 ≥120 帧（上限 30 s），pressure/extreme 30 s 且 ≥60 帧（上限 90 s）；每行 3 repeats、90 s cooldown，逐行独立进程；standard 另做 1440×900 spot 与 telemetry-off 对照。
+
+CPU 分项来自默认关闭的 `PhaseEmaRecorder`：`boidsMain`、`boidsClown`、`predator`、每 30 步的 `metrics`、`obstacleQuery` 与差值 `other`；渲染分项为 `fish`、`clownfish`、`predator`、`debug`、`camera`、`environment`、`draw` 与 `other`。GPU 时间来自 WebGL2 `EXT_disjoint_timer_query_webgl2`，丢弃 disjoint 样本，报告 EMA；telemetry 关闭时 GPU 时间为 N/A。`renderMs` 仍是 CPU 提交侧值。
+
+压力档与极限档的目标捕食者数量为 3/5，但本轮实际只放 1 个捕食者作为代理（intended-vs-measured 已写入每个 sample 与 `summary.md`）；这是 D027 记录的范围缺口，不能当作已支持多捕食者生态。
+
+### 四档矩阵（repeats 中位；硬件 Iris Xe）
+
+| 行 | 主鱼/小丑/捕食者（目标→实测） | n | FPS mean | FPS median | P50 ms | P95 ms | GPU EMA ms | Sim EMA ms | Render EMA ms | Dropped | FPS spread | P50 spread |
+| --- | --- | ---: | ---: | ---: | ---: | ---: | ---: | ---: | ---: | ---: | ---: | ---: |
+| base | 200/50/1 → 198/50/1 | 3 | 73.1 | 82.0 | 12.2 | 24.2 | 4.33 | 3.48 | 5.92 | 0 | 1.021 | 1.000 |
+| standard | 500/100/1 → 499/100/1 | 3 | 38.8 | 41.2 | 24.3 | 36.7 | 5.33 | 9.45 | 7.84 | 0 | 1.088 | 1.017 |
+| pressure | 1000/200/3 → 999/200/1 | 3 | 4.3 | 4.3 | 230.3 | 278.8 | 13.47 | 28.85 | 10.63 | 131 | 5.663 | 18.614 |
+| extreme | 2000/300/5 → 1999/300/1 | 3 | 2.7 | 2.7 | 374.8 | 521.4 | 11.87 | 37.25 | 9.74 | 82 | 1.465 | 1.542 |
+
+base 与 standard 的重复性达标（FPS spread ≤1.09、P50 spread ≤1.02、0 dropped）。pressure 与 extreme 未达标：pressure r1 呈现混合/瞬时状态（722 帧、P50 12.7 ms，但已有 99 dropped steps），r2/r3 回落到 4.2/4.3 FPS、P50 236.4/230.3 ms；extreme r1/r2 为 2.66 FPS、r3 降到 1.82 FPS / P50 563.4 ms。跨档比较因此混合了场景负载与整机漂移，不能把 pressure/extreme 的 FPS 当作稳定的硬件能力值。
+
+各档固定负载：candidates 14,276–14,378 / 60,701–60,993 / 289,927–302,739 / 608,001–643,511；平均邻居 32.2 / 52.4–52.6 / 100.0–110.4 / 94.8–104.2；四档均为 62 draw calls，三角形 819,745 / 1,374,095 / 2,337,995 / 4,025,895；renderer.info.memory 为 53 geometries / 39 textures、28 programs（spot 因宽屏剔除少 1 draw）。
+
+### 分项与瓶颈排序
+
+| 行 | Sim total ms | boidsMain 占比 | obstacleQuery 占比 | Render total ms | draw 占比 | GPU / sim step |
+| --- | ---: | ---: | ---: | ---: | ---: | ---: |
+| base | 3.96 | 69.1% | 13.1% | 5.99 | 52.4% | 1.24 |
+| standard | 10.74 | 72.5% | 11.8% | 7.70 | 42.3% | 0.56 |
+| pressure | 31.58 | 78.8% | 8.7% | 10.53 | 34.1% | 0.47 |
+| extreme | 40.45 | 83.1% | 7.4% | 10.05 | 24.4% | 0.32 |
+
+分项中位数（ms）：
+
+| 行 | boidsMain | boidsClown | predator | metrics | obstacleQuery | fish | clownfish | environment | draw |
+| --- | ---: | ---: | ---: | ---: | ---: | ---: | ---: | ---: | ---: |
+| base | 2.74 | 0.59 | 0.03 | 0.07 | 0.52 | 0.78 | 0.22 | 1.80 | 3.13 |
+| standard | 7.78 | 1.46 | 0.04 | 0.18 | 1.26 | 1.76 | 0.35 | 2.19 | 3.26 |
+| pressure | 24.90 | 3.77 | 0.04 | 0.13 | 2.74 | 3.39 | 0.68 | 2.71 | 3.59 |
+| extreme | 33.63 | 3.46 | 0.06 | 0.31 | 2.98 | 4.89 | 0.72 | 1.83 | 2.45 |
+
+结论：CPU 模拟是唯一随规模单调放大的主瓶颈，`boidsMain` 占 sim 的 69–83%，障碍查询占 7–13%；渲染提交（draw + environment + fish）在 6–10.5 ms 量级，draw 本身约 2.5–3.6 ms，除 extreme 因可见面减少略低外基本稳定；GPU 在本矩阵为 4.33–13.47 ms 中位，单样本尾部到 32.4/26.3 ms（pressure r3 / extreme r3），与共享 iGPU 竞争一致，GPU/sim 比从 base 的 1.24 降到 extreme 的 0.32，说明高负载下不是 GPU 先饱和。pressure/extreme 的低 FPS 还叠加了固定步长调度：当单步成本超过帧预算时，每帧跑满 8 个追赶步，帧时间接近 `8 × simStep`，dropped steps 因而累积到 82–131。这是 `Scheduler` 的固定步长语义，不是新增模拟错误，但也意味着 FPS 不能线性外推 CPU 成本。
+
+### Spot、telemetry 对照与测量开销
+
+- standard 1440×900 spot：FPS mean 34.2、P50 30.2 ms、P95 42.6 ms、GPU 8.29 ms、sim 9.41 ms、render 7.37 ms、0 dropped、61 draws。宽屏剔除少了 1 个 draw，绝对 FPS 不与 1280×720 直接比较。
+- standard telemetry-off 对照（1280×720）：FPS mean 45.2、P50 18.4 ms、P95 36.3 ms、GPU N/A（timer 随遥测关闭）、sim 7.47 ms、render 7.12 ms、0 dropped。
+- 与同场景 telemetry-on 的 standard 行相比，污染会话中的 off/on 对照为 sim 7.47 vs 9.45 ms、render 7.12 vs 7.84 ms（约 +2.0/+0.7 ms），但两者不是严格同会话 A/B；干净会话的同场对照见下节，测量开销更大。该对照是测量开销参考，不是产品路径性能结论。
+
+### 环境、会话漂移与刷新量化（必须与矩阵一起读）
+
+同一标准场景（500/100/1、1280×720、相同 counts/candidates/draws/triangles）在同一晚测到两个不同状态：
+
+| 会话 | FPS mean（3 repeats） | P50 ms | Sim EMA ms | Render EMA ms | GPU EMA ms |
+| --- | --- | --- | --- | --- | --- |
+| `stability-standard`（20:00 本地） | 91.6 / 89.1 / 67.7 | 12.1 / 12.1 / 12.2 | 5.90 / 7.69 / 5.68 | 4.33 / 4.68 / 3.62 | 5.26 / 5.25 / 5.25 |
+| `rows` standard（20:43–20:53） | 38.8 / 35.9 / 39.0 | 24.3 / 24.6 / 24.2 | 9.40 / 9.45 / 9.69 | 7.02 / 7.94 / 7.84 | 6.71 / 5.22 / 5.33 |
+
+同一场景的 CPU 分项在约 40 分钟内慢了 1.5–2×，FPS 因此整档下降；这不是场景内容差异。采样期间 Wallpaper Engine（`wallpaper64`）占用 33.6–42.3% 的 iGPU 3D engine，用户自己的 Chrome 窗口也在活动；电源为 AC、Balanced scheme、无 overlay，`Win32_Processor.CurrentClockSpeed` 报 1520 MHz（Max 2400，WMI 对 boost 不可靠）。系统空闲超时为 180 s，早期交错 run 期间 Windows 记录过 Modern Standby 进入/退出；从 21:08 起用 `SetThreadExecutionState(ES_CONTINUOUS|ES_SYSTEM_REQUIRED|ES_DISPLAY_REQUIRED)` 保持显示与系统唤醒。extreme/spot/control 的页面可见性与焦点均已 instrument，采样前后为 `visible/focused`；base/standard/pressure 的样本早于该字段，显示 N/A，但 base/standard 的内部重复性正常。
+
+P50 落在 12.2 / 18.2 / 24.3 / 30.2 ms 等 6.06 ms 的整数倍上（165 Hz 面板的 82.5/55/41.25/33 fps 档），因此 P50 与 FPS 是离散档位，小量 CPU 变化可能整档跳变；P95 与 dropped steps 才描述尾部。综合以上，`rows/` 矩阵只作为共享桌面负载下的晚间实测基线保留；干净复测已于 2026-11-14 在暂停动态壁纸、关闭并发负载、记录电源/热状态的条件下完成，见下节。
+
+### Phase F 验收目标（D028）与干净复测
+
+标准档（500/100/1、1280×720、Iris Xe D3D11、telemetry-off 对照）的验收目标为 P50 ≤ 16.7 ms、P95 ≤ 33 ms、0 dropped steps，并在 3 repeats 中稳定复现；pressure/extreme 只作扩展性诊断，不要求实时。
+
+干净复测证据：`test-artifacts/phase-f/2026-11-14T13-38-06Z-clean/acceptance.md`、`standard-off/results.json`。条件：Wallpaper Engine（`wallpaper64`，pid 6412）进程暂停（CPU 时间冻结、GPU engine <1%），用户 Chrome 关闭，AC/Balanced，无 power overlay，显示/系统保持唤醒，页面每次采样前后均为 `visible/focused`。同一 harness 跑 standard telemetry-off 3 repeats：
+
+| Repeat | Frames | FPS mean | P50 ms | P95 ms | Sim EMA ms | Render EMA ms | Dropped |
+| ---: | ---: | ---: | ---: | ---: | ---: | ---: | ---: |
+| 1 | 899 | 89.8 | 12.1 | 18.1 | 4.42 | 3.30 | 0 |
+| 2 | 933 | 93.3 | 12.1 | 12.3 | 4.44 | 3.43 | 0 |
+| 3 | 629 | 62.9 | 12.4 | 24.4 | 7.47 | 7.52 | 0 |
+
+中位：P50 12.1 ms、P95 18.1 ms、0 dropped；3/3 达到 P50 ≤ 16.7、P95 ≤ 33、0 dropped，D028 标准档目标在本机干净会话通过。更早 `rows/` 的 telemetry-off 对照（45.2 FPS / P50 18.4 / P95 36.3）是在动态壁纸与并发负载下采集，只作污染基线，不用于目标判定。
+
+同会话 telemetry-on 诊断（非验收路径）：
+
+| Repeat | Frames | FPS mean | P50 ms | P95 ms | GPU EMA ms | Sim EMA ms | Render EMA ms | Dropped |
+| ---: | ---: | ---: | ---: | ---: | ---: | ---: | ---: | ---: |
+| 1 | 379 | 37.8 | 24.3 | 36.5 | 10.58 | 9.13 | 8.31 | 0 |
+| 2 | 325 | 32.5 | 30.3 | 48.5 | 13.18 | 10.03 | 7.92 | 0 |
+| 3 | 387 | 38.6 | 24.3 | 36.4 | 10.64 | 10.28 | 8.61 | 0 |
+
+中位：P50 24.3 ms、P95 36.5 ms、GPU 10.64 ms、sim 10.03 ms、render 8.31 ms、0 dropped。逐鱼障碍计时与 GPU timer query polling 使 sim 比同场 telemetry-off 高约 5.6 ms、render 高约 4.9 ms，P50 从 12.1 抬到 24.3 ms；因此验收使用 telemetry-off，telemetry-on 只用于分项诊断，其 GPU 时间不能与产品路径帧时间直接相加。
+
+### 干净四档矩阵（补充，2026-11-14）
+
+在 D028 干净复测的同一条件下继续补测 base/pressure/extreme（Wallpaper Engine 暂停、用户 Chrome 关闭、AC/Balanced、显示保持唤醒、页面每次采样前后 `visible/focused`）。DeepSeek Harness 与 Claude 应用的 GPU 进程仍分别占用约 19–20% 与 4–9% iGPU，且整机状态在 repeats 间波动，因此这组数据只作诊断，不足以签核 pressure/extreme。
+
+telemetry-off 中位：
+
+| Row | n | FPS mean | FPS median | P50 ms | P95 ms | Sim EMA ms | Render EMA ms | Dropped | FPS spread | P50 spread |
+| --- | ---: | ---: | ---: | ---: | ---: | ---: | ---: | ---: | ---: | ---: |
+| base | 3 | 69.3 | 82.0 | 12.2 | 18.5 | 2.45 | 6.80 | 0 | 1.436 | 1.025 |
+| standard | 3 | 89.8 | 82.6 | 12.1 | 18.1 | 4.44 | 3.43 | 0 | 1.483 | 1.025 |
+| pressure | 3 | 5.3 | 5.2 | 193.9 | 230.3 | 22.17 | 10.27 | 158 | 5.171 | 6.403 |
+| extreme | 3 | 3.1 | 3.1 | 321.2 | 436.3 | 29.78 | 8.59 | 115 | 1.237 | 1.341 |
+
+telemetry-on 中位（GPU timer 可用）：
+
+| Row | n | FPS mean | P50 ms | P95 ms | GPU EMA ms | Sim EMA ms | Render EMA ms | Dropped | FPS spread | P50 spread |
+| --- | ---: | ---: | ---: | ---: | ---: | ---: | ---: | ---: | ---: | ---: |
+| base | 3 | 104.4 | 12.0 | 18.1 | 4.31 | 2.19 | 2.88 | 0 | 1.092 | 1.935 |
+| standard | 3 | 37.8 | 24.3 | 36.5 | 10.64 | 10.03 | 8.31 | 0 | 1.188 | 1.247 |
+| pressure | 3 | 8.8 | 127.2 | 188.1 | 16.59 | 15.35 | 5.21 | 124 | 2.027 | 2.185 |
+| extreme | 3 | 2.9 | 345.4 | 460.6 | 22.70 | 37.84 | 9.10 | 102 | 1.442 | 1.366 |
+
+telemetry-on 分项中位（ms）：
+
+| Row | boidsMain | boidsClown | obstacleQuery | fish | environment | draw |
+| --- | ---: | ---: | ---: | ---: | ---: | ---: |
+| base | 1.78 | 0.36 | 0.36 | 0.47 | 0.90 | 1.52 |
+| standard | 8.23 | 1.54 | 1.32 | 1.86 | 2.18 | 3.95 |
+| pressure | 13.42 | 1.78 | 1.43 | 1.80 | 1.39 | 1.60 |
+| extreme | 33.62 | 3.64 | 2.99 | 4.47 | 1.72 | 2.03 |
+
+结论：base 与 standard 的 P50 与 dropped 可重复（P50 spread ≤1.03、0 dropped），但 FPS mean spread 为 1.44/1.48，受长尾尖峰影响，不满足旧矩阵的 ≤1.15 口径；standard 仍按 D028 的 P50/P95/dropped 3/3 通过。pressure 与 extreme 在本次仍不可重复；关闭剩余后台应用后的重试见下节。pressure telemetry-off 的 r1/r3 约 5 FPS、sim 22 ms，r2 约 27 FPS、sim 12.7 ms（FPS spread 5.17、P50 spread 6.40）；telemetry-on 的 pressure/extreme 也在 >2× 范围摆动。相同 counts/candidates 下出现 1.7× 的 sim 差异，说明是整机状态/后台负载而不是场景内容；telemetry-on 的 pressure 反而比 telemetry-off 快，也证明两次运行不在同一状态，不能用于 on/off 开销或扩展性签核。
+
+### pressure/extreme 重试（2026-11-15 02:25，关闭 Chrome/DeepSeek）
+
+用户关闭 Chrome 与 DeepSeek Harness 后，暂停 Wallpaper Engine 重跑 pressure/extreme；剩余后台只有 Claude 应用约 6% iGPU，CPU 起始负载约 21%，页面每次采样前后 `visible/focused`。证据：`test-artifacts/phase-f/2026-11-14T18-25-37Z-retry/matrix-retry.md`。
+
+| Mode | Row | n | FPS mean | P50 ms | P95 ms | GPU EMA ms | Sim EMA ms | Render EMA ms | Dropped | FPS spread | P50 spread |
+| --- | --- | ---: | ---: | ---: | ---: | ---: | ---: | ---: | ---: | ---: | ---: |
+| off | pressure | 3 | 21.6 | 30.4 | 133.3 | N/A | 13.56 | 4.95 | 38 | 2.571 | 2.212 |
+| off | extreme | 3 | 3.88 | 254.5 | 339.2 | N/A | 26.20 | 7.35 | 119 | 1.054 | 1.075 |
+| on | pressure | 3 | 12.7 | 66.7 | 157.5 | 9.81 | 15.13 | 5.50 | 71 | 1.125 | 1.296 |
+| on | extreme | 3 | 3.50 | 302.9 | 357.6 | 24.05 | 26.82 | 7.03 | 106 | 1.061 | 1.041 |
+
+- extreme 两种模式均可重复（spread ≤1.08），是当前最可信的扩展性数据。
+- pressure telemetry-on 可重复（spread ≤1.30）；telemetry-off r1/r2 为 P50 30.2/30.4 ms（0/16 dropped），r3 降到 66.8 ms（38 dropped），而 sim 稳定在 13.1–14.2 ms——这是帧节奏/热状态问题，不是模拟吞吐变化。
+- 与第一次干净尝试相比，pressure 从 5.2/26.9/5.3 FPS 提升到 33.2/21.6/12.9 FPS，extreme 从 3.8/3.1/3.1 到 4.0/3.8/3.9；关闭后台应用显著降低了噪声。
+- telemetry-on 分项中位（ms）：pressure boidsMain 13.23、boidsClown 1.82、obstacle 1.29、fish 1.86、env 1.53、draw 1.59；extreme boidsMain 23.86、boidsClown 2.72、obstacle 2.50、fish 3.40、env 1.34、draw 1.68。`boidsMain` 仍是主瓶颈。
+- pressure telemetry-off 的 cadence decay 仍需独立的热/节奏控制（更长 cooldown 或分段冷却）才能签核；3/5 捕食者仍缺。
+- pressure telemetry-off 再用 180 s cooldown 重跑一次：FPS 36.1/27.7/20.2、P50 24.2/30.2/36.5 ms、sim 12.4/12.6/13.7 ms、render 4.5/4.6/5.5 ms；FPS spread 1.79、P50 spread 1.51。更长冷却降低了 decay（90 s 时为 P50 30.2/30.4/66.8），但没有消除，sim 与 render 仍随 repeat 缓慢上升；尾帧也随 repeat 增大（p99 96.9→157.7→157.4 ms、max 103.2→181.8→175.9 ms），heap 51→62 MB，不是内存上限压力。下一步可用每 repeat 重启浏览器验证是否为同一浏览器会话累积；pressure telemetry-off 仍不作为签核基线。
+
+### F2 优化第一轮：位相同热路径优化（2026-11-15）
+
+本轮只做保持逐位相同的 CPU 热路径优化；不改模拟参数、邻居半径/顺序、默认鱼数/资产、渲染、相机或固定步长语义。代码变更：
+
+- `BoidSystem`：每步提升 config、bounds、habitat/home、predator pose 等常量；邻居速度只读一次；对齐权重内联；predator 关闭时不再读取未使用的 `fear[other]`；每步预计算所有鱼速度供加权对齐复用，消除逐邻居 `sqrt`。
+- `UniformGrid3D`：内联 `rebuild`/`collect` 的 cell 坐标计算，移除临时 `Int32Array` 与两个 private helper；邻居输出顺序、距离过滤和候选集不变。
+- `ObstacleSystem` / `EnvironmentForces`：把每鱼/每障碍重复读取的 margin、look-ahead、force scale、definitions、metrics、proxySet、bounds 提升到循环外，center 改用直接索引。
+
+CPU A/B（`test-artifacts/phase-f/optimization/2026-11-14T20-21-09Z-baseline-vs-opt/`）：Node 24.14.1、grid、500/1000/2000 主鱼 + 默认 100 小丑鱼、predator/detailed metrics 关闭、150 steps、30 warmup、4 repeats × 2 次交替；每个状态前先跑一次 2000 鱼 60 步丢弃预热。Wallpaper Engine 暂停、Chrome/DeepSeek 关闭；为消除本机约 2× 的频率漂移，A/B 期间临时使用 Performance 电源方案 `27fa6203-3987-4dcc-918d-748559d549ec`，结束后恢复 Balanced `381b4222-f694-41f0-9685-ff5bb260df2e`。下表的绝对值只在该电源方案内可比，不能与 Balanced 下的 Phase F 基线（8.25/19.40/48.05 ms）直接比较。
+
+| 主鱼 | Baseline wall ms | Optimized wall ms | Wall 变化 | Baseline CPU ms | Optimized CPU ms | CPU 变化 | Baseline P95 ms | Optimized P95 ms |
+| ---: | ---: | ---: | ---: | ---: | ---: | ---: | ---: | ---: |
+| 500 | 3.146 | 3.043 | −3.28% | 3.123 | 2.867 | −8.22% | 3.400 | 3.337 |
+| 1000 | 7.945 | 7.673 | −3.43% | 7.913 | 7.600 | −3.96% | 9.655 | 9.167 |
+| 2000 | 20.462 | 19.868 | −2.90% | 20.210 | 19.633 | −2.85% | 27.958 | 26.799 |
+
+两次交替的 wall mean 分别为 baseline 3.150/7.873/20.500、3.143/8.018/20.425，optimized 3.034/7.701/19.850、3.052/7.645/19.887。结论：约 3% wall / 3–8% CPU 的稳定改善，P95 改善 1.8–5.1%；幅度小是因为基准同时包含 grid rebuild、小丑鱼群和其他固定步工作，CPU profile 中 `UniformGrid3D.collect` 仍占 2000 鱼的约 49%，`BoidSystem.update` 约 40%。
+
+浏览器复核（标准档、telemetry-off、1280×720、Iris Xe D3D11、499/100/1、62 draws、1,374,095 三角形、0 errors）：优化后构建在 2026-11-15 04:26 的干净会话中 3 repeats 为 P50 12.0/12.1/12.1 ms、P95 18.2/18.2/18.3 ms、sim 4.75/4.52/5.26 ms、render 3.59/3.48/4.16 ms、0 dropped，3/3 达 D028；04:32 重新生成（修复 telemetry-off 聚合后）的 3 repeats 中 r1/r2 为 P50 12.0/12.1、P95 18.2/18.2、0 dropped，r3 热漂移到 P50 18.2、P95 30.2、sim 7.35、render 8.59、仍 0 dropped。两次都不是 baseline/optimized 同会话 A/B；相对 2026-11-14 干净基线（P50 12.1/12.1/12.4、P95 18.1/12.3/24.4、sim 4.42/4.44/7.47），优化后构建处于同一水平且第三轮 sim 尾部更低。r3 的 P50 漂移与已记录的 cadence/热状态限制一致，不是功能或 checksum 回归。证据：`test-artifacts/phase-f/optimization/2026-11-14T20-26-07Z-browser-standard/`、`2026-11-14T20-32-36Z-browser-standard/`。
+
+被否决的试验（同树，不保留）：把 `dx/dy/dz/distanceSquared/positions` 从 `collect` 缓存到 Float64 数组在 1000/2000 慢 12–15%；cell 顺序位置缓存在噪声内（±2–3%）；Float32 缓存会舍入 f64 距离并改变 encounter checksum（`52478c71` vs `535bf883`），立即否决。`scripts/benchmark.ts` 新增 `--modes=grid|brute-force` 过滤与逐 step `process.cpuUsage()` CPU 时间，便于后续同版对照。验证：50 文件/370 tests、`tsc --noEmit`、构建、`sim:regression` 全部通过，checksums 与 Phase E 基线完全相同（`8a4ebd80…`、`69d993ea…`、`251d7c0f…`、`937cdfef…`、`42e40651…`）。另修复 `phase-f-baseline.ts` 的 `aggregate()` 只统计 telemetry-on 样本的问题；该修复只影响报告聚合，不改变采样或模拟。
+
+仍缺：本轮没有 Worker/WASM 或其他会改变浮点求和顺序的大改动，约 3% 的收益不足以改变 pressure/extreme 的实时性；标准档只做了优化后复核，没有同会话 baseline/optimized 浏览器 A/B；pressure/extreme 未重测。
+
+### Phase F 仍缺
+
+- pressure/extreme 已在 2026-11-15 关闭 Chrome/DeepSeek 后重试：extreme 两种模式可重复，pressure telemetry-on 可重复，pressure telemetry-off 仍有 cadence decay（180 s cooldown 重跑改善但未消除）；pressure telemetry-off 签核基线与 3/5 捕食者仍缺。
+- pressure/extreme 的 3/5 捕食者完整矩阵未测，只有 1 捕食者代理（D027）。
+- GPU 内存只有 `renderer.info.memory` 的资源计数，没有字节级 GPU memory counter；`performance.memory` 是 JS heap，不能当 GPU 内存。
+- F1 测量轮没有优化代码；F2 第一轮已于 2026-11-15 完成位相同热路径优化与 CPU A/B（约 −3% wall / −3–8% CPU），标准档 telemetry-off 复核仍达 D028，但只有优化后复核、没有同会话 baseline/optimized 浏览器 A/B；Worker/WASM 等会改变求和顺序或架构的改动未做。
+- SwiftShader 未参与本矩阵；所有四档与 spot/control 均为 Iris Xe D3D11 硬件路径。
+
+
 ## 当前可用 CPU 实验数据
 
 B1 `test-artifacts/reef-collision/experiment-b.json` 在 t63 记录 Sphere/ReefProxy 障碍查询平均 0.539/0.954 ms per step，约 +77%。它只覆盖障碍查询，不是整帧或 GPU 成本。Experiment C 文档记录 School 0.040 ms/帧、Predator 0.007 ms/帧，属于纯 JS 相机数学基准。
@@ -56,7 +228,7 @@ B1 `test-artifacts/reef-collision/experiment-b.json` 在 t63 记录 Sphere/ReefP
 
 ## 当前 N/A 项
 
-GPU timestamp、可测 CPU/GPU Memory、1000/2000 鱼硬件矩阵和完整压力测试仍为 N/A。180 s 与 30 分钟观察已记录，但它们是单机长跑，不是满帧/无卡顿证明，也不是压力矩阵。帧率优化与压力矩阵已于 2026-11-12 决定留到 Phase F（`../DECISIONS.md` D014）；Integration 只记录实测与限制，不把 60 FPS 作为门槛。1000/2000 是否需要 Worker/WASM、邻居上限或降频，必须先由当前分项测量和用户验收目标决定；不得通过降低默认质量绕过。
+Phase F F1 已把 GPU timestamp 从 N/A 变为实测（4.33–13.47 ms EMA，0 disjoint），并完成 1000/2000 鱼的 1 捕食者代理矩阵；standard 档已在干净复测中验证（3/3 达 D028），pressure/extreme 已在干净会话中补测但未达重复性，仍为 N/A 的是 3/5 捕食者完整矩阵、字节级 GPU memory、pressure/extreme 的签核基线。帧率优化与压力矩阵已于 2026-11-12 决定留到 Phase F（`../DECISIONS.md` D014）；F1 只测量与审计（D027），F2 第一轮只做位相同 CPU 热路径优化并已记录约 3% 的 CPU 模拟收益（D029），没有决定 1000/2000 是否需要 Worker/WASM、邻居上限或降频；不得通过降低默认质量绕过。验收目标已由 D028 签核为标准档 60 FPS（P50 ≤ 16.7 ms、P95 ≤ 33 ms、0 dropped），并在 2026-11-14 干净复测与 2026-11-15 优化后复核中验证。
 
 ## 当前硬件复测命令
 

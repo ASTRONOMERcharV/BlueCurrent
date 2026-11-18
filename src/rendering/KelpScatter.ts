@@ -13,6 +13,10 @@ import {
 import { KELP_SPECS, type KelpAsset, type KelpName } from './KelpAsset';
 import type { KelpPlacement } from './kelpPlacement';
 import { OceanCurrentField } from '../environment/OceanCurrentField';
+import { applyCurrentSway, updateCurrentSway } from './currentSway';
+import { UNDERWATER_LIGHTING_CONFIG } from './lighting/UnderwaterLightingConfig';
+
+export { localSwayDirection } from './currentSway';
 
 /**
  * Instanced kelp renderer with GPU sway.
@@ -35,30 +39,8 @@ const KELP_HEIGHT: Record<KelpName, number> = { kelp_a: 3.55, kelp_b: 2.8 };
 
 interface SwayLayer {
   readonly entries: readonly KelpPlacement[];
-  readonly directionX: InstancedBufferAttribute;
-  readonly directionZ: InstancedBufferAttribute;
+  readonly sway: InstancedBufferAttribute;
   readonly sampleY: Float32Array;
-}
-
-/** Rotate a world-space current direction into an instance's local XZ axes. */
-export function localSwayDirection(
-  currentX: number,
-  currentZ: number,
-  yaw: number,
-  out: Float32Array,
-): void {
-  const length = Math.hypot(currentX, currentZ);
-  if (length < 1e-8) {
-    out[0] = 1;
-    out[1] = 0;
-    return;
-  }
-  const worldX = currentX / length;
-  const worldZ = currentZ / length;
-  const cosine = Math.cos(yaw);
-  const sine = Math.sin(yaw);
-  out[0] = cosine * worldX - sine * worldZ;
-  out[1] = sine * worldX + cosine * worldZ;
 }
 
 export class KelpScatter {
@@ -70,8 +52,6 @@ export class KelpScatter {
   private readonly materials: MeshStandardMaterial[] = [];
   private readonly swayLayers: SwayLayer[] = [];
   private readonly currentField: OceanCurrentField;
-  private readonly currentSample = new Float32Array(3);
-  private readonly localDirection = new Float32Array(2);
   private readonly timeUniform = { value: 0 };
 
   constructor(
@@ -117,53 +97,28 @@ export class KelpScatter {
       geometry.setAttribute('instancePhase', new InstancedBufferAttribute(phases, 1));
       geometry.setAttribute('instanceFrequency', new InstancedBufferAttribute(frequencies, 1));
       geometry.setAttribute('instanceAmplitude', new InstancedBufferAttribute(amplitudes, 1));
-      const directionX = new InstancedBufferAttribute(new Float32Array(entries.length), 1);
-      const directionZ = new InstancedBufferAttribute(new Float32Array(entries.length), 1);
-      directionX.setUsage(DynamicDrawUsage);
-      directionZ.setUsage(DynamicDrawUsage);
-      geometry.setAttribute('instanceSwayX', directionX);
-      geometry.setAttribute('instanceSwayZ', directionZ);
+      const sway = new InstancedBufferAttribute(new Float32Array(entries.length * 3), 3);
+      sway.setUsage(DynamicDrawUsage);
+      geometry.setAttribute('instanceSway', sway);
       const sampleY = new Float32Array(entries.length);
       entries.forEach((placement, index) => {
         sampleY[index] = placement.y + KELP_HEIGHT[asset.name] * placement.scale * 0.55;
       });
-      this.swayLayers.push({ entries, directionX, directionZ, sampleY });
+      this.swayLayers.push({ entries, sway, sampleY });
 
       const material = asset.material.clone();
       material.name = `kelp_sway_${asset.name}`;
-      const timeUniform = this.timeUniform;
-      material.onBeforeCompile = (shader) => {
-        shader.uniforms.uKelpTime = timeUniform;
-        shader.uniforms.uKelpAmplitude = { value: spec.amplitude };
-        shader.uniforms.uKelpFrequency = { value: spec.frequency };
-        shader.uniforms.uKelpPhaseGradient = { value: PHASE_GRADIENT };
-        shader.vertexShader = shader.vertexShader
-          .replace('#include <common>', `#include <common>
-            uniform float uKelpTime;
-            uniform float uKelpAmplitude;
-            uniform float uKelpFrequency;
-            uniform float uKelpPhaseGradient;
-            attribute float aSwayWeight;
-            attribute float aBladePhase;
-            attribute float instancePhase;
-            attribute float instanceFrequency;
-            attribute float instanceAmplitude;
-            attribute float instanceSwayX;
-            attribute float instanceSwayZ;
-          `)
-          .replace('#include <begin_vertex>', `#include <begin_vertex>
-            float swayWeight = pow(clamp(aSwayWeight, 0.0, 1.0), 1.35);
-            float swayPhase = uKelpTime * uKelpFrequency * instanceFrequency
-              + uKelpPhaseGradient * position.y
-              + instancePhase + aBladePhase;
-            float sway = sin(swayPhase) * uKelpAmplitude * instanceAmplitude * swayWeight;
-            float secondary = cos(swayPhase * 0.81 + 1.7) * uKelpAmplitude * 0.38 * instanceAmplitude * swayWeight;
-            transformed.x += sway * instanceSwayX - secondary * instanceSwayZ;
-            transformed.z += sway * instanceSwayZ + secondary * instanceSwayX;
-          `);
-      };
-      material.customProgramCacheKey = () => `blue-current-kelp-${asset.name}-v1`;
-      material.needsUpdate = true;
+      const currentSway = UNDERWATER_LIGHTING_CONFIG.water.currentSway;
+      applyCurrentSway(material, {
+        amplitude: spec.amplitude,
+        frequency: spec.frequency,
+        phaseGradient: PHASE_GRADIENT,
+        swayExponent: 1.35,
+        secondaryWeight: 0.38,
+        speedAmplitude: currentSway.kelpSpeedAmplitude,
+        speedFrequency: currentSway.kelpSpeedFrequency,
+        referenceSpeed: currentSway.referenceSpeed,
+      }, this.timeUniform);
 
       const mesh = new InstancedMesh(geometry, material, entries.length);
       mesh.name = `glb_${asset.name}`;
@@ -202,25 +157,7 @@ export class KelpScatter {
   update(time: number): void {
     this.timeUniform.value = time;
     for (const layer of this.swayLayers) {
-      layer.entries.forEach((placement, index) => {
-        this.currentField.sample(
-          placement.x,
-          layer.sampleY[index],
-          placement.z,
-          time,
-          this.currentSample,
-        );
-        localSwayDirection(
-          this.currentSample[0],
-          this.currentSample[2],
-          placement.yaw,
-          this.localDirection,
-        );
-        layer.directionX.setX(index, this.localDirection[0]);
-        layer.directionZ.setX(index, this.localDirection[1]);
-      });
-      layer.directionX.needsUpdate = true;
-      layer.directionZ.needsUpdate = true;
+      updateCurrentSway(layer, this.currentField, time);
     }
   }
 

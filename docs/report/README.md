@@ -3,7 +3,7 @@
 本目录保存实验报告的 Markdown 源、排版模板与本机导出脚本。正文变更只需修改
 `FINAL_REPORT.md`，然后运行 `build.sh` 重新生成 PDF。
 
-- 产物：`BlueCurrent-实验报告.pdf`（A4，14 页：封面 1 页 + 目录 1 页 + 正文 12 页）
+- 产物：`BlueCurrent-实验报告.pdf`（A4，24 页：封面 1 页 + 目录 1 页 + 正文 22 页）
 - 源文档：`FINAL_REPORT.md`
 - 版式：Eisvogel 3.5.1 模板 + 本目录的定制封面（白底、纯黑文字、居中排版）
 
@@ -124,13 +124,13 @@ pdftotext -enc UTF-8 docs/report/BlueCurrent-实验报告.pdf - | head -20
 
 预期结果：
 
-- 页数 14，A4 595×842 pt；
+- 页数 24，A4 595×842 pt；
 - 封面为纯黑文字、白底，含课程/作者/学号/日期；
-- 第 2 页（页脚第 1 页）为目录，条目页码为各节起始页（2–12）；正文末页页脚为第 13 页
-  （附录表格续页）；
+- 第 2 页（页脚第 1 页）为目录，条目页码为各节起始页码；正文末页页脚为第 23 页，
+  第 8 章参考资料在该页结束，不应出现只剩两行的孤立尾页；
 - 正文从“摘要”开始，开头不再有项目/版本/完成日期等元信息块；
-- 三张图按页脚页码位于第 9–11 页（PDF 文件第 10–12 页）：实验一性能图、Boids 消融图、
-  捕食者响应图。
+- 图 1 为四联运行画面（页脚第 16 页），图 2–4 为实验一至三的图表（页脚第 19–21 页）；
+  题注按 caption 计数为“图 1”至“图 4”、“表 1”至“表 5”。
 
 ## 已知问题
 
@@ -142,5 +142,12 @@ pdftotext -enc UTF-8 docs/report/BlueCurrent-实验报告.pdf - | head -20
 3. **不要加 `--highlight-style`**：Eisvogel 用 `listings` 对代码块着色；md2pdf 的
    `ea.theme` 是给 pandoc 2.10+ 的 JSON 主题，沙箱 pandoc 2.9 传 `idiomatic` 等名称会报
    `Unknown highlight-style`，本流水线不需要该参数。
-4. **图片更新**：三张图由 `scripts/generate-figures.ts` 生成到 `screenshots/`；
-   `build.sh` 只读取，不会重新生成图表。
+4. **图片更新**：报告用四张图。三张实验图（fig-performance / fig-ablation / fig-predator）由
+   `scripts/generate-figures.ts` 生成；图 1 的四联运行画面由 `scripts/compose-report-figure.py`
+   从 `test-artifacts/phase-e/` 证据截图合成到 `screenshots/fig-final-visual.png`。
+   `build.sh` 只读取这些 PNG，不会重新生成图表。
+5. **构建目录变量不能叫 TMP**：若把构建目录赋给 TMP，会覆盖环境里已导出的 TMP（MSYS 路径），
+   xelatex 在第 1–2 页报 `fwrite: Broken pipe` 并失败；脚本中已改名为 BUILD，不要改回。
+6. **图表题注的中文名称要在 \AtBeginDocument 里设置**：caption 包在 \begin{document} 时
+   才解析 \figurename，导言区提前 \renewcommand 会被覆盖而显示英文 “Figure”；
+   `template/header.tex` 已用 \AtBeginDocument{\captionsetup[figure]{name=图}…}。

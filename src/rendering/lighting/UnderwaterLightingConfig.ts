@@ -121,11 +121,11 @@ const SHAFTS_CONFIG = {
 export const UNDERWATER_LIGHTING_CONFIG = {
   renderer: {
     exposure: 1.05,
-    environmentIntensity: 0.55,
+    environmentIntensity: 0.75,
   },
   sun: {
     color: 0xb8e5e7,
-    intensity: 2.05,
+    intensity: 2.1,
     position: [-18, 30, 12],
     target: [0, 3, 0],
     shadow: {
@@ -140,8 +140,8 @@ export const UNDERWATER_LIGHTING_CONFIG = {
   },
   hemisphere: {
     skyColor: 0x86c6d2,
-    groundColor: 0x15414c,
-    intensity: 0.8,
+    groundColor: 0x2a6570,
+    intensity: 0.82,
   },
   rim: {
     color: 0x9feaff,
@@ -178,17 +178,27 @@ export const UNDERWATER_LIGHTING_CONFIG = {
     // column receives a modest lit tint, and the sun lobe is deliberately weak.
     scatterNearColor: 0x1a6878,
     scatterFarColor: 0x0a3a66,
-    scatterColorDistance: 28,
+    scatterColorDistance: 34,
     surfaceScatterColor: 0x2f7f8c,
-    surfaceScatterStrength: 0.32,
+    surfaceScatterStrength: 0.24,
     surfaceHeight: 18,
     deepHeight: 1,
     sunScatterColor: 0xaee6ec,
     sunScatterStrength: 0.2,
     fogDensity: 0.0055,
-    attenuationRgb: [1.38, 1.06, 0.78],
-    scatteringStrength: 0.9,
+    attenuationRgb: [1.24, 0.99, 0.74],
+    scatteringStrength: 0.8,
     scatteringAnisotropy: 0.35,
+    // Phase D3: shared current response for kelp and detail seaweed. Speed is
+    // normalised against a reference flow; gains of 0 restore the pre-D3
+    // direction-only sway for A/B captures.
+    currentSway: {
+      referenceSpeed: 0.35,
+      kelpSpeedAmplitude: 0.3,
+      kelpSpeedFrequency: 0.15,
+      seaweedSpeedAmplitude: 0.55,
+      seaweedSpeedFrequency: 0.25,
+    },
     domeDeepColor: 0x071e2a,
     domeMidColor: 0x0a3546,
     domeUpperColor: 0x146078,
@@ -218,7 +228,38 @@ export const UNDERWATER_LIGHTING_CONFIG = {
     shafts: SHAFTS_CONFIG,
   },
   materials: {
-    floorColor: 0x3b626b,
+    // Phase D2: procedural seabed detail. Vertex values shape 8-20 m sand and
+    // organic patches; fragment values add sub-metre grain close to the camera.
+    // Every colour is a linear working-space value; no textures or UVs exist.
+    seabed: {
+      vertex: {
+        patchFrequency: 0.42,
+        octaveScale: 2.17,
+        octaveWeight: 0.45,
+        sandColor: 0x5c7d76,
+        organicColor: 0x3a5f62,
+        patchContrast: 0.55,
+        slopeColor: 0x31565c,
+        slopeStart: 0.02,
+        slopeEnd: 0.22,
+        slopeStrength: 0.35,
+        heightTint: 0.1,
+        heightRange: 0.56,
+      },
+      fragment: {
+        midFrequency: 2.2,
+        fineFrequency: 7.5,
+        fineWeight: 0.35,
+        contrast: 0.16,
+        tint: 0x93b3a6,
+        tintStrength: 0.1,
+        roughnessAmount: 0.06,
+        roughnessMin: 0.84,
+        fadeStart: 18,
+        fadeEnd: 55,
+      },
+    },
+    floorColor: 0x456c74,
     rockAtlasTint: 0xffffff,
     duneAtlasTint: 0xe5eef1,
   },

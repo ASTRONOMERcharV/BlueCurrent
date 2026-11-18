@@ -110,19 +110,27 @@ export class ObstacleSystem {
       return;
     }
 
-    const futureX = x + vx * config.obstacleLookAhead;
-    const futureY = y + vy * config.obstacleLookAhead;
-    const futureZ = z + vz * config.obstacleLookAhead;
+    const lookAhead = config.obstacleLookAhead;
+    const futureX = x + vx * lookAhead;
+    const futureY = y + vy * lookAhead;
+    const futureZ = z + vz * lookAhead;
     const speed = Math.sqrt(vx * vx + vy * vy + vz * vz);
-    const maximumTravel = speed * config.obstacleLookAhead;
+    const maximumTravel = speed * lookAhead;
+    const margin = config.obstacleMargin;
+    const definitions = this.definitions;
+    const forceScale = config.maxAcceleration * config.obstacleWeight;
+    const metrics = recordMetrics ? this.metrics : undefined;
+    const proxySet = this.proxySet;
 
-    for (let obstacleIndex = 0; obstacleIndex < this.definitions.length; obstacleIndex += 1) {
-      const obstacle = this.definitions[obstacleIndex];
-      const [cx, cy, cz] = obstacle.center;
+    for (let obstacleIndex = 0; obstacleIndex < definitions.length; obstacleIndex += 1) {
+      const obstacle = definitions[obstacleIndex];
+      const cx = obstacle.center[0];
+      const cy = obstacle.center[1];
+      const cz = obstacle.center[2];
       const currentX = x - cx;
       const currentY = y - cy;
       const currentZ = z - cz;
-      const clearance = obstacle.radius + config.obstacleMargin;
+      const clearance = obstacle.radius + margin;
       const currentDistanceSquared = currentX * currentX + currentY * currentY + currentZ * currentZ;
       const broadReach = clearance + maximumTravel;
       if (currentDistanceSquared >= broadReach * broadReach) continue;
@@ -141,8 +149,8 @@ export class ObstacleSystem {
       const strength = Math.min(
         1,
         Math.max(
-          (clearance - currentDistance) / config.obstacleMargin,
-          (clearance - predictedDistance) / config.obstacleMargin,
+          (clearance - currentDistance) / margin,
+          (clearance - predictedDistance) / margin,
           0,
         ),
       );
@@ -161,19 +169,18 @@ export class ObstacleSystem {
       ny /= distance;
       nz /= distance;
 
-      const force = config.maxAcceleration * config.obstacleWeight * strength * strength;
+      const force = forceScale * strength * strength;
       output[0] += nx * force;
       output[1] += ny * force;
       output[2] += nz * force;
 
-      const metrics = recordMetrics ? this.metrics : undefined;
       if (force > 0 && metrics !== undefined) {
         metrics.recordForce(obstacleIndex, force);
         // Sphere contact is based on the centre distance; compare it with the
         // true proxy surface only for the experiment telemetry.
-        if (metrics.enabled && this.proxySet) {
-          const proxy = this.proxySet.proxies[obstacleIndex];
-          if (proxy && proxy.query(x, y, z, this.proxyNormal) > config.obstacleMargin) {
+        if (metrics.enabled && proxySet) {
+          const proxy = proxySet.proxies[obstacleIndex];
+          if (proxy && proxy.query(x, y, z, this.proxyNormal) > margin) {
             metrics.recordFalseAvoidance(obstacleIndex);
           }
         }
@@ -273,10 +280,13 @@ export class ObstacleSystem {
     const inverseMargin = margin > 1e-6 ? 1 / margin : 0;
     const currentNormal = this.proxyNormal;
     const predictedNormal = this.proxyPredictedNormal;
+    const forceScale = config.maxAcceleration * config.obstacleWeight;
 
     for (let index = 0; index < set.proxies.length; index += 1) {
       const proxy = set.get(index);
-      const [cx, cy, cz] = proxy.boundCenter;
+      const cx = proxy.boundCenter[0];
+      const cy = proxy.boundCenter[1];
+      const cz = proxy.boundCenter[2];
       const currentX = x - cx;
       const currentY = y - cy;
       const currentZ = z - cz;
@@ -312,7 +322,7 @@ export class ObstacleSystem {
         nz /= normalLength;
       }
 
-      const force = config.maxAcceleration * config.obstacleWeight * strength * strength;
+      const force = forceScale * strength * strength;
       output[0] += nx * force;
       output[1] += ny * force;
       output[2] += nz * force;

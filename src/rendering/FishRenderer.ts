@@ -15,6 +15,13 @@ import { createFishGeometry } from './Environment';
 import type { FishAsset } from './FishAsset';
 import { applyFresnelRim } from './UnderwaterLighting';
 import { UNDERWATER_LIGHTING_CONFIG } from './lighting/UnderwaterLightingConfig';
+import {
+  clampPitch,
+  stepPitch,
+  targetPitchFromDirection,
+  turnFromBank,
+  type FishMotionDiagnostics,
+} from './fishMotion';
 
 const FORWARD = new Vector3(0, 0, 1);
 const TAIL_START = -0.95;
@@ -36,6 +43,21 @@ export interface FishRendererOptions {
   readonly swimRateFear?: number;
   readonly swimPhasePerZ?: number;
   readonly swimAmplitude?: number;
+  /** Absolute renderer pitch limit (rad). */
+  readonly pitchLimit?: number;
+  /** Maximum pitch change per second (rad/s). */
+  readonly pitchRateLimit?: number;
+  /** Exponential pitch response rate (1/s). */
+  readonly pitchResponse?: number;
+  /** Lateral tail bend per unit of normalised bank. */
+  readonly turnCurvature?: number;
+  /** Bank magnitude treated as a full turn. */
+  readonly turnBankReference?: number;
+  /**
+   * `legacy` reproduces the pre-E1 presentation (instant, unclamped pitch and
+   * no turn bend) for same-version before/after captures. Presentation only.
+   */
+  readonly motionMode?: 'smooth' | 'legacy';
 }
 
 const DEFAULT_RENDER_OPTIONS: Required<FishRendererOptions> = {
@@ -50,6 +72,12 @@ const DEFAULT_RENDER_OPTIONS: Required<FishRendererOptions> = {
   swimRateFear: 2.4,
   swimPhasePerZ: 2.35,
   swimAmplitude: TAIL_AMPLITUDE,
+  pitchLimit: 0.9,
+  pitchRateLimit: 2.4,
+  pitchResponse: 9,
+  turnCurvature: 0.2,
+  turnBankReference: 0.65,
+  motionMode: 'smooth',
 };
 
 /** Small reef school: 0.50-0.60 m long, rapid pectoral-style wiggle. */
@@ -80,6 +108,11 @@ export class FishRenderer {
   private readonly alertColor = new Color(0xffa27c);
   private readonly motion: InstancedBufferAttribute;
   private readonly fearAttribute: InstancedBufferAttribute;
+  private readonly turnAttribute: InstancedBufferAttribute;
+  private readonly pitchState: Float32Array;
+  private readonly headingState: Float32Array;
+  private readonly motionInitialized: Uint8Array;
+  private lastMotionTime = Number.NEGATIVE_INFINITY;
   private readonly timeUniform = { value: 0 };
   private readonly tailStartUniform = { value: TAIL_START };
   private readonly tailEndUniform = { value: TAIL_END };
@@ -112,6 +145,12 @@ export class FishRenderer {
     this.fearAttribute = new InstancedBufferAttribute(new Float32Array(flock.capacity), 1);
     this.fearAttribute.setUsage(DynamicDrawUsage);
     geometry.setAttribute('instanceFear', this.fearAttribute);
+    this.turnAttribute = new InstancedBufferAttribute(new Float32Array(flock.capacity), 1);
+    this.turnAttribute.setUsage(DynamicDrawUsage);
+    geometry.setAttribute('instanceTurn', this.turnAttribute);
+    this.pitchState = new Float32Array(flock.capacity);
+    this.headingState = new Float32Array(flock.capacity);
+    this.motionInitialized = new Uint8Array(flock.capacity);
 
     const bodyMaterial = materials[0];
     bodyMaterial.onBeforeCompile = (shader) => {
@@ -126,6 +165,7 @@ export class FishRenderer {
           attribute float instancePhase;
           attribute float instanceSpeed;
           attribute float instanceFear;
+          attribute float instanceTurn;
           ${hasTailWeights ? 'attribute float aTailWeight;' : ''}
         `)
         .replace('#include <begin_vertex>', `#include <begin_vertex>
@@ -142,9 +182,11 @@ export class FishRenderer {
           float swimAmplitude = 0.66 + instanceSpeed * 0.42 + instanceFear * 0.30;
           transformed.x += (tailWave * tailWeight + bodyWave * tailWeight * 0.35)
             * ${this.options.swimAmplitude.toFixed(3)} * swimAmplitude;
+          transformed.x += instanceTurn * ${this.options.turnCurvature.toFixed(3)}
+            * pow(tailWeight, 1.35);
         `);
     };
-    bodyMaterial.customProgramCacheKey = () => `blue-current-fish-${this.modelKind}-v4-${this.options.swimRateBase}-${this.options.swimRateSpeed}-${this.options.swimRateFear}-${this.options.swimPhasePerZ}-${this.options.swimAmplitude}`;
+    bodyMaterial.customProgramCacheKey = () => `blue-current-fish-${this.modelKind}-v6-${this.options.swimRateBase}-${this.options.swimRateSpeed}-${this.options.swimRateFear}-${this.options.swimPhasePerZ}-${this.options.swimAmplitude}-${this.options.turnCurvature}-${this.options.turnBankReference}-${this.options.motionMode}`;
     // The school keeps only a thin shared Fresnel edge; the shark carries the
     // obvious rim. Individual fish are therefore grouped by the water light,
     // not turned into 500 evenly spotlit objects.
@@ -182,6 +224,15 @@ export class FishRenderer {
     this.mesh.count = count;
     this.timeUniform.value = time;
 
+    // Render-only pitch state. First frame, a time jump or a large step snaps
+    // to the simulated heading so paused/scrubbed captures stay reproducible;
+    // a non-positive step keeps the pose instead of jumping.
+    const dt = time - this.lastMotionTime;
+    const snap = !Number.isFinite(this.lastMotionTime) || time < this.lastMotionTime || dt > 0.25;
+    const smooth = dt > 0 && !snap;
+    this.lastMotionTime = time;
+    const { pitchLimit, pitchRateLimit, pitchResponse, turnBankReference } = this.options;
+
     for (let i = 0; i < count; i += 1) {
       const offset = i * 3;
       this.dummy.position.set(
@@ -189,11 +240,39 @@ export class FishRenderer {
         MathUtils.lerp(previousPositions[offset + 1], positions[offset + 1], alpha),
         MathUtils.lerp(previousPositions[offset + 2], positions[offset + 2], alpha),
       );
-      this.direction.set(velocities[offset], velocities[offset + 1], velocities[offset + 2]);
-      const speed = Math.max(0.0001, this.direction.length());
-      this.direction.multiplyScalar(1 / speed);
+      const velocityX = velocities[offset];
+      const velocityY = velocities[offset + 1];
+      const velocityZ = velocities[offset + 2];
+      const speed = Math.max(0.0001, Math.hypot(velocityX, velocityY, velocityZ));
+      const horizontalSpeed = Math.hypot(velocityX, velocityZ);
+      let heading = this.headingState[i];
+      if (horizontalSpeed > 1e-4) heading = Math.atan2(velocityX, velocityZ);
+      const targetPitch = targetPitchFromDirection(velocityY / speed);
+      let pitch = this.pitchState[i];
+      if (this.options.motionMode === 'legacy') {
+        // Pre-E1 presentation kept for same-version comparison captures: the
+        // body follows the instantaneous velocity with no smoothing, rate
+        // limit or limit.
+        pitch = targetPitch;
+        this.motionInitialized[i] = 1;
+      } else if (snap || this.motionInitialized[i] === 0) {
+        pitch = clampPitch(targetPitch, pitchLimit);
+        this.motionInitialized[i] = 1;
+      } else if (smooth) {
+        pitch = stepPitch(pitch, targetPitch, dt, pitchResponse, pitchRateLimit, pitchLimit);
+      }
+      this.pitchState[i] = pitch;
+      this.headingState[i] = heading;
+      const cosPitch = Math.cos(pitch);
+      this.direction.set(
+        Math.sin(heading) * cosPitch,
+        Math.sin(pitch),
+        Math.cos(heading) * cosPitch,
+      );
+      this.direction.normalize();
       this.dummy.quaternion.setFromUnitVectors(FORWARD, this.direction);
-      this.bankRotation.setFromAxisAngle(FORWARD, MathUtils.lerp(previousBanks[i], banks[i], alpha));
+      const bank = MathUtils.lerp(previousBanks[i], banks[i], alpha);
+      this.bankRotation.setFromAxisAngle(FORWARD, bank);
       this.dummy.quaternion.multiply(this.bankRotation);
 
       const scale = alive[i] === 0
@@ -228,10 +307,85 @@ export class FishRenderer {
       this.mesh.setColorAt(i, this.color);
       this.motion.setX(i, Math.min(1.5, speed / maximumSpeed));
       this.fearAttribute.setX(i, fear[i]);
+      this.turnAttribute.setX(
+        i,
+        this.options.motionMode === 'legacy' ? 0 : turnFromBank(bank, turnBankReference),
+      );
     }
     this.mesh.instanceMatrix.needsUpdate = true;
     if (this.mesh.instanceColor) this.mesh.instanceColor.needsUpdate = true;
     this.motion.needsUpdate = true;
     this.fearAttribute.needsUpdate = true;
+    this.turnAttribute.needsUpdate = true;
+  }
+
+  /** Read-only motion summary for capture evidence and debug telemetry. */
+  motionDiagnostics(): FishMotionDiagnostics {
+    const { velocities, alive, count, fear, banks, positions } = this.flock;
+    let pitchSum = 0;
+    let pitchMax = 0;
+    let bankSum = 0;
+    let bankMax = 0;
+    let turnSum = 0;
+    let turnMax = 0;
+    let speedSum = 0;
+    let fearSum = 0;
+    let targetPitchMax = -1;
+    let targetPitchIndex = -1;
+    let live = 0;
+    for (let i = 0; i < count; i += 1) {
+      if (alive[i] === 0) continue;
+      live += 1;
+      const pitch = Math.abs(this.pitchState[i]);
+      pitchSum += pitch;
+      pitchMax = Math.max(pitchMax, pitch);
+      const bank = Math.abs(banks[i]);
+      bankSum += bank;
+      bankMax = Math.max(bankMax, bank);
+      const turn = Math.abs(this.turnAttribute.getX(i));
+      turnSum += turn;
+      turnMax = Math.max(turnMax, turn);
+      const offset = i * 3;
+      const speed = Math.hypot(velocities[offset], velocities[offset + 1], velocities[offset + 2]);
+      speedSum += speed;
+      fearSum += fear[i];
+      const targetPitch = Math.abs(targetPitchFromDirection(velocities[offset + 1] / Math.max(0.0001, speed)));
+      if (targetPitch > targetPitchMax) {
+        targetPitchMax = targetPitch;
+        targetPitchIndex = i;
+      }
+    }
+    if (live === 0) {
+      return {
+        meanAbsPitch: 0,
+        maxAbsPitch: 0,
+        meanAbsBank: 0,
+        maxAbsBank: 0,
+        meanAbsTurn: 0,
+        maxAbsTurn: 0,
+        meanSpeed: 0,
+        meanFear: 0,
+        maxTargetPitchIndex: -1,
+        maxTargetPitchPosition: null,
+      };
+    }
+    return {
+      meanAbsPitch: pitchSum / live,
+      maxAbsPitch: pitchMax,
+      meanAbsBank: bankSum / live,
+      maxAbsBank: bankMax,
+      meanAbsTurn: turnSum / live,
+      maxAbsTurn: turnMax,
+      meanSpeed: speedSum / live,
+      meanFear: fearSum / live,
+      maxTargetPitchIndex: targetPitchIndex,
+      maxTargetPitchPosition: targetPitchIndex >= 0
+        ? [
+          positions[targetPitchIndex * 3],
+          positions[targetPitchIndex * 3 + 1],
+          positions[targetPitchIndex * 3 + 2],
+        ]
+        : null,
+    };
   }
 }

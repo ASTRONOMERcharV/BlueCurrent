@@ -31,6 +31,10 @@ scripts/setup/merge-claude-desktop-config.mjs
 assets_src/
 docs/asset-previews/
 
+# Local submission binaries (large ZIP/MP4/PDF artifacts stay out of Git)
+submission/*
+!submission/Submission-Instructions.md
+
 # Local editor/OS files
 .DS_Store
 Thumbs.db

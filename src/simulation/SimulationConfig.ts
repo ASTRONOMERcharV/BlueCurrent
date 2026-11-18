@@ -81,6 +81,22 @@ export interface SimulationConfig {
   /** Tangential share that turns the school along a boundary instead of stacking it there. */
   boundaryTangentialWeight: number;
 
+  /**
+   * Phase E2 school-structure terms. `false` skips every new arithmetic branch,
+   * reproducing the pre-E2 behaviour bit-for-bit for same-version A/B evidence.
+   */
+  schoolDynamicsEnabled: boolean;
+  /** Blend between plain and heading-agreement-weighted alignment; 0 = legacy. */
+  alignmentAgreementBlend: number;
+  /** Extra separation in crowded alignment neighborhoods, capped at 1.75x. */
+  separationDensityBoost: number;
+  /** Share of the neighbor-flow velocity fed into obstacle look-ahead. */
+  obstacleAnticipationBlend: number;
+  /** Neighbor fear below this does not propagate; filters numerical noise. */
+  startlePropagationThreshold: number;
+  /** Extra tangential boundary steering at full fear; 0 = legacy. */
+  edgeEscapeBoost: number;
+
   connectionRadius: number;
 
   /** Optional soft habitat anchor used by the reef-dwelling second school. */
@@ -89,6 +105,17 @@ export interface SimulationConfig {
   homeRadius?: number;
   /** 0 disables the habitat force; 1 is a full-strength max-acceleration pull. */
   homeWeight?: number;
+
+  /**
+   * Phase E4 anemone habitat. When present it replaces the plain home anchor
+   * with a soft annular profile: attract outside `habitatAttractRadius`, gently
+   * repel inside `habitatCoreRadius`, dead band between. Never a hard constraint.
+   */
+  habitatCenter?: Vec3Tuple;
+  habitatAttractRadius?: number;
+  habitatCoreRadius?: number;
+  habitatAttractWeight?: number;
+  habitatRepelWeight?: number;
 }
 
 export const DEFAULT_CONFIG: SimulationConfig = {
@@ -146,6 +173,13 @@ export const DEFAULT_CONFIG: SimulationConfig = {
   boundaryMargin: 5,
   boundaryTangentialWeight: 1,
 
+  schoolDynamicsEnabled: true,
+  alignmentAgreementBlend: 0.35,
+  separationDensityBoost: 0.4,
+  obstacleAnticipationBlend: 0.35,
+  startlePropagationThreshold: 0.02,
+  edgeEscapeBoost: 0.6,
+
   connectionRadius: 3.2,
 };
 
@@ -198,6 +232,10 @@ export function createClownfishConfig(): SimulationConfig {
     homeCenter: [...CLOWNFISH_SPAWN.center] as Vec3Tuple,
     homeRadius: 4.2,
     homeWeight: 0.55,
+    habitatAttractRadius: 3.4,
+    habitatCoreRadius: 1.1,
+    habitatAttractWeight: 0.55,
+    habitatRepelWeight: 0.7,
   };
 }
 

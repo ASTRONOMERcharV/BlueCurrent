@@ -9,6 +9,7 @@ import {
   Vector3,
 } from 'three';
 import type { ObstacleDefinition } from '../simulation/ObstacleSystem';
+import { anemoneAnchorForReef } from '../environment/AnemoneHabitat';
 import type { CoralAsset, CoralName } from './CoralAsset';
 import { createRandom, floorHeightAt } from './rockPlacement';
 
@@ -158,8 +159,13 @@ export class CoralScatter {
         activeAssets.forEach((asset, speciesIndex) => {
           const angle = reefIndex * 1.71 + speciesIndex * 2.39996;
           const radial = obstacle.radius * (1.02 + (speciesIndex % 2) * 0.15);
-          const x = cx + Math.cos(angle) * radial;
-          const z = cz + Math.sin(angle) * radial;
+          // The anemone anchor owns this placement so E4's clownfish habitat
+          // points at the rendered instance. Other species keep the same formula.
+          const anchor = asset.name === 'anemone'
+            ? anemoneAnchorForReef(obstacle, reefIndex)
+            : null;
+          const x = anchor ? anchor.x : cx + Math.cos(angle) * radial;
+          const z = anchor ? anchor.z : cz + Math.sin(angle) * radial;
           placements.get(asset.name)!.push({
             x,
             y: floorHeightAt(x, z) - 0.025,

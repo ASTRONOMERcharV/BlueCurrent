@@ -18,7 +18,7 @@ interface MainApi {
 }
 
 const EXPECTED_TRIS = 13_792;
-const MAIN_INSTANCES = 6;
+const MAIN_INSTANCES = 14;
 
 function assert(condition: unknown, message: string): asserts condition {
   if (!condition) throw new Error(message);
@@ -30,7 +30,7 @@ mkdirSync(artifacts, { recursive: true });
 
 const server = await createServer({
   root: projectRoot,
-  cacheDir: '/tmp/blue-current-vite-seaweed-main',
+  cacheDir: `${projectRoot}.tmp/blue-current-vite-seaweed-main`,
   server: { host: '127.0.0.1', port: 5181, strictPort: true },
 });
 await server.listen();

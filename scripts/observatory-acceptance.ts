@@ -121,8 +121,8 @@ try {
     await page.waitForTimeout(400);
     await page.screenshot({ path: `${artifacts}/observation.png`, fullPage: true, timeout: 120000 });
     const observation = await evaluate(page, (api) => api.getDiagnostics());
-    assert(observation.coralModel === 'temperate', 'The default coral tier is not temperate.');
-    assert(observation.coralInstances === 12, 'The restrained temperate coral layer did not load.');
+    assert(observation.coralModel === 'full', 'The default coral tier is not full.');
+    assert(observation.coralInstances === 48, 'The full coral layer did not load.');
     assert(observation.shelteredCount >= 0, 'Sheltered count is not a real measurement.');
     assert(observation.kelpTriangles > 0, 'The kelp layer did not load.');
 
@@ -220,11 +220,14 @@ try {
       },
     });
 
+    // Two concurrent pages under SwiftShader cannot both finish loading the rich scene in a
+    // reasonable budget, so the main page releases its GL context before the opt-in coral page.
+    await page.goto('about:blank');
     const fullCoralPage = await browser.newPage({
       viewport: { width: 1440, height: 900 },
       deviceScaleFactor: 1,
     });
-    fullCoralPage.setDefaultTimeout(120000);
+    fullCoralPage.setDefaultTimeout(300000);
     try {
       await fullCoralPage.goto(`${baseUrl}/?scenario=calm&coral=full`, { waitUntil: 'networkidle' });
       await fullCoralPage.waitForFunction(

@@ -1,9 +1,11 @@
 % XeTeX 原生中文断行（沙箱 TeX 无 xeCJK/ctexhook）
 \XeTeXlinebreaklocale "zh"
 \XeTeXlinebreakskip = 0pt plus 1pt minus 0.1pt
-% 中文图表标题与编号
-\renewcommand{\figurename}{图}
-\renewcommand{\tablename}{表}
+% 中文图表标题与编号（caption 包在 \begin{document} 时才解析名称，故用 AtBeginDocument）
+\AtBeginDocument{%
+  \captionsetup[figure]{name=图}%
+  \captionsetup[table]{name=表}%
+}
 % 图片按版心 95% 宽、等比缩放
 \setkeys{Gin}{width=0.95\linewidth,keepaspectratio}
 % caption 标签与文字之间留一个 quad

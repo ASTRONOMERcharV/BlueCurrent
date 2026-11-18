@@ -1,7 +1,7 @@
 import './style.css';
 import { PerspectiveCamera, Vector3 } from 'three';
 import { SceneManager } from './rendering/SceneManager';
-import type { RockMaskCapture } from './rendering/SceneManager';
+import type { RendererPerformanceStats, RockMaskCapture } from './rendering/SceneManager';
 import type { CameraMode } from './rendering/CameraController';
 import type { PredatorForwardSource, SchoolHeadingSource } from './rendering/cameraStability';
 import { terrainHeightAt } from './rendering/terrain';
@@ -25,14 +25,27 @@ import type { RockDiagnosticsReport } from './rendering/lighting/RockDiagnostics
 import type { UnderwaterLightingMode } from './rendering/lighting/UnderwaterLightingConfig';
 import type { WaterDebugLayer, WaterDebugState, WaterOpticsModel } from './rendering/UnderwaterMedium';
 import { applyScenario, getScenario } from './simulation/Scenarios';
+import {
+  PredationEventTracker,
+  type PredationEvent,
+  type PredationObservation,
+} from './ui/PredationEventTracker';
+import {
+  SchoolStructureTracker,
+  type SchoolStructureState,
+} from './ui/SchoolStructureTracker';
+import type { FishMotionDiagnostics } from './rendering/fishMotion';
 import type { ScenarioId } from './simulation/Scenarios';
 import { buildReefProxySet, createReefProxyQueryResult } from './simulation/ReefCollisionProxy';
 import type { ObstacleShapeMode } from './simulation/SimulationConfig';
 import type { ReefObstacleMetricsSnapshot } from './simulation/ReefObstacleMetrics';
+import type { PhaseEmaSnapshot } from './simulation/PerformanceTelemetry';
 import { ControlPanel } from './ui/ControlPanel';
 import type { ViewMode } from './ui/ControlPanel';
 import { StatisticsPanel } from './ui/StatisticsPanel';
 import { renderLayout } from './ui/layout';
+import { DemoDirector } from './demo/DemoDirector';
+import type { DemoPresentation, DemoState } from './demo/DemoDirector';
 
 interface ReefSampleDiagnostics {
   id: string;
@@ -163,6 +176,7 @@ interface Diagnostics {
   predatorPitch: number;
   drawCalls: number;
   renderTriangles: number;
+  demo: DemoState | null;
 }
 
 interface FlockSnapshot {
@@ -189,6 +203,21 @@ interface SimulationSnapshot {
   checksum: string;
 }
 
+interface PerformanceDiagnostics {
+  simulation: PhaseEmaSnapshot;
+  render: PhaseEmaSnapshot;
+  renderer: RendererPerformanceStats;
+  memory: {
+    usedJSHeapSize: number;
+    totalJSHeapSize: number;
+    jsHeapSizeLimit: number;
+  } | null;
+  droppedSteps: number;
+  frameSampleCount: number;
+  simulationMs: number;
+  renderMs: number;
+}
+
 interface BlueCurrentDebug {
   readonly ready: boolean;
   getDiagnostics(): Diagnostics;
@@ -197,8 +226,19 @@ interface BlueCurrentDebug {
   captureRockMask(): RockMaskCapture;
   setRockDebugMode(mode: RockDebugMode): void;
   getSimulationSnapshot(): SimulationSnapshot;
+  getPredationEvents(limit?: number): PredationEvent[];
+  getSchoolStructure(limit?: number): SchoolStructureState;
+  getFishMotionDiagnostics(): {
+    school: FishMotionDiagnostics;
+    clownfish: FishMotionDiagnostics | null;
+  };
   getObstacleDiagnostics(): ReefObstacleMetricsSnapshot;
   setObstacleMetricsEnabled(enabled: boolean): void;
+  getPerformanceDiagnostics(): PerformanceDiagnostics;
+  setPerformanceTelemetryEnabled(enabled: boolean): void;
+  getClownfishHabitatDiagnostics(): ReturnType<SimulationWorld['getClownfishHabitatDiagnostics']>;
+  getSedimentDiagnostics(): ReturnType<SceneManager['getSedimentDiagnostics']>;
+  advanceSediment(seconds: number): ReturnType<SceneManager['getSedimentDiagnostics']>;
   settleCamera(seconds?: number, frames?: number): Diagnostics;
   settleVisual(seconds?: number, frames?: number): Diagnostics;
   captureCameraSheet(
@@ -221,6 +261,11 @@ interface BlueCurrentDebug {
   setViewMode(mode: ViewMode): void;
   setCameraMode(mode: CameraMode): void;
   setCameraPose(position: readonly [number, number, number], target: readonly [number, number, number]): void;
+  getDemoState(): DemoState | null;
+  startDemo(): DemoState | null;
+  restartDemo(): DemoState | null;
+  stopDemo(): DemoState | null;
+  seekDemo(seconds: number): DemoState | null;
   advanceVisualTime(seconds: number): Diagnostics;
   setVisualTime(seconds: number): Diagnostics;
   setGridVisible(visible: boolean): void;
@@ -270,12 +315,14 @@ let gridVisible = false;
 let waterEffects = true;
 let lightingMode: UnderwaterLightingMode = 'full';
 let terrainMode: 'continuous' | 'legacy' = 'continuous';
+let fishMotionMode: 'smooth' | 'legacy' = 'smooth';
 let waterOpticsModel: WaterOpticsModel = 'clear';
 let viewMode: ViewMode = 'observation';
 let activeScenario: ScenarioId = 'encounter';
 let obstacleMetricsRequested = false;
 let scene: SceneManager;
 let controls: ControlPanel;
+let demoDirector: DemoDirector | null = null;
 
 let lastFrame = performance.now();
 let lastAlpha = 1;
@@ -300,6 +347,22 @@ function setPaused(next: boolean): void {
   controls.setRunning(!paused);
 }
 
+function predationObservation(): PredationObservation {
+  const metrics = world.metrics;
+  return {
+    simulationTime: metrics.simulationTime,
+    totalSteps: metrics.totalSteps,
+    predatorState: world.predator.state,
+    targetIndex: world.predator.targetIndex,
+    captures: world.predator.captures,
+    captureSerial: world.predator.captureSerial,
+    aliveCount: world.flock.aliveCount,
+    schoolCount: metrics.schoolCount,
+    radiusOfGyration: metrics.radiusOfGyration,
+    threatenedCount: metrics.threatenedCount,
+  };
+}
+
 function resetVisualState(): void {
   lastAlpha = 1;
   visualTime = 0;
@@ -310,6 +373,9 @@ function resetVisualState(): void {
 function reset(): void {
   world.reset();
   world.scheduler.reset();
+  predationTracker.reset();
+  schoolStructureTracker.reset();
+  scene?.resetSediment();
   resetVisualState();
   controls.syncConfig(world.config, world.clownfishCount);
 }
@@ -331,6 +397,19 @@ function setViewMode(mode: ViewMode): void {
 function setCameraMode(mode: CameraMode): void {
   scene.setCameraMode(mode);
   controls.syncCameraMode(mode);
+}
+
+function setDemoPresentation(mode: DemoPresentation | null): void {
+  const root = document.querySelector<HTMLElement>('.observatory');
+  if (!root) return;
+  root.classList.toggle('demo-cinematic', mode === 'cinematic');
+  root.classList.toggle('demo-technical', mode === 'technical');
+  if (mode) {
+    root.dataset.demoMode = mode;
+    controls?.setPanelOpen(false);
+  } else {
+    delete root.dataset.demoMode;
+  }
 }
 
 function setObstacleShapeMode(mode: ObstacleShapeMode): void {
@@ -384,9 +463,39 @@ function resetPerformanceSamples(): void {
   fpsFrames = 0;
   fpsElapsed = 0;
   renderMs = 0;
+  droppedSteps = 0;
   statisticsElapsed = 1;
   collisionReadoutElapsed = 0;
   lastFrame = performance.now();
+  world.resetPerformanceCounters();
+  scene.resetRenderPerformanceCounters();
+}
+
+function setPerformanceTelemetryEnabled(enabled: boolean): void {
+  world.setPerformanceTelemetryEnabled(enabled);
+  scene.setPerformanceTelemetryEnabled(enabled);
+}
+
+function getPerformanceDiagnostics(): PerformanceDiagnostics {
+  const heap = (performance as Performance & {
+    memory?: { usedJSHeapSize: number; totalJSHeapSize: number; jsHeapSizeLimit: number };
+  }).memory;
+  return {
+    simulation: world.getPerformanceSnapshot(),
+    render: scene.getRenderPerformanceSnapshot(),
+    renderer: scene.getRendererStats(),
+    memory: heap
+      ? {
+        usedJSHeapSize: heap.usedJSHeapSize,
+        totalJSHeapSize: heap.totalJSHeapSize,
+        jsHeapSizeLimit: heap.jsHeapSizeLimit,
+      }
+      : null,
+    droppedSteps,
+    frameSampleCount: frameTimes.length,
+    simulationMs: world.metrics.averageStepMs,
+    renderMs,
+  };
 }
 
 function updateCollisionReadout(): void {
@@ -421,6 +530,9 @@ function setScenario(id: ScenarioId): void {
   timeScale = 1;
   gridVisible = false;
   world.scheduler.reset();
+  predationTracker.reset();
+  schoolStructureTracker.reset();
+  scene?.resetSediment();
   resetVisualState();
   setSearchMode('grid');
   setCameraMode('overview');
@@ -446,6 +558,8 @@ function byId<T extends HTMLElement>(id: string): T {
 }
 
 const statistics = new StatisticsPanel();
+const predationTracker = new PredationEventTracker();
+const schoolStructureTracker = new SchoolStructureTracker();
 const fishProxyQuery = createReefProxyQueryResult();
 
 function getFishProxyInfo(index: number): {
@@ -471,6 +585,10 @@ function getFishProxyInfo(index: number): {
 
 async function boot(): Promise<void> {
   const params = new URLSearchParams(window.location.search);
+  const requestedDemo = params.get('demo');
+  if (requestedDemo && requestedDemo !== '0' && requestedDemo !== 'off') {
+    setDemoPresentation(requestedDemo === 'technical' ? 'technical' : 'cinematic');
+  }
   lightingMode = params.get('lighting') === 'base' ? 'base' : 'full';
   obstacleMetricsRequested = params.get('obstacleMetrics') === '1'
     || params.get('obstacleMetrics') === 'true';
@@ -479,6 +597,9 @@ async function boot(): Promise<void> {
   const requestedRockDebug: RockDebugMode =
     rockDebugParam === 'normal' || rockDebugParam === 'normals' ? 'normal' : 'off';
   terrainMode = params.get('terrain') === 'legacy' ? 'legacy' : 'continuous';
+  fishMotionMode = params.get('fishMotion') === 'legacy' ? 'legacy' : 'smooth';
+  world.setSchoolDynamicsEnabled(params.get('schoolDynamics') !== 'legacy');
+  world.setClownfishHabitatMode(params.get('habitat') === 'legacy' ? 'legacy' : 'anemone');
   waterEffects = lightingMode === 'full';
   waterOpticsModel = params.get('water') === 'legacy' ? 'legacy-display' : 'clear';
   const requestedScenario = params.get('scenario') as ScenarioId | null;
@@ -565,8 +686,13 @@ async function boot(): Promise<void> {
       world,
       fishAsset,
       predatorAsset,
-      { lightingMode, waterOpticsModel, clownfishAsset, terrainMode },
+      { lightingMode, waterOpticsModel, clownfishAsset, terrainMode, fishMotionMode },
     );
+    if (params.get('sediment') === '0') scene.setWaterDebugLayer('sediment', false);
+    const perfTelemetryParam = params.get('perfTelemetry');
+    if (perfTelemetryParam === '1' || perfTelemetryParam === 'true') {
+      setPerformanceTelemetryEnabled(true);
+    }
     controls = new ControlPanel({
       setPaused,
       reset,
@@ -619,6 +745,39 @@ async function boot(): Promise<void> {
       scene.setCollisionDebugLayers(true);
     }
     controls.syncCollisionDebug(scene.getCollisionDebugVisibility());
+
+    demoDirector = new DemoDirector({
+      setScenario,
+      setCameraMode,
+      setViewMode: (mode) => {
+        setViewMode(mode);
+        controls.syncViewMode(mode);
+      },
+      setSearchMode: (mode) => {
+        setSearchMode(mode);
+        controls.syncSearchMode(mode);
+      },
+      setGridVisible: (visible) => {
+        gridVisible = visible;
+        scene.grid.setVisible(
+          viewMode === 'laboratory' && visible && world.boids.searchMode === 'grid',
+        );
+        byId<HTMLInputElement>('grid-visible').checked = visible;
+      },
+      setCollisionDebugLayers: (enabled) => {
+        scene.setCollisionDebugLayers(enabled);
+        controls.syncCollisionDebug(scene.getCollisionDebugVisibility());
+      },
+      setPresentation: setDemoPresentation,
+      setPaused,
+      setTimeScale: (scale) => {
+        timeScale = scale;
+        controls.syncTimeScale(scale);
+      },
+    });
+    if (requestedDemo && requestedDemo !== '0' && requestedDemo !== 'off') {
+      demoDirector.start();
+    }
 
     const fullEnvironment = params.get('environment') !== 'bare';
     const loads: Promise<boolean>[] = [];
@@ -1004,6 +1163,7 @@ function getDiagnostics(): Diagnostics {
     predatorPitch: scene.predator.pitchAngle,
     drawCalls: scene.renderer.info.render.calls,
     renderTriangles: scene.renderer.info.render.triangles,
+    demo: demoDirector?.getState() ?? null,
   };
 }
 
@@ -1015,7 +1175,34 @@ window.__blueCurrent = {
   captureRockMask: () => scene.captureRockMask(),
   setRockDebugMode: (mode) => scene.setRockDebugMode(mode),
   getSimulationSnapshot,
+  getPredationEvents: (limit = 20) => {
+    predationTracker.observe(predationObservation());
+    schoolStructureTracker.observe(world.getSchoolStructureSnapshot());
+    const events = predationTracker.all;
+    const count = Math.max(0, Math.min(Math.floor(limit), events.length));
+    return events.slice(events.length - count).map((event) => ({ ...event }));
+  },
+  getSchoolStructure: (limit = 20) => {
+    const state = schoolStructureTracker.observe(world.getSchoolStructureSnapshot());
+    const count = Math.max(0, Math.min(Math.floor(limit), state.events.length));
+    return {
+      ...state,
+      events: state.events.slice(state.events.length - count).map((event) => ({ ...event })),
+    };
+  },
+  getFishMotionDiagnostics: () => ({
+    school: scene.fish.motionDiagnostics(),
+    clownfish: scene.clownfish ? scene.clownfish.motionDiagnostics() : null,
+  }),
   getObstacleDiagnostics: () => world.getObstacleDiagnostics(),
+  getPerformanceDiagnostics,
+  setPerformanceTelemetryEnabled,
+  getClownfishHabitatDiagnostics: () => world.getClownfishHabitatDiagnostics(),
+  getSedimentDiagnostics: () => scene.getSedimentDiagnostics(),
+  advanceSediment: (seconds) => {
+    scene.advanceSediment(world, Math.max(0, seconds), visualTime);
+    return scene.getSedimentDiagnostics();
+  },
   setObstacleMetricsEnabled: (enabled) => world.setObstacleMetricsEnabled(enabled),
   settleCamera: (seconds = 2.4, frames = 16) => {
     const count = Math.max(1, Math.min(120, Math.floor(frames)));
@@ -1069,6 +1256,11 @@ window.__blueCurrent = {
     scene.setCameraPose(position, target);
     controls.syncCameraMode('free');
   },
+  getDemoState: () => demoDirector?.getState() ?? null,
+  startDemo: () => demoDirector?.start() ?? null,
+  restartDemo: () => demoDirector?.restart() ?? null,
+  stopDemo: () => demoDirector?.stop() ?? null,
+  seekDemo: (seconds) => demoDirector?.seek(seconds) ?? null,
   advanceVisualTime: (seconds) => {
     // Render-only clock hook for deterministic temporal captures: advances the
     // visual clock (shafts, kelp, snow) without stepping the paused simulation.
@@ -1134,6 +1326,8 @@ function frame(now: number): void {
   frameTimes.push(rawDelta * 1000);
   if (frameTimes.length > 240) frameTimes.shift();
 
+  demoDirector?.update(rawDelta);
+
   let simulatedDelta = 0;
   if (!paused) {
     const result = world.scheduler.advance(frameDelta * timeScale, (delta) => world.step(delta));
@@ -1145,6 +1339,9 @@ function frame(now: number): void {
     // with the trajectory at low or irregular frame rates.
     simulatedDelta = result.steps * world.config.fixedDelta;
   }
+
+  predationTracker.observe(predationObservation());
+  schoolStructureTracker.observe(world.getSchoolStructureSnapshot());
 
   const renderStarted = performance.now();
   scene.update(
@@ -1172,7 +1369,7 @@ function frame(now: number): void {
       p95FrameMs: percentile95(),
       droppedSteps,
       drawCalls: scene.renderer.info.render.calls,
-    });
+    }, predationTracker.latest, schoolStructureTracker.latest);
     statisticsElapsed = 0;
   }
   collisionReadoutElapsed += rawDelta;

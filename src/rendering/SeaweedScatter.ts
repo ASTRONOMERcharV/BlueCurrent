@@ -1,5 +1,6 @@
 import {
   Color,
+  DynamicDrawUsage,
   Euler,
   Group,
   InstancedBufferAttribute,
@@ -11,6 +12,9 @@ import {
 } from 'three';
 import { SEAWEED_SPEC, type SeaweedAsset } from './SeaweedAsset';
 import type { SeaweedPlacement } from './seaweedPlacement';
+import { OceanCurrentField } from '../environment/OceanCurrentField';
+import { applyCurrentSway, updateCurrentSway } from './currentSway';
+import { UNDERWATER_LIGHTING_CONFIG } from './lighting/UnderwaterLightingConfig';
 
 /**
  * Instanced detail-seaweed renderer with GPU sway.
@@ -25,6 +29,12 @@ import type { SeaweedPlacement } from './seaweedPlacement';
 const TINTS = [0xe8f0df, 0xdfe9d4, 0xf0f5e7] as const;
 const PHASE_GRADIENT = 1.7;
 
+interface SwayLayer {
+  readonly entries: readonly SeaweedPlacement[];
+  readonly sway: InstancedBufferAttribute;
+  readonly sampleY: Float32Array;
+}
+
 export class SeaweedScatter {
   readonly group = new Group();
   readonly instanceCount: number;
@@ -33,9 +43,16 @@ export class SeaweedScatter {
   private readonly mesh: InstancedMesh;
   private readonly material: MeshStandardMaterial;
   private readonly timeUniform = { value: 0 };
+  private readonly currentField: OceanCurrentField;
+  private readonly swayLayer: SwayLayer;
 
-  constructor(asset: SeaweedAsset, placements: readonly SeaweedPlacement[]) {
+  constructor(
+    asset: SeaweedAsset,
+    placements: readonly SeaweedPlacement[],
+    currentField = new OceanCurrentField(),
+  ) {
     this.group.name = 'glbDetailSeaweed';
+    this.currentField = currentField;
 
     const geometry = asset.geometry;
     const phases = new Float32Array(placements.length);
@@ -49,39 +66,28 @@ export class SeaweedScatter {
     geometry.setAttribute('instancePhase', new InstancedBufferAttribute(phases, 1));
     geometry.setAttribute('instanceFrequency', new InstancedBufferAttribute(frequencies, 1));
     geometry.setAttribute('instanceAmplitude', new InstancedBufferAttribute(amplitudes, 1));
+    const sway = new InstancedBufferAttribute(new Float32Array(placements.length * 3), 3);
+    sway.setUsage(DynamicDrawUsage);
+    geometry.setAttribute('instanceSway', sway);
+    const sampleY = new Float32Array(placements.length);
+    placements.forEach((placement, index) => {
+      sampleY[index] = placement.y + asset.stats.height * placement.scale * 0.5;
+    });
+    this.swayLayer = { entries: placements, sway, sampleY };
 
     const material = asset.material.clone();
     material.name = 'seaweed_detail_sway';
-    const timeUniform = this.timeUniform;
-    material.onBeforeCompile = (shader) => {
-      shader.uniforms.uSeaweedTime = timeUniform;
-      shader.uniforms.uSeaweedAmplitude = { value: SEAWEED_SPEC.amplitude };
-      shader.uniforms.uSeaweedFrequency = { value: SEAWEED_SPEC.frequency };
-      shader.uniforms.uSeaweedPhaseGradient = { value: PHASE_GRADIENT };
-      shader.vertexShader = shader.vertexShader
-        .replace('#include <common>', `#include <common>
-          uniform float uSeaweedTime;
-          uniform float uSeaweedAmplitude;
-          uniform float uSeaweedFrequency;
-          uniform float uSeaweedPhaseGradient;
-          attribute float aSwayWeight;
-          attribute float aBladePhase;
-          attribute float instancePhase;
-          attribute float instanceFrequency;
-          attribute float instanceAmplitude;
-        `)
-        .replace('#include <begin_vertex>', `#include <begin_vertex>
-          float swayWeight = pow(clamp(aSwayWeight, 0.0, 1.0), 1.1);
-          float swayPhase = uSeaweedTime * uSeaweedFrequency * instanceFrequency
-            + uSeaweedPhaseGradient * position.y
-            + instancePhase + aBladePhase;
-          float sway = sin(swayPhase) * uSeaweedAmplitude * instanceAmplitude * swayWeight;
-          transformed.x += sway;
-          transformed.z += cos(swayPhase * 0.83 + 1.2) * uSeaweedAmplitude * 0.35 * instanceAmplitude * swayWeight;
-        `);
-    };
-    material.customProgramCacheKey = () => 'blue-current-seaweed-detail-v1';
-    material.needsUpdate = true;
+    const currentSway = UNDERWATER_LIGHTING_CONFIG.water.currentSway;
+    applyCurrentSway(material, {
+      amplitude: SEAWEED_SPEC.amplitude,
+      frequency: SEAWEED_SPEC.frequency,
+      phaseGradient: PHASE_GRADIENT,
+      swayExponent: 1.1,
+      secondaryWeight: 0.35,
+      speedAmplitude: currentSway.seaweedSpeedAmplitude,
+      speedFrequency: currentSway.seaweedSpeedFrequency,
+      referenceSpeed: currentSway.referenceSpeed,
+    }, this.timeUniform);
     this.material = material;
 
     const mesh = new InstancedMesh(geometry, material, placements.length);
@@ -112,10 +118,12 @@ export class SeaweedScatter {
     this.group.add(mesh);
     this.instanceCount = placements.length;
     this.triangleCount = asset.stats.triangles * placements.length;
+    this.update(0);
   }
 
   update(time: number): void {
     this.timeUniform.value = time;
+    updateCurrentSway(this.swayLayer, this.currentField, time);
   }
 
   get swayTime(): number {

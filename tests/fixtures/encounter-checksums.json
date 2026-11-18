@@ -1,0 +1,196 @@
+{
+  "schemaVersion": 1,
+  "scenario": "encounter",
+  "times": [
+    17,
+    43,
+    52,
+    60,
+    63
+  ],
+  "convention": {
+    "seed": "0x9e71c0de",
+    "warmupSteps": 150,
+    "fixedDelta": "1/60",
+    "initialFishCount": 500,
+    "initialClownfishCount": 100,
+    "predator": "disabled during warmup, released once",
+    "obstaclesEnabled": true,
+    "searchMode": "grid",
+    "stepRule": "step until totalSteps >= round(seconds * 60)",
+    "legacyPreE2": "schoolDynamics=false + habitat=legacy, 1020 steps"
+  },
+  "environment": {
+    "node": "v24.14.1",
+    "platform": "win32",
+    "arch": "x64",
+    "v8": "13.6.233.17-node.44",
+    "packageVersion": "0.1.0"
+  },
+  "dynamic": {
+    "states": {
+      "17.00": {
+        "simulationTime": 17.000000000000316,
+        "totalSteps": 1020,
+        "seed": 2658255070,
+        "fishChecksum": "8a4ebd80",
+        "clownfishChecksum": "73cc884f",
+        "aliveCount": 499,
+        "clownfishAliveCount": 100,
+        "captures": 1,
+        "predatorState": "pursuit",
+        "predatorPosition": [
+          -12.092934608459473,
+          5.65048885345459,
+          -9.666309356689453
+        ],
+        "predatorVelocity": [
+          3.345446825027466,
+          -4.53807258605957,
+          -3.577223062515259
+        ],
+        "kelpRefugeEnabled": true,
+        "checksum": "8a4ebd8073cc884fa5621e60"
+      },
+      "43.00": {
+        "simulationTime": 42.99999999999884,
+        "totalSteps": 2580,
+        "seed": 2658255070,
+        "fishChecksum": "69d993ea",
+        "clownfishChecksum": "1f7a4675",
+        "aliveCount": 499,
+        "clownfishAliveCount": 100,
+        "captures": 1,
+        "predatorState": "patrol",
+        "predatorPosition": [
+          -15.646406173706055,
+          4.9665961265563965,
+          -10.72696304321289
+        ],
+        "predatorVelocity": [
+          2.8751156330108643,
+          1.3922841548919678,
+          -0.1877644807100296
+        ],
+        "kelpRefugeEnabled": true,
+        "checksum": "69d993ea1f7a467566b1e394"
+      },
+      "52.00": {
+        "simulationTime": 51.99999999999833,
+        "totalSteps": 3120,
+        "seed": 2658255070,
+        "fishChecksum": "251d7c0f",
+        "clownfishChecksum": "66ffc470",
+        "aliveCount": 499,
+        "clownfishAliveCount": 100,
+        "captures": 1,
+        "predatorState": "pursuit",
+        "predatorPosition": [
+          15.487273216247559,
+          7.943203449249268,
+          -0.22467045485973358
+        ],
+        "predatorVelocity": [
+          0.8392531871795654,
+          -0.04549989849328995,
+          7.551563739776611
+        ],
+        "kelpRefugeEnabled": true,
+        "checksum": "251d7c0f66ffc470ef667eab"
+      },
+      "60.00": {
+        "simulationTime": 59.999999999997875,
+        "totalSteps": 3600,
+        "seed": 2658255070,
+        "fishChecksum": "937cdfef",
+        "clownfishChecksum": "29cd2a9c",
+        "aliveCount": 498,
+        "clownfishAliveCount": 100,
+        "captures": 2,
+        "predatorState": "pursuit",
+        "predatorPosition": [
+          5.737884998321533,
+          11.805992126464844,
+          9.109134674072266
+        ],
+        "predatorVelocity": [
+          5.931199550628662,
+          0.5644538998603821,
+          2.8864195346832275
+        ],
+        "kelpRefugeEnabled": true,
+        "checksum": "937cdfef29cd2a9c2b21ac48"
+      },
+      "63.00": {
+        "simulationTime": 62.999999999997705,
+        "totalSteps": 3780,
+        "seed": 2658255070,
+        "fishChecksum": "42e40651",
+        "clownfishChecksum": "3e0b960c",
+        "aliveCount": 498,
+        "clownfishAliveCount": 100,
+        "captures": 2,
+        "predatorState": "pursuit",
+        "predatorPosition": [
+          13.131950378417969,
+          7.785398006439209,
+          10.258112907409668
+        ],
+        "predatorVelocity": [
+          3.7647640705108643,
+          -3.3082759380340576,
+          -3.004101037979126
+        ],
+        "kelpRefugeEnabled": true,
+        "checksum": "42e406513e0b960cd0c4c5e5"
+      }
+    }
+  },
+  "legacyPreE2": {
+    "times": [
+      17
+    ],
+    "flags": {
+      "legacySchoolDynamics": true,
+      "legacyHabitat": true
+    },
+    "states": {
+      "17.00": {
+        "simulationTime": 17.000000000000316,
+        "totalSteps": 1020,
+        "seed": 2658255070,
+        "fishChecksum": "535bf883",
+        "clownfishChecksum": "5258bcf1",
+        "aliveCount": 499,
+        "clownfishAliveCount": 100,
+        "captures": 1,
+        "predatorState": "pursuit",
+        "predatorPosition": [
+          -15.201210021972656,
+          14.216482162475586,
+          0.694212019443512
+        ],
+        "predatorVelocity": [
+          1.0860581398010254,
+          7.0600810050964355,
+          -2.2142083644866943
+        ],
+        "kelpRefugeEnabled": true,
+        "checksum": "535bf8835258bcf1b2e9e696"
+      }
+    }
+  },
+  "constants": {
+    "dynamic": {
+      "17.00": "8a4ebd8073cc884fa5621e60",
+      "43.00": "69d993ea1f7a467566b1e394",
+      "52.00": "251d7c0f66ffc470ef667eab",
+      "60.00": "937cdfef29cd2a9c2b21ac48",
+      "63.00": "42e406513e0b960cd0c4c5e5"
+    },
+    "preE2": {
+      "fishChecksum": "535bf883",
+      "checksum": "535bf8835258bcf1b2e9e696"
+    }
+  }
+}

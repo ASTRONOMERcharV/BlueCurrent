@@ -15,9 +15,9 @@ P0 的目标整合版本是富默认场景：500 条主鱼、100 条小丑鱼、
 | 阶段 | 目标 | 当前状态 | 进入条件 |
 | --- | --- | --- | --- |
 | A/B/C Integration Gate | 证明碰撞、B1 礁石、相机和 UI 组合正确 | **P0，通过（带限制，2026-11-13）；Phase D 可启动** | 已完成 |
-| D — Environment Look Development | 统一水体、材质、植被与光照，建立视觉基线 | 未启动 | Integration Gate 通过并保存基线 |
-| E — Ecosystem Behavior | 提升游动、群体动态、捕食事件和局部环境交互 | 未启动 | D 视觉基线稳定 |
-| F — Performance & Validation | 真实 GPU、CPU/GPU 分项、压力测试和优化 | 未启动 | A–E 主要功能稳定 |
+| D — Environment Look Development | 统一水体、材质、植被与光照，建立视觉基线 | 两轮完成（2026-11-13） | Integration Gate 通过并保存基线 |
+| E — Ecosystem Behavior | 提升游动、群体动态、捕食事件和局部环境交互 | 两轮完成（E1+E3 / E2+E4，2026-11-14） | D 视觉基线稳定 |
+| F — Performance & Validation | 真实 GPU、CPU/GPU 分项、压力测试和优化 | 进行中：F1 测量与 F2 第一轮优化完成（2026-11-15） | A–E 主要功能稳定 |
 | G — Release & Presentation | 完整观察流程、演示、文档和发布 | 未启动 | F 验收完成，展示内容稳定 |
 
 总原则是先把现有系统做成可验证的实时生态模拟，再扩充内容。任何阶段都不得为了画面或演示结果改写模拟事实；不可测数据保持 `N/A`，参考图片只用于美术方向，不能作为项目验收截图。
@@ -83,15 +83,15 @@ P0 的目标整合版本是富默认场景：500 条主鱼、100 条小丑鱼、
 | `camera-results.json` | 可见率、垂直追逐、目标切换、净空和轨迹诊断 |
 | `results.json` / `summary.md` | 环境、版本、参数、通过/失败项、已知限制和原始证据索引 |
 
-WP3 已输出 `overview.png` / `school.png` / `predator.png`、`camera-results.json`、`integration-contact-sheet.png`、UI 响应式截图和 `summary.md`；`collision-results.json` 由 WP1/WP2 的碰撞证据提供。WP4 已补真实硬件运行记录与 180 s/30 分钟观察，用户已签核硬件画面/交互；2026-11-12 FSM direct-retarget 后浏览器已捕获 4 次 direct index→index，但旧 WP0 锁与上述结果均基于 pre-FSM 源码，需在新 WP0 `2026-11-12T14-30-00Z` 上重跑。
+WP3 已输出 `overview.png` / `school.png` / `predator.png`、`camera-results.json`、`integration-contact-sheet.png`、UI 响应式截图和 `summary.md`；`collision-results.json` 由 WP1/WP2 的碰撞证据提供。WP4 已补真实硬件运行记录与 180 s/30 分钟观察，用户已签核硬件画面/交互；2026-11-12 FSM direct-retarget 后浏览器已捕获 4 次 direct index→index；上述 WP1–WP4 均已在 post-FSM 锁 `2026-11-12T14-30-00Z` 重跑完成。
 
 P0 已通过（带限制，2026-11-13），`reef-camera-integration-v1` annotated tag 在收尾提交上创建。证据目录 `test-artifacts/` 被 Git 忽略，tag 不包含证据本体；判定见 `../test-artifacts/integration-abc/2026-11-13T06-33-00Z/gate-verdict.md`。
 
-**Gate 规则：** 任一 P0 项失败，修复后重跑该项及受影响回归；在矩阵通过、材料归档和基线建立前，不启动 Phase D 的实现。
+**Gate 规则（历史，Gate 已于 2026-11-13 关闭）：** 任一 P0 项失败，修复后重跑该项及受影响回归；在矩阵通过、材料归档和基线建立前，不启动 Phase D 的实现。
 
 ## 3. Phase D — Environment Look Development
 
-**状态：未启动，等待 Integration Gate。** 目标是让现有场景形成可信的近、中、远水下层次，而不是把所有物体统一染成相同蓝色或依靠不断加雾制造氛围。
+**状态：两轮完成（2026-11-13）。** 第一轮 D4 全局光照与 D1 水体（D023），第二轮 D2 海床程序化材质与 D3 海草受流摆动/成簇分布（D024）；两轮均完成 10 机位 × base/fog/final 同版对照、全量回归与 Intel Iris Xe 硬件视觉签核（`test-artifacts/phase-d/2026-11-13t12-16-00z/`）。D2 剩余碎石/附着细节未做，是否补做由后续确认。目标是让现有场景形成可信的近、中、远水下层次，而不是把所有物体统一染成相同蓝色或依靠不断加雾制造氛围。
 
 | 模块 | 工作范围 | 验收重点 |
 | --- | --- | --- |
@@ -100,7 +100,7 @@ P0 已通过（带限制，2026-11-13），`reef-camera-integration-v1` annotate
 | D3 海草动画与分布 | 高度相关弯曲、株间/叶间相位差、轻微方向变化、尺寸密度变化和统一水流响应；优先顶点动画 | 运动协调但不同步，无根部滑移，不为每株引入重型独立物理 |
 | D4 光照与色彩统一 | 统一色彩管理、曝光、环境光、主光、体积光、焦散和远景衰减 | 不靠单独打亮 Hero 制造主角感；视觉层级来自局部受光、轮廓与材质 |
 
-**第一轮只做三项：** D1 水体 Shader、D2 的海床材质部分、D4 的全局光照。首轮固定视觉基线后，再处理 D3 海草和 D2 的剩余礁石接触/附着细节，避免所有视觉变量同时变化。
+**轮次划分：** 第一轮 D1 水体 + D4 全局光照；第二轮 D2 海床材质 + D3 海草动画与分布。两轮均已定稿（D023、D024）。每轮只变一组视觉变量并保留独立 before/after 目录；D2 的碎石/附着细节若继续，须作为独立轮次评审。
 
 技术上必须深化现有 `UnderwaterMedium`、`UnderwaterLightingConfig` 和既有焦散/颗粒/植被路径，不新增第二条水体或雾合成链。水体保持线性空间、tonemapping 前合成，`?lighting=base` 必须真正关闭水体介质与局部效果。D 阶段原则上只改呈现；相机与固定种子模拟 checksum 不应因视觉调整而变化。
 
@@ -108,7 +108,7 @@ P0 已通过（带限制，2026-11-13），`reef-camera-integration-v1` annotate
 
 ## 4. Phase E — Ecosystem Behavior
 
-**状态：未启动，等待 D 视觉基线。** 目标是把现有群体算法提升为可观察的生态行为，不用脚本化结果替代真实模拟。
+**状态：两轮完成（2026-11-14，D025/D026）。** 第一轮 E1 在渲染层深化主鱼俯仰平滑/限幅与转弯弯曲，E3 把真实 FSM/捕获映射为只读事件流与 `predator-watch` 单行，两者只改呈现，固定种子 checksum 不变。第二轮 E2 用一致度加权对齐、密度自适应分离、群体流地形预判、阈值门控惊扰传播与恐惧缩放边缘逃逸产生可复现的 split/merge 结构，并新增 30 步结构遥测与 `predator-watch` school 行；E4 把小丑鱼软栖息中心迁到最近海葵 `anemone-b` 上方（环形死区、无传送/硬约束），并用真实近底位置/速度与共享海流驱动确定性沙尘/悬浮颗粒。E2/E4 是有意的行为改动，建立新 checksum 基线，并提供 `?schoolDynamics=legacy`、`?habitat=legacy`、`?sediment=0` 同版回滚/对照。目标是把现有群体算法提升为可观察的生态行为，不用脚本化结果替代真实模拟。D2 剩余碎石/附着细节仍未做，未阻塞本轮入口。
 
 | 模块 | 工作范围 | 验收重点 |
 | --- | --- | --- |
@@ -121,11 +121,15 @@ E1 应深化现有主鱼 `_TAILWEIGHT` 顶点动画、转弯倾斜和 shayu 的 
 
 E3 是对现有 Patrol / Pursuit / Attack / Search 和真实捕获规则的表现深化，不要求为重命名而重写状态机。E4 优先把已有 100 条小丑鱼与海葵区域的关系做清晰，不扩大资产范围。
 
-**E 交付物：** 主鱼与鲨鱼游动对照、鱼群分裂/重聚轨迹、完整捕食事件记录、小丑鱼栖息观察和环境交互证据；固定 60 Hz、双缓冲、网格等价性和固定种子回归必须保持。
+**E 交付物：** 主鱼与鲨鱼游动对照、鱼群分裂/重聚轨迹、完整捕食事件记录、小丑鱼栖息观察和环境交互证据；固定 60 Hz、双缓冲、网格等价性和固定种子回归必须保持。第一轮（E1+E3）已交付 12 对同版鱼体运动对照、慢动作片段、70 s 真实捕食事件记录与 UI 证据，见 `../test-artifacts/phase-e/2026-11-14t00-13-00z/summary.md`。第二轮（E2+E4）已交付 70 s dynamic/legacy 结构事件与固定机位对照、3600 步压力与确定性、`predator-watch` school 行桌面/窄屏证据、calm 900 步栖息指标、沙尘 on/off 同机位对照与 checksum 不变证明，以及 Intel Iris Xe 硬件签核，见 `../test-artifacts/phase-e/2026-11-14t08-31-46z/summary.md`。两轮均完成软件评审与硬件签核。
 
 ## 5. Phase F — Performance & Validation
 
-**状态：未启动，等待 A–E 主要功能稳定。** 2026-11-09 的 Iris Xe 历史结果不能替代当前 B1 + C 富场景复测，SwiftShader 数据不能替代真实 GPU 验收。
+**状态：进行中（F1 测量与瓶颈审计完成 2026-11-14；F2 第一轮位相同优化完成 2026-11-15）。** F1 只测量、不改优化参数；四档矩阵与 GPU timer 已落地，standard 档已在干净复测中验证 D028，干净四档矩阵中 base/standard 的 P50 可重复（FPS mean 受长尾影响仍有波动）；2026-11-15 关闭 Chrome/DeepSeek 重试后 extreme 两种模式与 pressure telemetry-on 可重复，pressure telemetry-off 仍有 cadence decay（180 s cooldown 重跑改善但未消除），3/5 捕食者完整矩阵待后续。F2 第一轮只做保持逐位相同的 CPU 热路径优化，稳定 A/B 约 −3% wall / −3–8% CPU，标准档 telemetry-off 优化后复核一次 3/3 达 D028、另一次 r3 热漂移；tests 50/370、tsc、构建与 checksum 不变（D029）。2026-11-09 的 Iris Xe 历史结果不能替代当前 B1 + C 富场景复测，SwiftShader 数据不能替代真实 GPU 验收。
+
+**F1 执行记录（2026-11-14）：** 新增 `scripts/phase-f-baseline.ts`（`npm run baseline:phase-f`）、默认关闭的 `PhaseEmaRecorder` CPU 相位遥测、真实 WebGL2 `EXT_disjoint_timer_query_webgl2` GPU 计时与 `getRendererStats()`；完成 base/standard/pressure/extreme 四档 ×3 repeats、standard 1440×900 spot 与 telemetry-off 对照。结论：CPU 模拟是随规模单调放大的主瓶颈，渲染提交次之，GPU 在高负载下未先饱和；pressure/extreme 先用 1 捕食者代理，并因动态壁纸/并发负载与整机漂移未达重复性。同日暂停 Wallpaper Engine、关闭用户 Chrome 后复测 standard telemetry-off 3 repeats，3/3 达到 D028；补测的干净四档矩阵中 base/standard 的 P50 可重复（FPS mean 受长尾影响仍有波动）；2026-11-15 关闭 Chrome/DeepSeek 重试后 extreme 两种模式与 pressure telemetry-on 可重复，pressure telemetry-off 仍有 cadence decay（180 s cooldown 重跑改善但未消除），未形成签核基线。telemetry-on 诊断显示逐鱼计时与 GPU query polling 有明显测量开销，不作为产品路径性能。数值、采样条件和缺口只在 `../test-artifacts/phase-f/2026-11-14T11-26-00Z/rows/analysis.md`、`../test-artifacts/phase-f/2026-11-14T13-38-06Z-clean/acceptance.md`、`../test-artifacts/phase-f/2026-11-14T13-38-06Z-clean/matrix.md`、`../test-artifacts/phase-f/2026-11-14T18-25-37Z-retry/matrix-retry.md` 与 `validation/performance.md`；D027/D028 记录本轮范围与目标。
+
+**F2 优化第一轮执行记录（2026-11-15）：** 只做位相同 CPU 热路径优化（D029）：`BoidSystem` 提升每步常量、减少邻居速度重复读取、predator 关闭时跳过 fear 读取、每步预计算鱼速；`UniformGrid3D` 内联 cell 坐标并移除临时数组；`ObstacleSystem`/`EnvironmentForces` 提升循环外常量。稳定 A/B 在临时 Performance 电源方案下交替 baseline/optimized（Wallpaper Engine 暂停、Chrome/DeepSeek 关闭、各状态先预热），500/1000/2000 主鱼 wall mean 3.146/7.945/20.462 → 3.043/7.673/19.868 ms（约 −3%），P95 改善 1.8–5.1%；绝对值不能与 Balanced 下的 F1 基线直接比较。标准档 telemetry-off 优化后复核 run A 3/3 达 D028（P50 12.0/12.1/12.1、P95 18.2/18.2/18.3、0 dropped），run B r3 热漂移到 P50 18.2 但 P95 30.2、0 dropped；没有同会话 baseline/optimized 浏览器 A/B。被否决的邻居几何缓存（慢 12–15%）、cell 位置缓存（噪声内）与 Float32 距离缓存（改变 checksum）未进入代码。证据见 `../test-artifacts/phase-f/optimization/`；数值只在 `validation/performance.md` 维护。
 
 ### 5.1 真实硬件基线
 
@@ -147,6 +151,8 @@ E3 是对现有 Patrol / Pursuit / Attack / Search 和真实捕获规则的表�
 ### 5.3 优化顺序
 
 先依据 CPU/GPU 分项定位瓶颈，再选择 Instanced Rendering、几何/材质共享、LOD、Frustum Culling、粒子 GPU 更新、减少逐帧分配、阴影投射控制和远景降级。项目已有实例化与部分 LOD 时，应先审计实际覆盖和收益，不重复实现。优化必须让细节成本随距离递减，不能将近景礁石和鱼群一并简化。
+
+F2 第一轮的实测瓶颈是 CPU 模拟中的 `UniformGrid3D.collect`（2000 鱼约 49% profile）与 `BoidSystem.update`（约 40%），因此先做了不改变邻居顺序和浮点求和的常量提升、重复读取消除与速度预计算；约 3% 的收益不足以改变压力档实时性。继续优化若采用 Worker/WASM、改变邻居求和顺序、复用跨步邻居或降低默认质量，必须另立决定并重建 checksum、碰撞/相机与同版性能证据，不能作为“无害微优化”直接合入。
 
 **F 交付物：** 当前真实硬件报告、CPU/GPU 分项、四档压力矩阵、优化前后同版对照和仍未通过的限制。历史 500 鱼通过与当前富默认通过必须分开陈述。
 
@@ -189,4 +195,4 @@ E3 是对现有 Patrol / Pursuit / Attack / Search 和真实捕获规则的表�
 5. 每个阶段完成后更新对应 docs 报告、本文件状态和项目活记忆的指针；阶段细节只留在仓库 docs，不新增重复的阶段记忆。
 6. 当前目录无 Git 元数据时先备份再修改。捕获、测试和烘焙串行执行，保留原始数据、失败项和剩余限制。
 
-一个阶段只有在其交付物、回归、实际证据和已知限制全部记录后才算完成。下一阶段的推荐入口始终是：**先完成 Integration Gate，再启动 Phase D 第一轮的水体、海床和全局光照三项工作。**
+一个阶段只有在其交付物、回归、实际证据和已知限制全部记录后才算完成。Gate 已关闭，Phase D 两轮、Phase E 两轮均已完成并签核；Phase F F1 测量与瓶颈审计已完成，standard 档 D028 目标已在干净复测中验证，干净四档矩阵中 base/standard 的 P50 可重复；关闭 Chrome/DeepSeek 重试后 extreme 与 pressure telemetry-on 可重复，pressure telemetry-off 仍有 cadence decay（180 s cooldown 重跑改善但未消除）；F2 第一轮位相同优化已完成（D029，约 −3% CPU 模拟 wall，checksum 不变）。下一入口是 pressure telemetry-off 热/节奏复测、3/5 捕食者完整矩阵、是否继续非位相同优化，并需确认 D2 剩余碎石/附着细节是否补做。
