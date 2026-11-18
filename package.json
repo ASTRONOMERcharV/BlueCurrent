@@ -28,6 +28,7 @@
     "perf:fish": "tsx scripts/fish-perf.ts",
     "accept:gpu": "tsx scripts/gpu-acceptance.ts",
     "baseline:phase-f": "tsx scripts/phase-f-baseline.ts",
+    "gate:phase-f": "tsx scripts/phase-f-gate-rule.ts",
     "smoke:fish": "tsx scripts/fish-glb-smoke.ts",
     "smoke:predator": "tsx scripts/predator-glb-smoke.ts",
     "smoke:predator:shayu": "tsx scripts/predator-shayu-check.ts",

@@ -1,8 +1,9 @@
-import { mkdirSync, readFileSync, writeFileSync } from 'node:fs';
+import { execFileSync } from 'node:child_process';
+import { mkdirSync, readFileSync, statSync, writeFileSync } from 'node:fs';
 import { readFile, stat } from 'node:fs/promises';
 import { createServer } from 'node:http';
 import { extname, join, normalize, resolve, sep } from 'node:path';
-import { chromium, type Page } from 'playwright';
+import { chromium, type Browser, type Page } from 'playwright';
 
 /**
  * Phase F Round 1 baseline matrix.
@@ -25,6 +26,7 @@ interface Diagnostics {
   renderTriangles: number;
   simulationMs: number;
   lastStepMs: number;
+  totalSteps: number;
   droppedSteps: number;
   averageNeighbors: number;
   candidatesExamined: number;
@@ -99,6 +101,37 @@ interface PageVisibility {
   focused: boolean;
 }
 
+/** `gpu` is reserved for a future GPU-only capture; current telemetry is off/full. */
+type SampleMode = 'off' | 'gpu' | 'full';
+
+interface CanvasInfo {
+  width: number;
+  height: number;
+  clientWidth: number;
+  clientHeight: number;
+  devicePixelRatio: number;
+  effectivePixelRatio: number | null;
+}
+
+interface PageViewport {
+  innerWidth: number;
+  innerHeight: number;
+  devicePixelRatio: number;
+}
+
+interface RefreshEstimate {
+  estimateMs: number | null;
+  estimateHz: number | null;
+  method: string;
+}
+
+interface BuildIdentity {
+  packageVersion: string;
+  commit: string | null;
+  dirty: boolean | null;
+  distIndexMtime: string | null;
+}
+
 interface RowSpec {
   id: string;
   main: number;
@@ -116,6 +149,7 @@ interface SampleSummary {
   width: number;
   height: number;
   telemetry: boolean;
+  mode: SampleMode;
   intended: { main: number; clownfish: number; predators: number };
   measured: { main: number; clownfish: number; predators: number; predatorState: string };
   camera: { position: number[]; target: number[] };
@@ -136,6 +170,14 @@ interface SampleSummary {
   simulationMs: number;
   lastStepMs: number;
   renderMs: number;
+  totalSteps: number;
+  stepsPerFrameMean: number | null;
+  renderer: { vendor: string; renderer: string } | null;
+  viewport: PageViewport | null;
+  canvas: CanvasInfo | null;
+  panelClosed: boolean | null;
+  refresh: RefreshEstimate | null;
+  build: BuildIdentity;
   simulationPhases: PerformanceSnapshot | null;
   renderPhases: PerformanceSnapshot | null;
   rendererStats: PerformanceDiagnostics['renderer'] | null;
@@ -261,6 +303,7 @@ mkdirSync(join(artifacts, 'screenshots'), { recursive: true });
 mkdirSync(join(artifacts, 'logs'), { recursive: true });
 
 const packageVersion = JSON.parse(readFileSync('package.json', 'utf8')).version as string;
+const buildIdentity = readBuildIdentity(packageVersion);
 const append = argument('append', '0') === '1';
 let previous: { startedAt?: string; samples?: SampleSummary[] } | null = null;
 if (append) {
@@ -285,6 +328,7 @@ const browser = await chromium.launch({
     ...(software ? ['--use-angle=swiftshader', '--enable-unsafe-swiftshader'] : []),
   ],
 });
+const refreshEstimate = await estimateDisplayRefresh(browser);
 const results: SampleSummary[] = previous?.samples ? [...previous.samples] : [];
 let rendererInfo: { vendor: string; renderer: string } | null = null;
 let environment: Record<string, unknown> | null = null;
@@ -329,6 +373,92 @@ async function readRenderer(page: Page): Promise<{ vendor: string; renderer: str
       renderer: String(extension ? gl.getParameter(extension.UNMASKED_RENDERER_WEBGL) : gl.getParameter(gl.RENDERER)),
     };
   });
+}
+
+function readBuildIdentity(packageVersion: string): BuildIdentity {
+  let commit: string | null = null;
+  let dirty: boolean | null = null;
+  try {
+    commit = execFileSync('git', ['rev-parse', 'HEAD'], { encoding: 'utf8' }).trim();
+    dirty = execFileSync('git', ['status', '--porcelain'], { encoding: 'utf8' }).trim().length > 0;
+  } catch {
+    commit = null;
+    dirty = null;
+  }
+  let distIndexMtime: string | null = null;
+  try {
+    distIndexMtime = statSync(join(resolve('dist'), 'index.html')).mtime.toISOString();
+  } catch {
+    distIndexMtime = null;
+  }
+  return { packageVersion, commit, dirty, distIndexMtime };
+}
+
+async function estimateDisplayRefresh(browser: Browser): Promise<RefreshEstimate> {
+  const page = await browser.newPage({ viewport: { width: 320, height: 240 } });
+  page.setDefaultTimeout(15000);
+  try {
+    await page.bringToFront();
+    const frames = await Promise.race([
+      page.evaluate<number[]>(`(async () => {
+        const deltas = [];
+        let last = performance.now();
+        await new Promise((resolveFrames) => {
+          const tick = (now) => {
+            deltas.push(Math.max(0, now - last));
+            last = now;
+            if (deltas.length >= 60) resolveFrames();
+            else requestAnimationFrame(tick);
+          };
+          requestAnimationFrame(tick);
+        });
+        return deltas;
+      })()`),
+      new Promise<number[]>((resolveTimeout) => setTimeout(() => resolveTimeout([]), 5000)),
+    ]);
+    const sorted = frames.filter((value) => value > 0).sort((a, b) => a - b);
+    const estimateMs = sorted.length > 0 ? sorted[Math.floor(sorted.length / 2)] : null;
+    return {
+      estimateMs,
+      estimateHz: estimateMs !== null && estimateMs > 0 ? 1000 / estimateMs : null,
+      method: sorted.length > 0 ? 'blank-page-rAF-median-60' : 'blank-page-rAF-timeout',
+    };
+  } finally {
+    await page.close();
+  }
+}
+
+async function readPageMetrics(page: Page): Promise<{
+  canvas: CanvasInfo | null;
+  panelClosed: boolean | null;
+  viewport: PageViewport | null;
+}> {
+  return page.evaluate<{
+    canvas: CanvasInfo | null;
+    panelClosed: boolean | null;
+    viewport: PageViewport | null;
+  }>(`(() => {
+    const canvas = document.querySelector('canvas');
+    const rect = canvas?.getBoundingClientRect() ?? null;
+    return {
+      canvas: canvas && rect
+        ? {
+          width: canvas.width,
+          height: canvas.height,
+          clientWidth: rect.width,
+          clientHeight: rect.height,
+          devicePixelRatio: window.devicePixelRatio,
+          effectivePixelRatio: rect.width > 0 ? canvas.width / rect.width : null,
+        }
+        : null,
+      panelClosed: document.querySelector('.observatory')?.classList.contains('panel-closed') ?? null,
+      viewport: {
+        innerWidth: window.innerWidth,
+        innerHeight: window.innerHeight,
+        devicePixelRatio: window.devicePixelRatio,
+      },
+    };
+  })()`);
 }
 
 async function sampleFrames(page: Page, sampleMs: number, minFrames: number, maxSampleMs: number): Promise<number[]> {
@@ -401,6 +531,12 @@ async function runSample(
         userAgent: navigator.userAgent,
         hardwareConcurrency: nav.hardwareConcurrency ?? null,
         deviceMemory: nav.deviceMemory ?? null,
+        screen: {
+          width: screen.width,
+          height: screen.height,
+          availWidth: screen.availWidth,
+          availHeight: screen.availHeight,
+        },
         battery: battery ? { charging: battery.charging, level: battery.level } : null,
       };
     });
@@ -447,6 +583,7 @@ async function runSample(
     };
   });
   const stats = frameStats(frames);
+  const pageMetrics = await readPageMetrics(page);
   const framesFile = `frames/${options.label}-r${repeat}.json`;
   writeFileSync(join(artifacts, framesFile), `${JSON.stringify({
     row: row.id,
@@ -471,6 +608,7 @@ async function runSample(
     width: options.width,
     height: options.height,
     telemetry: options.telemetry,
+    mode: options.telemetry ? 'full' : 'off',
     intended: { main: row.main, clownfish: row.clownfish, predators: row.intendedPredators },
     measured: {
       main: final.diagnostics.fishCount,
@@ -499,6 +637,16 @@ async function runSample(
     simulationMs: final.diagnostics.simulationMs,
     lastStepMs: final.diagnostics.lastStepMs,
     renderMs: final.diagnostics.renderMs,
+    totalSteps: final.diagnostics.totalSteps,
+    stepsPerFrameMean: frames.length > 0
+      ? (final.diagnostics.totalSteps - prepared.totalSteps) / frames.length
+      : null,
+    renderer: pageRenderer,
+    viewport: pageMetrics.viewport,
+    canvas: pageMetrics.canvas,
+    panelClosed: pageMetrics.panelClosed,
+    refresh: refreshEstimate,
+    build: buildIdentity,
     simulationPhases: options.telemetry ? after.simulation : null,
     renderPhases: options.telemetry ? after.render : null,
     rendererStats: after.renderer,
@@ -567,6 +715,8 @@ function writeSummary(): void {
   lines.push(`- Vendor: ${rendererInfo?.vendor ?? 'unknown'}`);
   lines.push(`- Primary viewport: ${width}x${height} DPR1`);
   lines.push('- Method: fresh page per sample, 60 warm frames, deterministic 150+180-step replay, fixed overview pose, resetPerformanceSamples before sampling.');
+  lines.push(`- Build: ${buildIdentity.commit ?? 'unknown git commit'}${buildIdentity.dirty === true ? ' (dirty tree)' : ''}; dist/index.html ${buildIdentity.distIndexMtime ?? 'N/A'}; refresh probe ${refreshEstimate.estimateHz?.toFixed(2) ?? 'N/A'} Hz via ${refreshEstimate.method}.`);
+  lines.push('- Gate fields: per-sample mode, canvas/client size, device/effective DPR, panel state, total steps, steps per frame and renderer are in `results.json`.');
   lines.push('- Pressure/extreme use one predator as a documented proxy for 3/5; multi-predator is not implemented.');
   lines.push('');
   lines.push('## Matrix');
@@ -697,6 +847,8 @@ try {
     startedAt,
     finishedAt: new Date().toISOString(),
     packageVersion,
+    build: buildIdentity,
+    refresh: refreshEstimate,
     primaryViewport: { width, height, dpr: 1 },
     spotViewport: { width: spotWidth, height: spotHeight, dpr: 1 },
     rows: effectiveRows,
@@ -705,6 +857,8 @@ try {
   }, null, 2)}\n`);
   writeFileSync(join(artifacts, 'metadata.json'), `${JSON.stringify({
     packageVersion,
+    build: buildIdentity,
+    refresh: refreshEstimate,
     startedAt,
     finishedAt: new Date().toISOString(),
     platform: process.platform,
