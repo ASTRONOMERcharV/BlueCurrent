@@ -822,7 +822,7 @@ dz = 0.38 * uKelpAmplitude * instanceAmplitude * w * cos(phase * 0.81 + 1.7)
 - `python3 assets_src/scripts/verify_kelp_glbs.py`：PASS 2/2，三角形/高度/底部原点/属性范围/单材质/双面均符合。
 - `npm run smoke:kelp`：Phase C 交付时 PASS（预览 2 资产 / 15 实例 / 3 draw calls / 13,000 三角形；两张间隔 1.3 s 的 canvas 截图不同，证明摆动 Shader 生效）。后续海藻林布局扩展为 91 株后，由 `smoke:seaweed:combo` 覆盖组合加载。
 - 主场景 `/?kelp=1`：Phase C 交付时为 26 + 23 实例、8,648 海藻三角形、0 浏览器错误；当前生态布局为 48 + 43 实例、16,056 三角形，`smoke:seaweed:combo` 组合加载 0 错误。
-- 沙箱 FPS 来自 SwiftShader，**不能作为性能结论**；硬件 GPU 的帧率/P95/GPU time 与视觉验收待用户在本机完成（见 `docs/PHASE_C_ACCEPTANCE.md`）。
+- 沙箱 FPS 来自 SwiftShader，**不能作为性能结论**；硬件 GPU 的帧率/P95/GPU time 与视觉验收待用户在本机完成（见 `docs/archive/PHASE_C_ACCEPTANCE.md`）。
 
 ### 15.6 已知限制
 
@@ -877,7 +877,7 @@ dz = 0.15 * 0.35 * instanceAmplitude * w * cos(phase * 0.83 + 1.2)
 - `smoke:seaweed`：PASS；预览 5 实例、77,152 渲染三角形、2 draw calls（海床 + 海菜）、3 maps；间隔 1.3 s 的 canvas 截图不同。
 - `smoke:seaweed:main`：PASS；`environment=bare&fishCount=50` 下 `seaweedModel = "blender"`、6 实例、82,752 海菜三角形、0 浏览器错误。
 - `smoke:seaweed:combo`：PASS；完整环境组合（`?coral=full`）`glbRockMode = "set"`、48 珊瑚、91 低模海藻、6 细节海菜，渲染 264,091 三角形、56 draw calls、0 错误。默认珊瑚层现为 48 株完整展示层（`?coral=temperate` 恢复 12 株）。
-- 沙箱 FPS 来自 SwiftShader，**不是性能结论**；硬件 GPU 视觉/性能验收见 `docs/PHASE_SEAWEED_ACCEPTANCE.md`。
+- 沙箱 FPS 来自 SwiftShader，**不是性能结论**；硬件 GPU 视觉/性能验收见 `docs/archive/PHASE_SEAWEED_ACCEPTANCE.md`。
 
 ### 16.6 已知限制
 

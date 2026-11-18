@@ -25,7 +25,7 @@ npm run accept:observatory
 | 范围 | 入口示例 |
 | --- | --- |
 | CPU 网格/行为基准 | `npm run benchmark`、`npm run quality:benchmark`、`npm run benchmark:observatory` |
-| CPU 网格 A/B（Phase F F2） | `npm run benchmark -- --counts=500,1000,2000 --modes=grid --steps=150 --warmup=30 --repeats=4`；`--modes` 可只跑 `grid` 或 `brute-force`。每行输出 wall `mean ms`、`cpu ms`（`process.cpuUsage` delta）、P95、neighbors 与 candidates，写入 `benchmark/latest-results.json`/`.csv`。这是 Node 主线程的 CPU 模拟基准，不是浏览器/GPU 帧率；绝对值受电源方案和频率漂移影响，同版 A/B 必须固定电源方案、交替运行并先做丢弃预热。 |
+| CPU 网格 A/B（Phase F F2） | `npm run benchmark -- --counts=500,1000,2000 --modes=grid --steps=150 --warmup=30 --repeats=4`；`--modes` 可只跑 `grid` 或 `brute-force`。每行输出 wall `mean ms`、`cpu ms`（`process.cpuUsage` delta）、P95、neighbors 与 candidates，写入 `benchmarks/latest-results.json`/`.csv`。这是 Node 主线程的 CPU 模拟基准，不是浏览器/GPU 帧率；绝对值受电源方案和频率漂移影响，同版 A/B 必须固定电源方案、交替运行并先做丢弃预热。 |
 | Boids / Predator 实验 | `npm run experiment:ablation`、`npm run experiment:predator` |
 | Reef Proxy 覆盖 | `npx tsx scripts/measure-reef-collision.ts --bins`；固定输出会覆盖 `proxy-coverage.json`，需要先备份旧证据。 |
 | Sphere / ReefProxy 行为 | `npx tsx scripts/reef-collision-experiment.ts --mode=both --out=test-artifacts/reef-collision/<new>.json` |

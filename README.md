@@ -46,24 +46,25 @@ Blue Current 是一个独立的 TypeScript + Three.js 实时生态观测系统�
 正式文档：
 
 - [后续开发路线与 Integration Gate](docs/DEVELOPMENT_ROADMAP.md)
-- [本机硬件 GPU 验收分析（2026-11-09）](docs/GPU_ACCEPTANCE_2026-11-09.md)
 - [观测台布局与验收](docs/OBSERVATORY_LAYOUT.md)
 - [礁群主从关系、Overview 与生态构图](docs/REEF_COMPOSITION.md)
 - [构图外部评审参数包（世界/镜头/UI 数值）](docs/REEF_COMPOSITION_PARAMETERS.md)
 - [海藻庇护场与珊瑚分档](docs/KELP_REFUGE_AND_CORAL_TIER.md)
-- [礁石碰撞代理实验 A：设计与实现](docs/REEF_COLLISION_PROXY_EXPERIMENT.md)
-- [礁石碰撞代理实验 A：交付报告](docs/REEF_COLLISION_PROXY_EXPERIMENT_REPORT.md)
 - [最终实验报告（Markdown 源）](docs/report/FINAL_REPORT.md)
 - [最终实验报告（提交 PDF）](docs/report/BlueCurrent-实验报告.pdf)
-- [性能与技术实验分析](docs/BENCHMARK_RESULTS.md)
-- [验证记录](docs/VALIDATION_REPORT.md)
 - [演示视频录制脚本](docs/DEMO_VIDEO_SCRIPT.md)
 - [Blender 资产规格](docs/ASSET_SPEC.md)
 - [双鱼群与小丑鱼资产验收](docs/CLOWNFISH_SCHOOL.md)
 - [Blender 资产制作流程与验收](docs/ASSET_PIPELINE.md)
 - [Blender 资产契约](docs/BLENDER_ASSET_CONTRACT.md)
-- [Blender MCP 配置清单](docs/BLENDER_MCP_SETUP.md)
-- [Blender Agent 提示词](docs/BLENDER_AGENT_PROMPTS.md)
+
+历史文档（过程证据，索引见 [docs/archive/README.md](docs/archive/README.md)）：
+
+- [本机硬件 GPU 验收分析（2026-11-09）](docs/archive/GPU_ACCEPTANCE_2026-11-09.md)
+- [礁石碰撞代理实验 A：设计与实现](docs/archive/REEF_COLLISION_PROXY_EXPERIMENT.md)
+- [礁石碰撞代理实验 A：交付报告](docs/archive/REEF_COLLISION_PROXY_EXPERIMENT_REPORT.md)
+- [性能与技术实验分析](docs/archive/BENCHMARK_RESULTS.md)
+- [验证记录](docs/archive/VALIDATION_REPORT.md)
 
 外部 GLB 模型现在默认接入完整岩石/沙丘集、48 株珊瑚、91 株海藻、6 处细节海菜、两套 Blender 鱼模型和用户 shayu 捕食者。`?coral=temperate` 恢复 12 株温带珊瑚，`?coral=0` 关闭珊瑚；`?fish=procedural` 回退程序化主鱼群；`?clownfish=0` 关闭小丑鱼群，`?clownfish=N` 调整其数量（0–400）。`?environment=bare` 关闭完整岩石/珊瑚/海藻环境，`?glbRocks=0`、`?kelp=0`、`?seaweed=0` 可分别关闭对应层，`?glbRocks=1` 保留 legacy 单礁石入口。所有加载或契约校验失败均自动回退；小丑鱼资产失败时第二鱼群自动关闭，不会用普通鱼冒充。当前为双鱼群、单捕食者；尚未实现多捕食者、WebGPU Compute 和 LOD。鱼群避障支持可切换的球体基线或基于真实 GLB 变换的 SDF 复合代理（实验 A，默认仍为球体，`?obstacleShape=reefProxy` 启用；详见实验文档）。鱼体碰撞采用个体间分离力，而不是刚体接触求解。正式演示视频已录制：`submission/Demo.mp4`（1280×720、25 fps、49.6 s、硬件 Chrome）；录制脚本与 90 秒 `?demo=cinematic` 时间线仍保留，便于重录。
 
@@ -132,7 +133,7 @@ npm run quality:capture -- --scenario=calm --view=console  # 真实浏览器截�
 - [镜头清单](docs/demo-video/shot-list.md)
 - [录制检查表](docs/demo-video/capture-checklist.md)
 
-视觉质量 V1 的鱼群行为、温带海藻森林布局、A/B CPU 性能、截图和待办项见 [docs/VISUAL_QUALITY_V1.md](docs/VISUAL_QUALITY_V1.md)。
+视觉质量 V1 的鱼群行为、温带海藻森林布局、A/B CPU 性能、截图和待办项见 [docs/archive/VISUAL_QUALITY_V1.md](docs/archive/VISUAL_QUALITY_V1.md)。
 
 GLB 礁石：默认主场景加载完整 13 资产岩石/沙丘集。`?glbRocks=1` 使用 legacy `public/models/reef_rock_a.glb`；`?glbRocks=2` 显式选择完整集；`?glbRocks=0` 或 `?environment=bare` 回退轻量环境。对应浏览器验收分别为 `npm run smoke:glb` 与 `npm run smoke:rocks`。
 
@@ -214,7 +215,7 @@ npm run smoke:seaweed:combo
 # Blender 会话内执行：build_seaweed_detail.py → render_seaweed_detail_previews.py
 ```
 
-注意：沙箱内 Playwright 使用 SwiftShader，软件渲染帧率不代表本机 GPU；`--gpu` 会启动带界面的浏览器，结果 JSON 中会记录实际的 WebGL renderer。2026-11-09 已在 Intel Iris Xe 硬件路径完成四组合 × 500/1000/2000 实测：500 鱼通过实时目标，1000/2000 受 CPU 模拟与密集邻居查询限制，尚未通过；真正的 GPU timestamp 仍未测量。详见 [本机硬件 GPU 验收分析](docs/GPU_ACCEPTANCE_2026-11-09.md)。
+注意：沙箱内 Playwright 使用 SwiftShader，软件渲染帧率不代表本机 GPU；`--gpu` 会启动带界面的浏览器，结果 JSON 中会记录实际的 WebGL renderer。2026-11-09 已在 Intel Iris Xe 硬件路径完成四组合 × 500/1000/2000 实测：500 鱼通过实时目标，1000/2000 受 CPU 模拟与密集邻居查询限制，尚未通过；真正的 GPU timestamp 仍未测量。详见 [本机硬件 GPU 验收分析](docs/archive/GPU_ACCEPTANCE_2026-11-09.md)。
 
 ## 本机 GPU 验收
 
@@ -357,8 +358,8 @@ npm run benchmark -- --counts=100,250,500,1000,2000 --steps=120 --repeats=3 --wa
 
 脚本关闭捕食者以保持数量不变，保留避障和边界，关闭额外群体统计，不创建 Three.js 渲染器。每次重复都从相同种子开始。输出：
 
-- `benchmark/latest-results.csv`：汇总表。
-- `benchmark/latest-results.json`：环境、参数、汇总和每轮原始测量。
+- `benchmarks/latest-results.csv`：汇总表。
+- `benchmarks/latest-results.json`：环境、参数、汇总和每轮原始测量。
 
 本原型随附一次实际运行结果（2026-11-08，Linux，Node 22.23.4，i7-13700H，沙箱分配 2 个逻辑核；120 步 × 3 次，预热 40 步）：
 
@@ -370,7 +371,7 @@ npm run benchmark -- --counts=100,250,500,1000,2000 --steps=120 --repeats=3 --wa
 | 1000 | 28.223 ms | 23.849 ms | 35.674 ms | 29.427 ms | 1.18× |
 | 2000 | 86.222 ms | 68.642 ms | 123.376 ms | 103.089 ms | 1.26× |
 
-这里的 `1000 / meanStepMs` 只是模拟模块理论吞吐，不是显示 FPS。小规模和密集群体下网格可能不占优；2000 条在本测试中也没有达到 60 Hz 模拟预算。不同设备、浏览器和参数必须重新测量。`benchmarks/` 另含消融、捕食者实验和图表生成脚本。
+这里的 `1000 / meanStepMs` 只是模拟模块理论吞吐，不是显示 FPS。小规模和密集群体下网格可能不占优；2000 条在本测试中也没有达到 60 Hz 模拟预算。不同设备、浏览器和参数必须重新测量。`benchmarks/` 含第一轮性能、消融、捕食者实验数据和图表生成脚本。
 
 ## 验证
 
@@ -400,13 +401,12 @@ src/
 ├── ui/               # 控件绑定、真实统计、帧率图、语义布局
 ├── main.ts           # 应用组合与 requestAnimationFrame
 └── style.css         # 响应式观测仪界面
-preview/              # 独立资产、礁石和动画预览；总览入口 preview/index.html
+preview/              # 独立资产、礁石和动画预览；样式在 preview/css/，总览入口 preview/index.html
 docs/                 # 正式报告、验证记录、实验分析、视频录制脚本
 scripts/              # 基准、消融、捕食者实验、图表和浏览器验收/截图
 tests/                # 52 文件 / 400 tests，算法、资产与 checksum 回归
-benchmark/            # 第一轮性能基准的未改动原始文件
-benchmarks/           # 三项实验的正式原始 JSON/CSV 和说明
+benchmarks/           # 性能、消融与捕食者实验的原始 JSON/CSV 和说明
 screenshots/          # 最终真实运行截图、图表和诊断记录
-test-artifacts/       # 浏览器自动化输出；round-1/ 保留上一轮验收
+test-artifacts/       # 浏览器验收输出目录（.gitignore；运行验收脚本后生成）
 dist/                 # 生产构建，需要 HTTP 服务器
 ```

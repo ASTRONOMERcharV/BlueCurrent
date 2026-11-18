@@ -2,7 +2,7 @@
 
 日期：2026-11-09
 范围：Blue Current 捕食者（用户 shayu 模型）从静态 GLB + Shader 剪切升级为骨骼 SkinnedMesh + 程序化游动。
-配套分析：`docs/PREDATOR_ANIMATION_ANALYSIS.md`。
+配套分析：`docs/archive/PREDATOR_ANIMATION_ANALYSIS.md`。
 
 ## 1. 原动画缺陷（实测）
 

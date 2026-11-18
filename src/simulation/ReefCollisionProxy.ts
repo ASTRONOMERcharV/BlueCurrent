@@ -25,7 +25,7 @@ import {
  * conservative `min(S)` distance scale, inverse-transpose normal). Ellipsoids
  * scale per axis. Box rounding uses the largest scale so the world box contains
  * the per-axis rounded authored shape. The remaining error is measured against
- * the near-LOD vertices in `docs/REEF_COLLISION_PROXY_EXPERIMENT.md`.
+ * the near-LOD vertices in `docs/archive/REEF_COLLISION_PROXY_EXPERIMENT.md`.
  */
 
 export interface ReefWorldTransform {

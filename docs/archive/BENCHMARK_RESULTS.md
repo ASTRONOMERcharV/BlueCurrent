@@ -33,7 +33,7 @@ CPU 性能测试不创建 Three.js 渲染器。浏览器截图中的 2–20 FPS 
 - 指标：固定模拟步耗时（ms），取每轮平均步耗时的中位数；P95 取每轮 P95 的中位数。
 - 表中“模拟吞吐”仅为 `1000 / 平均步耗时`，不是显示帧率。
 
-原始数据：`benchmarks/performance-grid-vs-brute.json`（逐轮测量）和 `.csv`（汇总）。副本与原始 `benchmark/latest-results.*` 哈希一致。
+原始数据：`benchmarks/performance-grid-vs-brute.json`（逐轮测量）和 `.csv`（汇总）。副本与 `benchmarks/latest-results.*` 哈希一致。
 
 ### 2.2 结果
 

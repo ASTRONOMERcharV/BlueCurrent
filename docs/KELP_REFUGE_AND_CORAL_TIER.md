@@ -84,4 +84,4 @@
 
 宿主是 2 vCPU 且负载波动明显。上表取每次运行的最小 CPU 时间作为无争用估计，并用同一 repeat 内 off/on 配对比值的中位数复核；跨运行中位数分别为 +1.6% / +7.8% / +4.8%，波动来自宿主负载，不作为回归结论。500/1000/2000 的群体平均邻居数在 A/B 两侧相同（71.47 / 89.42 / 111.50）。查询微基准：`coverAt` 约 250–300 万次/CPU 秒，`blocksSegment` 约 31 万次/CPU 秒。原始数据：`test-artifacts/kelp-refuge/kelp-refuge-benchmark.json`。
 
-**未完成**：针对本次海藻庇护与珊瑚分档改动的 Windows 本机硬件 GPU 复测。已有 2026-11-09 Iris Xe 基线（改动前，见 `docs/GPU_ACCEPTANCE_2026-11-09.md`）为 500 鱼通过、1000/2000 鱼未达 60 Hz；本次不把 SwiftShader 或沙箱 CPU 数据当作硬件性能结论，也不把旧基线当作改动后的验收结果。
+**未完成**：针对本次海藻庇护与珊瑚分档改动的 Windows 本机硬件 GPU 复测。已有 2026-11-09 Iris Xe 基线（改动前，见 `docs/archive/GPU_ACCEPTANCE_2026-11-09.md`）为 500 鱼通过、1000/2000 鱼未达 60 Hz；本次不把 SwiftShader 或沙箱 CPU 数据当作硬件性能结论，也不把旧基线当作改动后的验收结果。

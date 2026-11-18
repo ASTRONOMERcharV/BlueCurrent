@@ -179,8 +179,8 @@ npm run accept:gpu -- --counts=500,1000,2000 --warmup-ms=3000 --sample-ms=10000 
 - `src/rendering/lighting/UnderwaterLighting.ts`
 - `src/rendering/lighting/MaterialColorSpace.ts`
 - `tests/UnderwaterLighting.test.ts`
-- `docs/UNDERWATER_LIGHTING_ANALYSIS.md`
-- `docs/UNDERWATER_LIGHTING_REPORT.md`
+- `docs/archive/UNDERWATER_LIGHTING_ANALYSIS.md`
+- `docs/archive/UNDERWATER_LIGHTING_REPORT.md`
 
 修改：
 

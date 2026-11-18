@@ -105,7 +105,7 @@ Phase 1–3 分别完成了基础灯光层级、水色层次和世界空间焦�
 - `src/main.ts`：`advanceVisualTime` / `setVisualTime` 渲染时钟测试钩子。
 - `tests/LightShafts.test.ts`（新，5 项）：配置/材质/结构/门禁。
 - `scripts/visual-quality-capture.ts`：确定性捕获选项与软件渲染兼容（冻结/强制退出/临时缓存）。
-- `docs/UNDERWATER_LIGHTING_PHASE4_REPORT.md`：本报告。
+- `docs/archive/UNDERWATER_LIGHTING_PHASE4_REPORT.md`：本报告。
 - `test-artifacts/underwater-lighting-phase4/`：`baseline/`、`final/`（8 视角 PNG+JSON）、`panels/`（before/after 与放大对比）、`metrics-phase4.json`。
 
 备份：`.task-locks/backups/phase4-20261110-113937`（Phase 4 改动前原文件）与 `.task-locks/backups/phase4-20261110-153946-takeover`（接管时快照）；临时对比图与未采用的批量捕获脚本在 `.task-locks/backups/phase4-tmp/`。

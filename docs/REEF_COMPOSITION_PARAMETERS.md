@@ -2,7 +2,7 @@
 
 日期：2026-11-11  
 用途：将当前 3D 场景的布局、尺寸、碰撞净距、屏幕投影和镜头规则交给外部评审模型，获取针对性构图建议。  
-版本：P3 主从礁群 + Overview/School/Predator 叙事机位。实验 B 已将 Hero/D 替换为 `reef_hero_b1`/`reef_twin_d_b1`，本文 Hero/D 的 AABB 与覆盖率为替换前基线；替换后的实测见 `docs/REEF_VISUAL_HIERARCHY_EXPERIMENT_B.md`。  
+版本：P3 主从礁群 + Overview/School/Predator 叙事机位。实验 B 已将 Hero/D 替换为 `reef_hero_b1`/`reef_twin_d_b1`，本文 Hero/D 的 AABB 与覆盖率为替换前基线；替换后的实测见 `docs/archive/REEF_VISUAL_HIERARCHY_EXPERIMENT_B.md`。  
 证据边界：Linux + SwiftShader 软件渲染，**不是硬件性能数据**。
 
 > 阅读方式：第 0 节是评审背景；第 1–5 节是可计算的空间/镜头事实；第 6–8 节是生态与氛围层级；第 11–12 节是已知争议点和可直接粘贴给 GPT 的评审要求。截图包围框来自目标 AABB 投影，不是像素级轮廓分割，会略大于真实资产剪影。

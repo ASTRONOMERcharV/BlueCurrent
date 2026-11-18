@@ -191,7 +191,7 @@ npm run accept:gpu -- --counts=500,1000,2000 --warmup-ms=3000 --sample-ms=10000 
 
 - `tests/Caustics.test.ts`
 - `vitest.config.ts`（排除 `.task-locks/**` 的接力备份副本，避免 `npm test` 误扫）
-- `docs/UNDERWATER_LIGHTING_PHASE3_REPORT.md`
+- `docs/archive/UNDERWATER_LIGHTING_PHASE3_REPORT.md`
 - `test-artifacts/underwater-lighting-phase3/`（baseline、final、`metrics.json`、before/after 面板、近景 x3 对比）
 
 回退：`.task-locks/backups/phase3-20261110-044713/` 保留改动前 `src/rendering/` 与 `tests/` 全量副本；`.task-locks/phase2-baseline.sha1` 记录改动前 154 个文件的哈希。

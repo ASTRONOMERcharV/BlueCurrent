@@ -225,7 +225,7 @@ __blueCurrent.getDiagnostics().waterDebug
 - `src/rendering/UnderwaterMedium.ts`
 - `scripts/water-clarity.ts`
 - `tests/UnderwaterMedium.test.ts`
-- `docs/WATER_CLARITY_DIAGNOSIS.md`
+- `docs/archive/WATER_CLARITY_DIAGNOSIS.md`
 
 修改：
 

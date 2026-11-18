@@ -531,7 +531,7 @@ npm run smoke:rocks-preview
 | 单测 / 构建 | `npm test` 26/26、`npx tsc --noEmit`、`npm run build` PASS |
 | Draw calls（80 鱼 + GLB 岩石 + GLB 捕食者） | 90；默认程序化基线 80 |
 
-沙箱使用 SwiftShader，FPS 约 1–7，**不作为性能结论**；硬件 GPU 验收待用户在本机完成（见 `docs/PHASE_R_ACCEPTANCE.md`）。
+沙箱使用 SwiftShader，FPS 约 1–7，**不作为性能结论**；硬件 GPU 验收待用户在本机完成（见 `docs/archive/PHASE_R_ACCEPTANCE.md`）。
 
 ### 9.4 集成路径
 
@@ -598,7 +598,7 @@ npm run dev
 | 单测 / 构建 | `npm test` 31/31、`npx tsc --noEmit`、`npm run build` PASS |
 | Draw calls | 主场景 500 条程序化鱼 + GLB 捕食者 + 49 株海藻 = 82；默认程序化基线 80–82，不宣称严格增量 |
 
-沙箱使用 SwiftShader，FPS 仅用于证明页面可运行，**不作为性能结论**；硬件 GPU 验收待用户在本机完成（见 `docs/PHASE_C_ACCEPTANCE.md`）。
+沙箱使用 SwiftShader，FPS 仅用于证明页面可运行，**不作为性能结论**；硬件 GPU 验收待用户在本机完成（见 `docs/archive/PHASE_C_ACCEPTANCE.md`）。
 
 ### 10.4 集成路径
 
@@ -678,7 +678,7 @@ npm run smoke:seaweed:combo
 - 13,792 三角形 / 3 × 2048² 贴图是英雄资产成本，只放 6 株；不能直接当 91 株级散射使用。
 - 模型自带岩石底座、海星与根须，实例化会重复这些装饰；它们不参与碰撞。
 - 摆动只位移顶点，不重算法线；无 LOD、无半透明/次表面散射。
-- 硬件 GPU 视觉/性能验收未完成，因此默认关闭；验收清单见 `docs/PHASE_SEAWEED_ACCEPTANCE.md`。
+- 硬件 GPU 视觉/性能验收未完成，因此默认关闭；验收清单见 `docs/archive/PHASE_SEAWEED_ACCEPTANCE.md`。
 
 ## 12. 小丑鱼鱼群交付（Clownfish school，2026-11-10）
 

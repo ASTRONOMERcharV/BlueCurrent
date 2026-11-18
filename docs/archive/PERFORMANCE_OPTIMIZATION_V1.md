@@ -42,7 +42,7 @@ npm run accept:gpu -- --counts=500,1000,2000 --warmup-ms=3000 --sample-ms=10000 
 
 ## 3. 既有硬件结果
 
-数据来自 `docs/GPU_ACCEPTANCE_2026-11-09.md` 与同目录原始 `results.json`。渲染器为 ANGLE / Intel Iris Xe Graphics / Direct3D11，不是 SwiftShader。
+数据来自 `docs/archive/GPU_ACCEPTANCE_2026-11-09.md` 与同目录原始 `results.json`。渲染器为 ANGLE / Intel Iris Xe Graphics / Direct3D11，不是 SwiftShader。
 
 | 鱼数 | FPS | 平均模拟步 | 丢步 | 判断 |
 | ---: | --- | ---: | ---: | --- |

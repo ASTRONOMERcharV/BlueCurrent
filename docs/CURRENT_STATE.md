@@ -92,7 +92,7 @@ Integration 还需补：无（Gate 已关闭）。WP1–WP4 已在新锁重跑�
 
 ## 6. 旧文档使用限制
 
-`docs/report/FINAL_REPORT.md`、`docs/VALIDATION_REPORT.md` 和早期视觉/验证报告保留作历史证据，不能提供当前测试数或默认资产范围。`README.md` 的运行说明仍可使用，但 `head/next` 网格、cohesionRadius=6、海带 48+43、完全无 LOD、31 tests 等描述已过期。
+`docs/report/FINAL_REPORT.md`、`docs/archive/VALIDATION_REPORT.md` 和早期视觉/验证报告保留作历史证据，不能提供当前测试数或默认资产范围。`README.md` 的运行说明仍可使用，但 `head/next` 网格、cohesionRadius=6、海带 48+43、完全无 LOD、31 tests 等描述已过期。
 
 实验 A 的覆盖率和 D 间隙是旧代理数据；`gpu-acceptance/latest.json` 实际是 SwiftShader；B1 `capture.json` 的 aggregate `renderTriangles` 不宜作为版本证明。当前任务先读本文件和对应子系统文档，不通读全部历史报告。
 

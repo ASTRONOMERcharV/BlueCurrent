@@ -157,9 +157,9 @@ Encounter 的威胁峰值下降是初始群体更分散后的结果，不表示�
 
 真实 Chromium 场景加载 91 株海藻、48 个珊瑚、完整岩石集和 shayu 鲨鱼，500 鱼，无浏览器错误。截图阶段 draw calls 为 47–53，渲染三角形约 23.1–24.1 万；海藻为 16,104 个实例三角形。
 
-SwiftShader 读数仅用于发现软件渲染问题，不能用于 60 FPS 判断。真实硬件验收已在 Windows 主机完成：ANGLE / Intel Iris Xe / Direct3D11，500 鱼四组资产均为 0 丢步、P95 约 12 ms；1000 鱼约 7 FPS、平均模拟步 17.3–17.9 ms；2000 鱼约 1.7 FPS、模拟步约 56 ms。结论是 500 鱼达标，1000/2000 未达标，瓶颈在 CPU 固定步模拟而不是 GLB 或 draw calls。完整证据见 `docs/GPU_ACCEPTANCE_2026-11-09.md`。
+SwiftShader 读数仅用于发现软件渲染问题，不能用于 60 FPS 判断。真实硬件验收已在 Windows 主机完成：ANGLE / Intel Iris Xe / Direct3D11，500 鱼四组资产均为 0 丢步、P95 约 12 ms；1000 鱼约 7 FPS、平均模拟步 17.3–17.9 ms；2000 鱼约 1.7 FPS、模拟步约 56 ms。结论是 500 鱼达标，1000/2000 未达标，瓶颈在 CPU 固定步模拟而不是 GLB 或 draw calls。完整证据见 `docs/archive/GPU_ACCEPTANCE_2026-11-09.md`。
 
-加固后的 `accept:gpu` 命令、CPU 优化 A/B 与 1000/2000 的明确限制见 `docs/PERFORMANCE_OPTIMIZATION_V1.md`。
+加固后的 `accept:gpu` 命令、CPU 优化 A/B 与 1000/2000 的明确限制见 `docs/archive/PERFORMANCE_OPTIMIZATION_V1.md`。
 
 ## 5. 自动化验证
 
@@ -190,6 +190,6 @@ SwiftShader 读数仅用于发现软件渲染问题，不能用于 60 FPS 判断
 - 用加固后的 `accept:gpu` 在 Windows 上重采 1000/2000 鱼数据：至少 120 帧、3 次重复，并另加真实 GPU timestamp；500 鱼已有硬件结论。
 - 珊瑚已降为默认 12 株温带点缀（2 个 `InstancedMesh`、33,720 三角形），`?coral=full` 保留 48 株完整展示层；海藻现在提供 `KelpRefugeField` 物理庇护场（圆柱遮蔽、恐惧衰减、覆盖拖速与真实 `shelteredCount`），但仍不是刚体碰撞。
 - 1000/2000 鱼的 CPU 固定步预算仍未解决，需要 Worker/WASM、行为可验证的邻居上限或降低高密度更新频率等架构级方案。
-- 正式 Phase 3：鲨鱼轮廓光、相机距离雾/颜色衰减、低分辨率体积光、粒子随流场运动、统一材质色调。该阶段已于 2026-11-09 交付，见 `docs/VISUAL_QUALITY_PHASE3.md`。
+- 正式 Phase 3：鲨鱼轮廓光、相机距离雾/颜色衰减、低分辨率体积光、粒子随流场运动、统一材质色调。该阶段已于 2026-11-09 交付，见 `docs/archive/VISUAL_QUALITY_PHASE3.md`。
 - 正式 Phase 4：Escape Wave 可读性、捕食者警示状态、School Density Map 体素可视化。
 - 鱼群在极长窗口和 2000 鱼密度下的稳定性仍需硬件长跑验证。

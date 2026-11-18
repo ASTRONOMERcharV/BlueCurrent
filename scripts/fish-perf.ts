@@ -37,7 +37,7 @@ const counts = (args.get('counts') ?? '500,1000,2000')
   .filter((value) => Number.isFinite(value) && value >= 10 && value <= 2000);
 
 const root = fileURLToPath(new URL('../', import.meta.url));
-const artifacts = `${root}benchmark`;
+const artifacts = `${root}benchmarks`;
 mkdirSync(artifacts, { recursive: true });
 
 const server = await createServer({ root, server: { host: '127.0.0.1', port: 5191, strictPort: true } });

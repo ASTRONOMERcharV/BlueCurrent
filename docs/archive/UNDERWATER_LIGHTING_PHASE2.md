@@ -191,7 +191,7 @@ Phase 2 没有新增 draw call；相对于 Phase 1 的 full 48 / base 39，只�
 
 新增：
 
-- `docs/UNDERWATER_LIGHTING_PHASE2.md`
+- `docs/archive/UNDERWATER_LIGHTING_PHASE2.md`
 - `test-artifacts/underwater-lighting-phase2/`（before、after、base、legacy、scattering-off、final 与 `metrics.json`）
 - `tests/UnderwaterOptics.test.ts` 中 5 项 Phase 2 纯函数测试
 - `tests/UnderwaterMedium.test.ts` 中 1 项分层散射注入测试

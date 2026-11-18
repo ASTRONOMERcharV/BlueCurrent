@@ -131,7 +131,7 @@ const summaries = options.counts.flatMap((count) => options.modes.map((mode) => 
 }));
 
 const projectRoot = fileURLToPath(new URL('../', import.meta.url));
-mkdirSync(`${projectRoot}benchmark`, { recursive: true });
+mkdirSync(`${projectRoot}benchmarks`, { recursive: true });
 const environment = {
   generatedAt: new Date().toISOString(),
   node: process.version,
@@ -147,7 +147,7 @@ const environment = {
     'Each repeat resets the same seeded initial state. Values are measured, not theoretical complexity estimates.',
   ],
 };
-writeFileSync(`${projectRoot}benchmark/latest-results.json`, JSON.stringify({ environment, summaries, measurements }, null, 2));
+writeFileSync(`${projectRoot}benchmarks/latest-results.json`, JSON.stringify({ environment, summaries, measurements }, null, 2));
 const csv = [
   'fish_count,search_mode,repeats,median_mean_step_ms,median_mean_cpu_step_ms,median_p95_step_ms,min_mean_step_ms,max_mean_step_ms,min_mean_cpu_step_ms,max_mean_cpu_step_ms,estimated_simulation_fps,average_neighbors,average_candidates_per_step',
   ...summaries.map((row) => [
@@ -159,7 +159,7 @@ const csv = [
     (1000 / row.medianMeanStepMs).toFixed(3), row.averageNeighbors.toFixed(3), row.averageCandidates.toFixed(1),
   ].join(',')),
 ].join('\n');
-writeFileSync(`${projectRoot}benchmark/latest-results.csv`, `${csv}\n`);
+writeFileSync(`${projectRoot}benchmarks/latest-results.csv`, `${csv}\n`);
 
 console.log('\nMedian of per-run means:');
 console.table(summaries.map((row) => ({
@@ -175,4 +175,4 @@ for (const count of options.counts) {
   const grid = summaries.find((row) => row.count === count && row.mode === 'grid');
   if (brute && grid) console.log(`${count} fish measured speedup: ${(brute.medianMeanStepMs / grid.medianMeanStepMs).toFixed(2)}×`);
 }
-console.log('\nWrote benchmark/latest-results.csv and benchmark/latest-results.json');
+console.log('\nWrote benchmarks/latest-results.csv and benchmarks/latest-results.json');

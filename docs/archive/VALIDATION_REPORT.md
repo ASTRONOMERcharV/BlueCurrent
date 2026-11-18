@@ -110,7 +110,7 @@ Tests       16 passed (16)
 | 锁文件与安装说明 | 已完成 |
 | 正式实验报告 `docs/FINAL_REPORT.md` | 已完成 |
 | 实验结果与原始数据 | 已完成 |
-| 性能/验证报告 | 本文件与 `docs/BENCHMARK_RESULTS.md` |
+| 性能/验证报告 | 本文件与 `docs/archive/BENCHMARK_RESULTS.md` |
 | 自动化测试 | 31 项通过（含 PredatorAnimation、KelpPlacement、rockPlacement） |
 | 桌面运行截图 | 10 张，含真实 UI 诊断 |
 | 移动端截图 | 1 张，来自最终 smoke |
